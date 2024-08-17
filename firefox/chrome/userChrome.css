@@ -1,0 +1,52 @@
+@media (prefers-color-scheme: dark) {
+    /* Dark Grey Background for Tab Strip/Bar and Native Backgrounds */
+    :root {
+        --background-color: #0f0f0f; /* Dark grey color */
+        --urlbar-background-color: #2d2d2d; /* Slightly lighter grey for the address bar */
+        --active-tab-background-color: rgb(31, 31, 31); /* Slightly lighter grey for the active tab */
+    }
+
+    #tabbrowser-tabs {
+        padding: 4px;
+    }
+
+    #navigator-toolbox,
+    #nav-bar,
+    #TabsToolbar,
+    #titlebar {
+        background-color: var(--background-color) !important;
+    }
+
+    /* Lighter Background for Address Bar */
+    #urlbar {
+        background-color: var(--urlbar-background-color) !important;
+    }
+
+    /* Lighter Background and Border Radius for Active Tab */
+    .tabbrowser-tab[selected="true"] * {
+        background-color: var(--active-tab-background-color) !important;
+    }
+
+    /* Active URL Bar color and Border Radius */
+    #urlbar:-moz-placeholder {
+        background-color: var(--active-background-color) !important;
+    }
+}
+
+#tabbrowser-tabs {
+    padding: 4px;
+}
+
+#urlbar {
+    border-radius: 10px !important;
+}
+
+/* Lighter Background and Border Radius for Active Tab */
+.tabbrowser-tab[selected="true"] * {
+    border-radius: 10px !important;
+}
+
+/* Active URL Bar color and Border Radius */
+#urlbar:-moz-placeholder {
+    border-radius: 10px !important;
+}
