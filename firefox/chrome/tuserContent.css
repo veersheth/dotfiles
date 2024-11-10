@@ -1,4 +1,4 @@
-@-moz-document url("about:home"), url("about:newtab") {
+/*@-moz-document url("about:home"), url("about:newtab") {
     .activity-stream {
       background-color: #0e0e0f !important;
     }
@@ -17,4 +17,4 @@
     *:empty:not([id]):not([style]) {
       background-color: #0e0e0f !important;
     }
-  }
+  }*/
