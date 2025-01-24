@@ -15,8 +15,8 @@ reference video: https://www.youtube.com/watch?v=y6XCebnB9gs
 ---
 
 to create a new package:
-- mkdir <package name>
-- move relative path from $HOME to the <package name> folder
+- mkdir `packagename`
+- move relative path from $HOME to the `packagename` folder
 
 for example for neovim:
 
