@@ -10,3 +10,19 @@ reference video: https://www.youtube.com/watch?v=y6XCebnB9gs
 
 3. apply links
 `stow dotfiles`
+
+
+---
+
+to create a new package:
+- mkdir <package name>
+- move relative path from $HOME to the <package name> folder
+
+for example for neovim:
+
+```bash
+cd dotfiles
+mkdir nvim
+mkdir nvim/.config
+mv ~/.config nvim/config
+```
