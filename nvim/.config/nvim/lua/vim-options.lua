@@ -29,3 +29,27 @@ vim.api.nvim_exec([[
     autocmd TextYankPost * silent! lua vim.highlight.on_yank({timeout=300})
   augroup end
 ]], false)
+
+-- Vertical scroll and center
+vim.keymap.set('n', '<C-d>', '<C-d>zz', opts)
+vim.keymap.set('n', '<C-u>', '<C-u>zz', opts)
+
+vim.keymap.set('n', 'n', 'nzzzv', opts)
+vim.keymap.set('n', 'N', 'Nzzzv', opts)
+
+-- Resize vim splits with arrow keys
+vim.keymap.set('n', '<Up>', ':resize -2<CR>', opts)
+vim.keymap.set('n', '<Down>', ':resize +2<CR>', opts)
+vim.keymap.set('n', '<Left>', ':vertical resize -2<CR>', opts)
+vim.keymap.set('n', '<Right>', ':vertical resize +2<CR>', opts)
+
+
+-- Buffer nav 
+vim.keymap.set('n', '<Tab>', ':bnext<CR>', opts)
+vim.keymap.set('n', '<S-Tab>', ':bprevious<CR>', opts)
+vim.keymap.set('n', '<leader>x', ':bdelete!<CR>', opts)
+vim.keymap.set('n', '<leader>b', '<cmd> enew <CR>', opts)
+
+-- Stay in indent mode when >>
+vim.keymap.set('n', '<', '<gv', opts)
+vim.keymap.set('n', '>', '>gv', opts)
