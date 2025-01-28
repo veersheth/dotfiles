@@ -8,7 +8,7 @@ vim.g.background = "light"
 vim.opt.swapfile = false
 
 -- copy visual selection to WSL clipboard
-vim.keymap.set("v", "<leader>c", ":w !clip.exe<CR>")
+vim.keymap.set("v", "<leader>cc", ":w !clip.exe<CR>")
 
 -- Navigate vim panes better
 vim.keymap.set("n", "<c-k>", ":wincmd k<CR>")
