@@ -8,7 +8,7 @@ vim.g.background = "light"
 vim.opt.swapfile = false
 
 -- copy visual selection to WSL clipboard
-vim.keymap.set("v", "<leader>cc", ":w !clip.exe<CR>")
+vim.keymap.set("v", "<leader>cc", ":w !clip.exe<CR>", { desc="Copy to clipboard" })
 
 -- Navigate vim panes better
 vim.keymap.set("n", "<c-k>", ":wincmd k<CR>")
@@ -16,16 +16,16 @@ vim.keymap.set("n", "<c-j>", ":wincmd j<CR>")
 vim.keymap.set("n", "<c-h>", ":wincmd h<CR>")
 vim.keymap.set("n", "<c-l>", ":wincmd l<CR>")
 
-vim.keymap.set("n", "<leader>h", ":nohlsearch<CR>")
+vim.keymap.set("n", "<leader>h", ":nohlsearch<CR>", { desc="Unhighlight search params" })
 vim.wo.number = true
 vim.wo.relativenumber = true
 
-vim.api.nvim_set_keymap("n", "<leader>S", ":w | lua vim.lsp.buf.format()<CR>", {
+vim.api.nvim_set_keymap("n", "<leader>s", ":w | lua vim.lsp.buf.format()<CR>", {
 	noremap = true,
 	silent = true,
+  desc = "Save and format"
 })
 
-vim.keymap.set("n", "<leader>s", ":w<CR>", opts)
 
 -- Highlight text after yank for a brief period
 vim.api.nvim_exec(
@@ -52,7 +52,7 @@ vim.keymap.set("n", "<Left>", ":vertical resize -2<CR>", opts)
 vim.keymap.set("n", "<Right>", ":vertical resize +2<CR>", opts)
 
 -- Buffer nav
-vim.keymap.set("n", "<Tab>", ":bnext<CR>", opts)
-vim.keymap.set("n", "<S-Tab>", ":bprevious<CR>", opts)
-vim.keymap.set("n", "<leader>w", ":bdelete!<CR>", opts)
-vim.keymap.set("n", "<leader>b", "<cmd> enew <CR>", opts)
+vim.keymap.set("n", "<Tab>", ":bnext<CR>", { desc="Next buffer" })
+vim.keymap.set("n", "<S-Tab>", ":bprevious<CR>", { desc="Previous buffer"})
+vim.keymap.set("n", "<leader>bn", "<cmd> enew <CR>", { desc="New buffer" })
+vim.keymap.set("n", "<leader>bw", ":bdelete<CR>", { desc = "Close buffer" })
