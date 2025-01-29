@@ -7,3 +7,5 @@
 [user]
 	name = Veer
 	email = veerksheth@gmail.com
+[init]
+	defaultBranch = main
