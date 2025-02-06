@@ -12,6 +12,6 @@ return {
 			},
 		})
 
-		vim.keymap.set("n", "<leader>ft", vim.lsp.buf.format, {})
+		vim.keymap.set("n", "<leader><leader>", vim.lsp.buf.format, { desc = "Format Document" })
 	end,
 }

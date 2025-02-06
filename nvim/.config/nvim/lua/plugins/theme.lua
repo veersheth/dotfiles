@@ -28,7 +28,7 @@ return {
 				},
 				mocha = {
 					base = "#181818",
-					mantle = "#222222",
+					mantle = "#000000",
 					crust = "#181818",
 				},
         latte = {},
