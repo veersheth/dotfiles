@@ -102,6 +102,9 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+alias vi="nvim"
+
+
 bindkey '^H' backward-kill-word
 
 export PATH=$PATH:/home/veer/.spicetify
