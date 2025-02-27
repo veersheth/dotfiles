@@ -9,7 +9,10 @@ return {
 	config = function()
 		vim.keymap.set("n", "<leader>-", ":Neotree right<CR>", { desc = "Open filetree" })
 		vim.keymap.set("n", "<leader>_", ":Neotree toggle right<CR>", { desc = "Toggle filetree" })
-		vim.keymap.set("n", "-", ":Neotree float<CR>", { desc = "Toggle floating neotree" })
+		vim.keymap.set("n", "<leader>e", ":Neotree float<CR>", { desc = "Toggle floating neotree" })
+
+		buffers = { follow_current_file = { enabled = true } }
+
 		require("neo-tree").setup({
 			window = {
 				width = 28,
@@ -17,3 +20,4 @@ return {
 		})
 	end,
 }
+

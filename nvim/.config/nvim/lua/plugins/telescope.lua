@@ -9,8 +9,14 @@ return {
 		config = function()
 			require("telescope").setup({
 				defaults = {
-					file_ignore_patterns = { "node_modules", ".git", ".venv" },
-          hidden = true,
+					theme = "center",
+					sorting_strategy = "ascending",
+					layout_config = {
+						horizontal = {
+							prompt_position = "top",
+							preview_width = 0.3,
+						},
+					},
 				},
 				extensions = {
 					["ui-select"] = {
@@ -19,10 +25,10 @@ return {
 				},
 			})
 			local builtin = require("telescope.builtin")
-			vim.keymap.set("n", "<C-p>", builtin.find_files, { desc = "[F]ind [F]iles" })
-			vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "[F]ind [F]iles" })
-			vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "[F]ind [G]rep" })
-			vim.keymap.set("n", "<leader>fo", builtin.oldfiles, { desc = "[F]ind [O]ld" })
+			vim.keymap.set("n", "<C-p>", builtin.find_files, { desc = "Find Files" })
+			vim.keymap.set("n", "<leader>fd", builtin.find_files, { desc = "Find Files" })
+			vim.keymap.set("n", "<leader>fg", builtin.live_grep, { desc = "Find Grep" })
+			vim.keymap.set("n", "<leader>fo", builtin.oldfiles, { desc = "Find Old Files" })
 
 			require("telescope").load_extension("ui-select")
 		end,
