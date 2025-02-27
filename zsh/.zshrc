@@ -76,6 +76,9 @@ alias ....="cd ../../.."
 # Extract compressed files quickly
 alias x="extract"
 
+# Simpler clear command
+alias cls="clear"
+
 # Quick access to Zsh config
 alias zshconfig="nvim ~/.zshrc"
 alias ohmyzsh="nvim ~/.oh-my-zsh"
