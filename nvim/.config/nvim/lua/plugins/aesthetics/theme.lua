@@ -5,7 +5,7 @@
 -- 		vim.cmd.colorscheme "gruvbox"
 -- 	end
 -- }
---
+
 -- return {
 --   "folke/tokyonight.nvim",
 --   lazy = false,

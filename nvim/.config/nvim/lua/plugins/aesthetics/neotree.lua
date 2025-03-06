@@ -60,13 +60,13 @@ return {
 		})
 
 		-- Improve colors for a more elegant look
-		vim.cmd([[
-			hi NeoTreeNormal guibg=#181818 guifg=#cdd6f4
-			hi NeoTreeNormalNC guibg=#181818 guifg=#cdd6f4
-			hi NeoTreeGitAdded guifg=#a6e3a1
-			hi NeoTreeGitModified guifg=#fab387
-			hi NeoTreeGitDeleted guifg=#f38ba8
-		]])
+		-- vim.cmd([[
+		-- 	hi NeoTreeNormal guibg=#181818 guifg=#cdd6f4
+		-- 	hi NeoTreeNormalNC guibg=#181818 guifg=#cdd6f4
+		-- 	hi NeoTreeGitAdded guifg=#a6e3a1
+		-- 	hi NeoTreeGitModified guifg=#fab387
+		-- 	hi NeoTreeGitDeleted guifg=#f38ba8
+		-- ]])
 	end,
 }
 
