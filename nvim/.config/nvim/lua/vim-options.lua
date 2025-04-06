@@ -7,6 +7,7 @@ vim.g.background = "light"
 vim.opt.cursorline = true
 
 vim.opt.swapfile = false
+vim.opt.scrolloff = 10
 
 -- copy visual selection to WSL clipboard
 vim.keymap.set("v", "<leader>cc", ":w !clip.exe<CR>", { desc = "Copy to clipboard" })
@@ -21,17 +22,18 @@ vim.keymap.set("n", "<leader>h", ":nohlsearch<CR>", { desc = "Unhighlight search
 vim.wo.number = true
 vim.wo.relativenumber = true
 
-vim.api.nvim_set_keymap("n", "<leader>s", ":w<CR>", {
+vim.api.nvim_set_keymap("n", "<leader>S", ":w<CR>", {
 	noremap = true,
 	silent = true,
 	desc = "Save",
 })
 
-vim.api.nvim_set_keymap("n", "<leader>p", ":w | lua vim.lsp.buf.format()<CR>", {
+vim.api.nvim_set_keymap("n", "<leader>F", ":lua vim.lsp.buf.format()<CR>", {
 	noremap = true,
 	silent = true,
-	desc = "Format and Save",
+	desc = "Format Document",
 })
+
 -- Highlight text after yank for a brief period
 vim.api.nvim_exec(
 	[[
@@ -61,3 +63,4 @@ vim.keymap.set("n", "<Tab>", ":bnext<CR>", { desc = "Next buffer" })
 vim.keymap.set("n", "<S-Tab>", ":bprevious<CR>", { desc = "Previous buffer" })
 vim.keymap.set("n", "<leader>bn", "<cmd> enew <CR>", { desc = "New buffer" })
 vim.keymap.set("n", "<leader>bw", ":bdelete<CR>", { desc = "Close buffer" })
+vim.keymap.set("n", "<leader>BW", ":bdelete!<CR>", { desc = "Close buffer FORCE" })

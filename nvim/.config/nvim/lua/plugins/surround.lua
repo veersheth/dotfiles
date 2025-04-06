@@ -4,10 +4,10 @@ return {
 	config = function()
 		require("nvim-surround").setup({
 			keymaps = {
-				normal = "sw", -- Surround word in normal mode
-				visual = "sw", -- Surround selection in visual mode
-				delete = "sd", -- Delete surrounding
-				change = "sc", -- Change surrounding
+				normal = "<leader>sw", -- Surround word in normal mode
+				visual = "<leader>sw", -- Surround selection in visual mode
+				delete = "<leader>sd", -- Delete surrounding
+				change = "<leader>sc", -- Change surrounding
 			},
 		})
 	end,

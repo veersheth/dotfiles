@@ -30,25 +30,25 @@ return {
 				},
 				git_status = {
 					symbols = {
-						added = " ", -- Git added
-						modified = " ", -- Git modified
-						deleted = " ", -- Git deleted
-						renamed = "➜ ",
+						added = "+ ", 
+						modified = "M",
+						deleted = "- ",
+						renamed = "R",
 						untracked = "★",
 					},
 				},
 			},
 			filesystem = {
 				follow_current_file = {
-					enabled = true, -- Track active file
+					enabled = true, 
 				},
 				hijack_netrw_behavior = "open_current",
-				use_libuv_file_watcher = true, -- Better performance
+				use_libuv_file_watcher = true, 
 			},
 			window = {
 				width = 30,
 				mappings = {
-					["<space>"] = "noop", -- Disable default space key behavior
+					["<space>"] = "noop", 
 				},
 			},
 			-- event_handlers = {
