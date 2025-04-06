@@ -1,21 +1,8 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
 # If you come from bash, you might have to change your $PATH
 export PATH="$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
 
 # Oh My Zsh installation path
 export ZSH="$HOME/.oh-my-zsh"
-
-# Set Powerlevel10k as the theme (Install with `git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$ZSH/custom}/themes/powerlevel10k`)
-ZSH_THEME="powerlevel10k/powerlevel10k"
-
-# Enable Powerlevel10k instant prompt (if installed)
-[[ ! -r ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # Enable case-insensitive completion
 CASE_SENSITIVE="false"
@@ -56,7 +43,7 @@ export EDITOR="nvim"
 export VISUAL="nvim"
 
 # Use `batcat` instead of `cat`
-alias cat="batcat"
+# alias cat="batcat"
 
 # Neovim aliases
 alias vi="nvim"
@@ -81,7 +68,6 @@ alias cls="clear"
 
 # Quick access to Zsh config
 alias zshconfig="nvim ~/.zshrc"
-alias ohmyzsh="nvim ~/.oh-my-zsh"
 
 # Fix accidental sudo typos
 alias please="sudo !!"
@@ -90,8 +76,8 @@ alias please="sudo !!"
 [[ -f ~/.fzf.zsh ]] && source ~/.fzf.zsh
 
 # Keybindings
-bindkey '^H' backward-kill-word    # Ctrl+H to delete a whole word
 bindkey '^R' history-incremental-search-backward  # Ctrl+R for searching history
 
 # User-defined PATH (ensure pipx is properly set)
 export PATH="$HOME/.local/bin:$PATH"
+eval "$(starship init zsh)"
