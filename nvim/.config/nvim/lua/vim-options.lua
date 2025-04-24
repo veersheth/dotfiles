@@ -11,6 +11,7 @@ vim.opt.scrolloff = 10
 
 -- copy visual selection to WSL clipboard
 vim.keymap.set("v", "<leader>cc", ":w !clip.exe<CR>", { desc = "Copy to clipboard" })
+vim.keymap.set("v", "Y", "\"+y", { desc = "Copy to clipboard" })
 
 -- Navigate vim panes better
 vim.keymap.set("n", "<c-k>", ":wincmd k<CR>")
@@ -22,7 +23,7 @@ vim.keymap.set("n", "<leader>h", ":nohlsearch<CR>", { desc = "Unhighlight search
 vim.wo.number = true
 vim.wo.relativenumber = true
 
-vim.api.nvim_set_keymap("n", "<leader>S", ":w<CR>", {
+vim.api.nvim_set_keymap("n", "<leader>s", ":w<CR>", {
 	noremap = true,
 	silent = true,
 	desc = "Save",
