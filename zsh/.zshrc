@@ -42,12 +42,11 @@ source $ZSH/oh-my-zsh.sh
 export EDITOR="nvim"
 export VISUAL="nvim"
 
-# Use `batcat` instead of `cat`
 # alias cat="batcat"
 
-# Neovim aliases
 alias vi="nvim"
 alias nv="nvim"
+alias lg="lazygit"
 
 # Color-enhanced ls and tree commands
 alias ls="ls --color=auto"
@@ -59,9 +58,6 @@ alias l="ls -CF"
 alias ..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
-
-# Extract compressed files quickly
-alias x="extract"
 
 # Simpler clear command
 alias cls="clear"
