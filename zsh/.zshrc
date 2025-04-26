@@ -1,9 +1,6 @@
 # If you come from bash, you might have to change your $PATH
 export PATH="$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
-
-# Oh My Zsh installation path
-export ZSH="$HOME/.oh-my-zsh"
-
+#
 # Enable case-insensitive completion
 CASE_SENSITIVE="false"
 
@@ -22,9 +19,6 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # Set history timestamp format
 HIST_STAMPS="yyyy-mm-dd"
 
-# Faster auto-update frequency (every 7 days)
-zstyle ':omz:update' frequency 7
-
 # Plugins for better usability (Install missing ones with `git clone`)
 plugins=(
   git
@@ -35,8 +29,6 @@ plugins=(
   extract
   sudo
 )
-
-source $ZSH/oh-my-zsh.sh
 
 # Preferred text editor
 export EDITOR="nvim"
