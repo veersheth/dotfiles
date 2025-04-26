@@ -5,13 +5,14 @@ vim.cmd("set shiftwidth=2")
 vim.g.mapleader = " "
 vim.g.background = "light"
 vim.opt.cursorline = true
+vim.opt.updatetime = 800
 
 vim.opt.swapfile = false
 vim.opt.scrolloff = 10
 
 -- copy visual selection to WSL clipboard
 vim.keymap.set("v", "<leader>cc", ":w !clip.exe<CR>", { desc = "Copy to clipboard" })
-vim.keymap.set("v", "Y", "\"+y", { desc = "Copy to clipboard" })
+vim.keymap.set("v", "Y", '"+y', { desc = "Copy to clipboard" })
 
 -- Navigate vim panes better
 vim.keymap.set("n", "<c-k>", ":wincmd k<CR>")
@@ -19,7 +20,7 @@ vim.keymap.set("n", "<c-j>", ":wincmd j<CR>")
 vim.keymap.set("n", "<c-h>", ":wincmd h<CR>")
 vim.keymap.set("n", "<c-l>", ":wincmd l<CR>")
 
-vim.keymap.set("n", "<leader>h", ":nohlsearch<CR>", { desc = "Unhighlight search params" })
+vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>", { desc = "Unhighlight search params" })
 vim.wo.number = true
 vim.wo.relativenumber = true
 
@@ -27,12 +28,6 @@ vim.api.nvim_set_keymap("n", "<leader>s", ":w<CR>", {
 	noremap = true,
 	silent = true,
 	desc = "Save",
-})
-
-vim.api.nvim_set_keymap("n", "<leader>F", ":lua vim.lsp.buf.format()<CR>", {
-	noremap = true,
-	silent = true,
-	desc = "Format Document",
 })
 
 -- Highlight text after yank for a brief period
