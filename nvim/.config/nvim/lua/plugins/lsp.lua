@@ -1,315 +1,183 @@
 return {
-	{
-		-- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
-		-- used for completion, annotations and signatures of Neovim apis
-		"folke/lazydev.nvim",
-		ft = "lua",
-		opts = {
-			library = {
-				-- Load luvit types when the `vim.uv` word is found
-				{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
-			},
-		},
-	},
-	{
-		-- Main LSP Configuration
-		"neovim/nvim-lspconfig",
-		dependencies = {
-			-- Automatically install LSPs and related tools to stdpath for Neovim
-			-- Mason must be loaded before its dependents so we need to set it up here.
-			-- NOTE: `opts = {}` is the same as calling `require('mason').setup({})`
-			{ "williamboman/mason.nvim", opts = {} },
-			"williamboman/mason-lspconfig.nvim",
-			"WhoIsSethDaniel/mason-tool-installer.nvim",
+  -- Mason plugin for LSP management
+  {
+    "williamboman/mason.nvim",
+    build = ":MasonUpdate",    -- Update Mason when plugin is loaded
+    cmd = "Mason",             -- Mason command is available in the command line
+    config = function()
+      require("mason").setup() -- Corrected the typo here
+    end,
+  },
 
-			-- Useful status updates for LSP.
-			{ "j-hui/fidget.nvim", opts = {} },
+  -- Mason-lspconfig plugin to integrate Mason with lspconfig
+  {
+    "williamboman/mason-lspconfig.nvim",
+    config = function()
+      require("mason-lspconfig").setup({
+        ensure_installed = {
+          "lua_ls", "pyright", "ts_ls", "html", "cssls", "jsonls", "bashls", -- Add any LSP servers you need
+        },
+        automatic_installation = true,                                       -- Automatically install missing servers
+      })
+    end,
+  },
 
-			-- Allows extra capabilities provided by blink.cmp
-			"saghen/blink.cmp",
-		},
-		config = function()
-			-- Brief aside: **What is LSP?**
-			--
-			-- LSP is an initialism you've probably heard, but might not understand what it is.
-			--
-			-- LSP stands for Language Server Protocol. It's a protocol that helps editors
-			-- and language tooling communicate in a standardized fashion.
-			--
-			-- In general, you have a "server" which is some tool built to understand a particular
-			-- language (such as `gopls`, `lua_ls`, `rust_analyzer`, etc.). These Language Servers
-			-- (sometimes called LSP servers, but that's kind of like ATM Machine) are standalone
-			-- processes that communicate with some "client" - in this case, Neovim!
-			--
-			-- LSP provides Neovim with features like:
-			--  - Go to definition
-			--  - Find references
-			--  - Autocompletion
-			--  - Symbol Search
-			--  - and more!
-			--
-			-- Thus, Language Servers are external tools that must be installed separately from
-			-- Neovim. This is where `mason` and related plugins come into play.
-			--
-			-- If you're wondering about lsp vs treesitter, you can check out the wonderfully
-			-- and elegantly composed help section, `:help lsp-vs-treesitter`
+  -- LSP Configuration for Neovim
+  {
+    "neovim/nvim-lspconfig",
+    event = { "BufReadPre", "BufNewFile" },
+    dependencies = {
+      "hrsh7th/nvim-cmp",
+      "hrsh7th/cmp-nvim-lsp",
+      "nvim-telescope/telescope.nvim",
+    },
+    config = function()
+      local lspconfig = require("lspconfig")
+      local cmp_nvim_lsp = require("cmp_nvim_lsp")
+      local telescope_builtin = require("telescope.builtin")
+      local cmp = require("cmp")
 
-			--  This function gets run when an LSP attaches to a particular buffer.
-			--    That is to say, every time a new file is opened that is associated with
-			--    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
-			--    function will be executed to configure the current buffer
-			vim.api.nvim_create_autocmd("LspAttach", {
-				group = vim.api.nvim_create_augroup("kickstart-lsp-attach", { clear = true }),
-				callback = function(event)
-					local map = function(keys, func, desc, mode)
-						mode = mode or "n"
-						vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
-					end
-					map("gd", require("telescope.builtin").lsp_definitions, "[G]oto [D]efinition")
-					map("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
-					map("gi", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
-					map("gt", require("telescope.builtin").lsp_type_definitions, "[G]oto [T]ype Definition")
-					map("gr", require("telescope.builtin").lsp_references, "[G]oto [R]eferences")
+      -- Setup capabilities for nvim-cmp
+      local capabilities = cmp_nvim_lsp.default_capabilities()
 
-					map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
-					map("<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ction", { "n", "x" })
+      -- on_attach function to map LSP commands
+      local on_attach = function(client, bufnr)
+        local opts = { noremap = true, silent = true }
+        local function map(mode, lhs, rhs)
+          vim.api.nvim_buf_set_keymap(bufnr, mode, lhs, rhs, opts)
+        end
 
-					map("<leader>ds", require("telescope.builtin").lsp_document_symbols, "[D]ocument [S]ymbols")
-					map(
-						"<leader>ws",
-						require("telescope.builtin").lsp_dynamic_workspace_symbols,
-						"[W]orkspace [S]ymbols"
-					)
+        map("n", "<leader>lf", "<cmd>lua vim.lsp.buf.format()<CR>")
 
-					-- highgliht instance of word under curosr
-					local client = vim.lsp.get_client_by_id(event.data.client_id)
-					if
-						client
-						and client.supports_method(
-							client,
-							vim.lsp.protocol.Methods.textDocument_documentHighlight,
-							event.buf
-						)
-					then
-						local highlight_augroup =
-							vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
-						vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-							buffer = event.buf,
-							group = highlight_augroup,
-							callback = vim.lsp.buf.document_highlight,
-						})
+        -- Telescope-powered mappings
+        map("n", "gd", "<cmd>lua require('telescope.builtin').lsp_definitions()<CR>")
+        map("n", "gr", "<cmd>lua require('telescope.builtin').lsp_references()<CR>")
+        map("n", "gi", "<cmd>lua require('telescope.builtin').lsp_implementations()<CR>")
+        map("n", "gt", "<cmd>lua require('telescope.builtin').lsp_type_definitions()<CR>")
 
-						vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-							buffer = event.buf,
-							group = highlight_augroup,
-							callback = vim.lsp.buf.clear_references,
-						})
+        -- LSP core
+        map("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>")
+        map("n", "<leader><leader>", "<cmd>lua vim.lsp.buf.signature_help()<CR>")
+        map("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>")
+        map("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>")
 
-						vim.api.nvim_create_autocmd("LspDetach", {
-							group = vim.api.nvim_create_augroup("kickstart-lsp-detach", { clear = true }),
-							callback = function(event2)
-								vim.lsp.buf.clear_references()
-								vim.api.nvim_clear_autocmds({ group = "kickstart-lsp-highlight", buffer = event2.buf })
-							end,
-						})
-					end
+        -- Workspace symbols
+        map("n", "<leader>ds", "<cmd>lua require('telescope.builtin').lsp_document_symbols()<CR>")
+        map("n", "<leader>ws", "<cmd>lua require('telescope.builtin').lsp_dynamic_workspace_symbols()<CR>")
 
-					-- The following code creates a keymap to toggle inlay hints in your
-					-- code, if the language server you are using supports them
-					--
-					-- This may be unwanted, since they displace some of your code
-					if
-						client
-						and client.supports_method(client, vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf)
-					then
-						map("<leader>th", function()
-							vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
-						end, "[T]oggle Inlay [H]ints")
-					end
-				end,
-			})
+        -- Diagnostics
+        map("n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<CR>")
+        map("n", "]d", "<cmd>lua vim.diagnostic.goto_next()<CR>")
+        map("n", "<leader>e", "<cmd>lua vim.diagnostic.open_float()<CR>")
+        map("n", "<leader>q", "<cmd>lua vim.diagnostic.setloclist()<CR>")
+      end
 
-			-- Diagnostic Config
-			-- See :help vim.diagnostic.Opts
-			vim.diagnostic.config({
-				severity_sort = true,
-				float = { border = "rounded", source = "if_many" },
-				underline = { severity = vim.diagnostic.severity.ERROR },
-				signs = vim.g.have_nerd_font and {
-					text = {
-						[vim.diagnostic.severity.ERROR] = "󰅚 ",
-						[vim.diagnostic.severity.WARN] = "󰀪 ",
-						[vim.diagnostic.severity.INFO] = "󰋽 ",
-						[vim.diagnostic.severity.HINT] = "󰌶 ",
-					},
-				} or {},
-				virtual_text = {
-					source = "if_many",
-					spacing = 2,
-					format = function(diagnostic)
-						local diagnostic_message = {
-							[vim.diagnostic.severity.ERROR] = diagnostic.message,
-							[vim.diagnostic.severity.WARN] = diagnostic.message,
-							[vim.diagnostic.severity.INFO] = diagnostic.message,
-							[vim.diagnostic.severity.HINT] = diagnostic.message,
-						}
-						return diagnostic_message[diagnostic.severity]
-					end,
-				},
-			})
+      local servers = {
+        "lua_ls", "pyright", "ts_ls", "html", "cssls", "jsonls", "bashls",
+      }
 
-			local capabilities = require("blink.cmp").get_lsp_capabilities()
-			local servers = {
-				-- clangd = {},
-				-- gopls = {},
-				pyright = {},
-				rust_analyzer = {},
-				ts_ls = {},
-				lua_ls = {
-					-- cmd = { ... },
-					-- filetypes = { ... },
-					-- capabilities = {},
-					settings = {
-						Lua = {
-							completion = {
-								callSnippet = "Replace",
-							},
-							-- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-							-- diagnostics = { disable = { 'missing-fields' } },
-						},
-					},
-				},
-			}
+      for _, server in ipairs(servers) do
+        lspconfig[server].setup({
+          on_attach = on_attach,
+          capabilities = capabilities,
+        })
+      end
 
-			-- Ensure the servers and tools above are installed
-			--
-			-- To check the current status of installed tools and/or manually install
-			-- other tools, you can run
-			--    :Mason
-			--
-			-- You can press `g?` for help in this menu.
-			--
-			-- `mason` had to be setup earlier: to configure its options see the
-			-- `dependencies` table for `nvim-lspconfig` above.
-			--
-			-- You can add other tools here that you want Mason to install
-			-- for you, so that they are available from within Neovim.
-			local ensure_installed = vim.tbl_keys(servers or {})
-			vim.list_extend(ensure_installed, {
-				"stylua", -- Used to format Lua code
-			})
-			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
+      -- Sign symbols for diagnostics
+      local signs = { Error = "✘", Warn = "▲", Hint = "⚑", Info = "" }
+      for type, icon in pairs(signs) do
+        local hl = "DiagnosticSign" .. type
+        vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
+      end
 
-			require("mason-lspconfig").setup({
-				ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-				automatic_installation = false,
-				handlers = {
-					function(server_name)
-						local server = servers[server_name] or {}
-						-- This handles overriding only values explicitly passed
-						-- by the server configuration above. Useful when disabling
-						-- certain features of an LSP (for example, turning off formatting for ts_ls)
-						server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
-						require("lspconfig")[server_name].setup(server)
-					end,
-				},
-			})
-		end,
-	},
+      -- Diagnostics configuration
+      vim.diagnostic.config({
+        virtual_text = true,
+        signs = true,
+        underline = true,
+        update_in_insert = false,
+        severity_sort = true,
+        float = {
+          border = "rounded",
+          source = "always",
+        },
+      })
+    end,
+  },
 
-	{ -- Autoformat
-		"stevearc/conform.nvim",
-		event = { "BufWritePre" },
-		cmd = { "ConformInfo" },
-		keys = {
-			{
-				"<leader>F",
-				function()
-					require("conform").format({ async = true, lsp_format = "fallback" })
-				end,
-				mode = "",
-				desc = "[F]ormat buffer",
-			},
-		},
-		opts = {
-			notify_on_error = false,
-			format_on_save = function(bufnr)
-				local disable_filetypes = { c = true, cpp = true }
-				if disable_filetypes[vim.bo[bufnr].filetype] then
-					return nil
-				else
-					return {
-						timeout_ms = 500,
-						lsp_format = "fallback",
-					}
-				end
-			end,
-			formatters_by_ft = {
-				lua = { "stylua" },
-				-- Conform can also run multiple formatters sequentially
-				-- python = { "isort", "black" },
-				--
-				-- You can use 'stop_after_first' to run the first available formatter from the list
-				-- javascript = { "prettierd", "prettier", stop_after_first = true },
-			},
-		},
-	},
+  -- Autocompletion with nvim-cmp
+  {
+    "hrsh7th/nvim-cmp",
+    config = function()
+      local cmp = require("cmp")
 
-	{ -- Autocompletion
-		"saghen/blink.cmp",
-		event = "VimEnter",
-		version = "1.*",
-		dependencies = {
-			-- Snippet Engine
-			{
-				"L3MON4D3/LuaSnip",
-				version = "2.*",
-				build = (function()
-					if vim.fn.has("win32") == 1 or vim.fn.executable("make") == 0 then
-						return
-					end
-					return "make install_jsregexp"
-				end)(),
-				dependencies = {
-					-- `friendly-snippets` contains a variety of premade snippets.
-					--    See the README about individual language/framework/plugin snippets:
-					--    https://github.com/rafamadriz/friendly-snippets
-					{
-						"rafamadriz/friendly-snippets",
-						config = function()
-							require("luasnip.loaders.from_vscode").lazy_load()
-						end,
-					},
-				},
-				opts = {},
-			},
-			"folke/lazydev.nvim",
-		},
-		--- @module 'blink.cmp'
-		--- @type blink.cmp.Config
-		opts = {
-			keymap = {
-				preset = "default",
-			},
+      cmp.setup({
+        snippet = {
+          expand = function(args)
+            require("luasnip").lsp_expand(args.body) -- Using luasnip for snippet expansion
+          end,
+        },
+        mapping = {
+          ["<C-Space>"] = cmp.mapping.complete(),
+          ["<CR>"] = cmp.mapping.confirm({ select = true }),
+          ["<C-e>"] = cmp.mapping.close(),
+        },
+        sources = {
+          { name = "nvim_lsp" },
+          { name = "luasnip" },
+          { name = "buffer" },
+        },
+      })
+    end,
+  },
 
-			appearance = {
-				nerd_font_variant = "mono",
-			},
+  -- Performance optimization for Telescope references
+  {
+    "nvim-telescope/telescope.nvim",
+    config = function()
+      local telescope = require("telescope")
+      telescope.setup({
+        defaults = {
+          prompt_prefix = "🔍 ",
+          selection_caret = "➤ ",
+          layout_strategy = "horizontal",
+          layout_config = {
+            width = 0.8,
+            height = 0.8,
+            preview_width = 0.6,
+          },
+          sorting_strategy = "ascending",
+          file_ignore_patterns = { "node_modules", ".git" },
+        },
+      })
 
-			completion = {
-				documentation = { auto_show = true, auto_show_delay_ms = 500 },
-			},
+      -- Optimize the references command (uses `lsp_references` more efficiently)
+      local builtin = require("telescope.builtin")
+      builtin.lsp_references = function(opts)
+        opts = opts or {}
+        opts.telescope_sorter = require("telescope.sorters").get_fuzzy_file
+        builtin.lsp_references(opts)
+      end
+    end,
+  },
 
-			sources = {
-				default = { "lsp", "path", "snippets", "lazydev" },
-				providers = {
-					lazydev = { module = "lazydev.integrations.blink", score_offset = 100 },
-				},
-			},
+  -- Highlight word when hovering (for 400ms)
+  -- Highlight word when hovering (for 400ms)
+  -- {
+  --   "nvim-lua/plenary.nvim",
+  --   config = function()
+  --     vim.api.nvim_create_autocmd("CursorHold", {
+  --       callback = function()
+  --         local word = vim.fn.expand("<cword>")
+  --         -- Highlight the word and store the match ID
+  --         local match_id = vim.fn.matchadd("Search", word, 10)
+  --         vim.defer_fn(function()
+  --           -- Remove the highlight after 400ms using the match ID
+  --           vim.fn.matchdelete(match_id)
+  --         end, 400)
+  --       end,
+  --     })
+  --   end,
+  -- },
 
-			snippets = { preset = "luasnip" },
-			fuzzy = { implementation = "lua" },
-			signature = { enabled = true },
-		},
-	},
 }
