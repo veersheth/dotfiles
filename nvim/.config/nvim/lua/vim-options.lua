@@ -9,10 +9,20 @@ vim.opt.updatetime = 800
 
 vim.opt.swapfile = false
 vim.opt.scrolloff = 10
+vim.keymap.set("i", "", "") -- remap ctrl backspace to delete a word
 
--- copy visual selection to WSL clipboard
-vim.keymap.set("v", "<leader>cc", ":w !clip.exe<CR>", { desc = "Copy to clipboard" })
-vim.keymap.set("v", "Y", '"+y', { desc = "Copy to clipboard" })
+-- copy visual selection to system clipboard
+vim.keymap.set("v", "Y", '"+y', { desc = "Copy to system" })
+
+-- select document vid
+vim.keymap.set("v", "id", "<Esc>ggVG", { desc = "Entire document" })
+
+-- move visual blocks
+vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv", { desc = "move selection down" })
+vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv", { desc = "move selection up" })
+
+-- replace selection globally
+vim.keymap.set("n", "<leader>r", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
 
 -- Navigate vim panes better
 vim.keymap.set("n", "<c-k>", ":wincmd k<CR>")
@@ -24,22 +34,14 @@ vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>", { desc = "Unhighlight search par
 vim.wo.number = true
 vim.wo.relativenumber = true
 
-vim.api.nvim_set_keymap("n", "<leader>s", ":w<CR>", {
-	noremap = true,
-	silent = true,
-	desc = "Save",
-})
-
 -- Highlight text after yank for a brief period
-vim.api.nvim_exec(
-	[[
-  augroup YankHighlight
-    autocmd!
-    autocmd TextYankPost * silent! lua vim.highlight.on_yank({timeout=300})
-  augroup end
-]],
-	false
-)
+vim.api.nvim_create_autocmd('TextYankPost', {
+  desc = 'Highlight when yanking (copying) text',
+  group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
+  callback = function()
+    vim.highlight.on_yank()
+  end,
+})
 
 -- Vertical scroll and center
 vim.keymap.set("n", "<C-d>", "<C-d>zz", opts)
@@ -58,5 +60,40 @@ vim.keymap.set("n", "<Right>", ":vertical resize +2<CR>", opts)
 vim.keymap.set("n", "<Tab>", ":bnext<CR>", { desc = "Next buffer" })
 vim.keymap.set("n", "<S-Tab>", ":bprevious<CR>", { desc = "Previous buffer" })
 vim.keymap.set("n", "<leader>bn", "<cmd> enew <CR>", { desc = "New buffer" })
-vim.keymap.set("n", "<leader>bw", ":bdelete<CR>", { desc = "Close buffer" })
-vim.keymap.set("n", "<leader>BW", ":bdelete!<CR>", { desc = "Close buffer FORCE" })
+
+
+-- lsp highlight under cursor
+vim.api.nvim_create_autocmd('LspAttach', {
+  group = vim.api.nvim_create_augroup('kickstart-lsp-attach', { clear = true }),
+  callback = function(event)
+    local client = vim.lsp.get_client_by_id(event.data.client_id)
+
+    -- Check if the client supports document highlighting
+    if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
+      local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
+
+      -- Highlight references when the cursor stays in place (CursorHold & CursorHoldI)
+      vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+        buffer = event.buf,
+        group = highlight_augroup,
+        callback = vim.lsp.buf.document_highlight,
+      })
+
+      -- Clear highlights when the cursor moves (CursorMoved & CursorMovedI)
+      vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+        buffer = event.buf,
+        group = highlight_augroup,
+        callback = vim.lsp.buf.clear_references,
+      })
+
+      -- Remove highlights when LSP is detached
+      vim.api.nvim_create_autocmd('LspDetach', {
+        group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
+        callback = function(event2)
+          vim.lsp.buf.clear_references()
+          vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
+        end,
+      })
+    end
+  end,
+})
