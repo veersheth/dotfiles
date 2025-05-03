@@ -224,8 +224,8 @@
 
   // Clock
   "clock": {
-    "format": "{:%H:%M %a}",
-    "on-click": "flatpak run com.ml4w.calendar",
+    "format": "{:%I:%M %a}",
+    "on-click": "gnome-calendar",
     "timezone": "",
     "tooltip": false
   },
