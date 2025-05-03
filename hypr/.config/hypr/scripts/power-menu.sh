@@ -13,7 +13,7 @@ case "$choice" in
     hyprctl dispatch exit
     ;;
   Lock)
-    swaylock
+      hyprlock
     ;;
   Cancel)
     exit 0
