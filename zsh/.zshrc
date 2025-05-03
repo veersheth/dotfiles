@@ -12,6 +12,7 @@ alias l="ls -CF"
 alias ..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
+alias c="clear"
 
 export PNPM_HOME="/home/veer/.local/share/pnpm"
 ZSH_THEME="bureau"

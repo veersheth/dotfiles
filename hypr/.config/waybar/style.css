@@ -1,24 +1,24 @@
-@define-color backgroundlight rgba(40, 44, 52, 0.9);   /* translucent dark gray */
-@define-color backgrounddark rgba(30, 32, 38, 0.9);     /* slightly darker base */
-@define-color backgroundalt rgba(50, 54, 64, 0.9);      /* lighter alt background */
-@define-color iconcolor #cba6f7;                        /* lavender/magenta */
-@define-color iconhover #f5c2e7;                        /* pinkish hover */
-@define-color textcolor1 #ffffff;                       /* pure white text */
-@define-color textcolor2 #cdd6f4;                       /* softer white */
-@define-color warningcolor #f38ba8;                     /* red/pink warning */
-@define-color successcolor #a6e3a1;                     /* green for success */
-@define-color infocolor #89dceb;                        /* cyan/light blue info */
-@define-color bordercolor #585b70;                      /* muted border */
-@define-color accentcolor #b4befe;                      /* soft blue accent */
+/* @define-color background rgba(0, 0, 0, 0.2);      */
+@define-color background rgba(0, 0, 0, 0.1);     
+@define-color backgroundbutton rgba(255, 255, 255, 0.1)     ;
+@define-color iconcolor #cba6f7;                        
+@define-color iconhover #f5c2e7;                        
+@define-color textcolor #ffffff;                       
+@define-color warningcolor #f38ba8;                     
+@define-color successcolor #a6e3a1;                     
+@define-color infocolor #89dceb;                        
+@define-color bordercolor #585b70;                      
+@define-color accentcolor #b4befe;                      
 
 * {
     font-family: monospace;
+    font-weight: bold;
     border: none;
     border-radius: 0px;
 }
 
 window#waybar {
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: @background;
     border-bottom: 0px solid #ffffff;
     transition-property: background-color;
     transition-duration: .5s;
@@ -34,14 +34,14 @@ window#waybar {
  * ----------------------------------------------------- */
 
 #workspaces {
-    background: @workspacesbackground1;
+    background: @backgroundbutton;
     border-radius: 15px;
     border: 0px;
     font-weight: bold;
     font-style: normal;
     opacity: 0.8;
     font-size: 16px;
-    color: @textcolor1;
+    color: @textcolor;
 }
 
 #workspaces button {
@@ -49,14 +49,14 @@ window#waybar {
     margin: 4px 3px;
     border-radius: 15px;
     border: 0px;
-    color: @textcolor1;
+    color: @textcolor;
     background-color: @workspacesbackground2;
     transition: all 0.2s ease-in-out;
     opacity: 0.2;
 }
 
 #workspaces button.active {
-    color: @textcolor1;
+    color: @textcolor;
     background: @workspacesbackground2;
     border-radius: 15px;
     /* min-width: 40px; */
@@ -70,14 +70,14 @@ window#waybar {
 
 tooltip {
     border-radius: 16px;
-    background-color: @backgroundlight;
+    background-color: @backgroundbutton;
     opacity:0.9;
     padding:20px;
     margin:0px;
 }
 
 tooltip label {
-    color: @textcolor2;
+    color: @textcolor;
 }
 
 /* -----------------------------------------------------
@@ -85,11 +85,11 @@ tooltip label {
  * ----------------------------------------------------- */
 
 #window {
-    background: @backgroundlight;
+    background: @backgroundbutton;
     margin: 8px 15px 8px 0px;
     padding: 2px 10px 0px 10px;
     border-radius: 12px;
-    color:@textcolor2;
+    color:@textcolor;
     font-size:16px;
     font-weight:normal;
     opacity:0.8;
@@ -104,14 +104,14 @@ window#waybar.empty #window {
  * ----------------------------------------------------- */
 
 #taskbar {
-    background: @backgroundlight;
+    background: @backgroundbutton;
     margin: 6px 15px 6px 0px;
     padding:0px;
     border-radius: 15px;
     font-weight: normal;
     font-style: normal;
     opacity:0.8;
-    border: 3px solid @backgroundlight;
+    border: 3px solid @backgroundbutton;
 }
 
 #taskbar button {
@@ -267,9 +267,9 @@ window#waybar.empty #window {
  * ----------------------------------------------------- */
 
 #custom-appmenu {
-    background-color: @backgrounddark;
+    background-color: @backgroundbutton;
     font-size: 16px;
-    color: @textcolor1;
+    color: @textcolor;
     border-radius: 15px;
     padding: 0px 10px 0px 10px;
     margin: 8px 16px 8px 0px;
@@ -306,9 +306,9 @@ window#waybar.empty #window {
  * ----------------------------------------------------- */
 
 #custom-updates {
-    background-color: @backgroundlight;
+    background-color: @backgroundbutton;
     font-size: 16px;
-    color: @textcolor2;
+    color: @textcolor;
     border-radius: 15px;
     padding: 2px 10px 0px 10px;
     margin: 8px 15px 8px 0px;
@@ -316,7 +316,7 @@ window#waybar.empty #window {
 }
 
 #custom-updates.green {
-    background-color: @backgroundlight;
+    background-color: @backgroundbutton;
 }
 
 #custom-updates.yellow {
@@ -360,9 +360,9 @@ window#waybar.empty #window {
  * ----------------------------------------------------- */
 
 #clock {
-    background-color: @backgrounddark;
+    background-color: @backgroundbutton;
     font-size: 16px;
-    color: @textcolor1;
+    color: @textcolor;
     border-radius: 15px;
     padding: 1px 10px 0px 10px;
     margin: 8px 15px 8px 0px;
@@ -375,9 +375,9 @@ window#waybar.empty #window {
  * ----------------------------------------------------- */
 
  #backlight {
-    background-color: @backgroundlight;
+    background-color: @backgroundbutton;
     font-size: 16px;
-    color: @textcolor2;
+    color: @textcolor;
     border-radius: 15px;
     padding: 2px 10px 0px 10px;
     margin: 8px 15px 8px 0px;
@@ -389,9 +389,9 @@ window#waybar.empty #window {
  * ----------------------------------------------------- */
 
 #pulseaudio {
-    background-color: @backgroundlight;
+    background-color: @backgroundbutton;
     font-size: 16px;
-    color: @textcolor2;
+    color: @textcolor;
     border-radius: 15px;
     padding: 2px 10px 0px 10px;
     margin: 8px 15px 8px 0px;
@@ -399,8 +399,8 @@ window#waybar.empty #window {
 }
 
 #pulseaudio.muted {
-    background-color: @backgrounddark;
-    color: @textcolor1;
+    background-color: @backgroundbutton;
+    color: @textcolor;
 }
 
 /* -----------------------------------------------------
@@ -408,9 +408,9 @@ window#waybar.empty #window {
  * ----------------------------------------------------- */
 
 #network {
-    background-color: @backgroundlight;
+    background-color: @backgroundbutton;
     font-size: 16px;
-    color: @textcolor2;
+    color: @textcolor;
     border-radius: 15px;
     padding: 2px 10px 0px 10px;
     margin: 8px 15px 8px 0px;
@@ -418,13 +418,13 @@ window#waybar.empty #window {
 }
 
 #network.ethernet {
-    background-color: @backgroundlight;
-    color: @textcolor2;
+    background-color: @backgroundbutton;
+    color: @textcolor;
 }
 
 #network.wifi {
-    background-color: @backgroundlight;
-    color: @textcolor2;
+    background-color: @backgroundbutton;
+    color: @textcolor;
 }
 
 /* -----------------------------------------------------
@@ -432,9 +432,9 @@ window#waybar.empty #window {
  * ----------------------------------------------------- */
 
  #bluetooth, #bluetooth.on, #bluetooth.connected {
-    background-color: @backgroundlight;
+    background-color: @backgroundbutton;
     font-size: 16px;
-    color: @textcolor2;
+    color: @textcolor;
     border-radius: 15px;
     padding: 2px 10px 0px 10px;
     margin: 8px 15px 8px 0px;
@@ -452,9 +452,9 @@ window#waybar.empty #window {
  * ----------------------------------------------------- */
 
 #battery {
-    background-color: @backgroundlight;
+    background-color: @backgroundbutton;
     font-size: 16px;
-    color: @textcolor2;
+    color: @textcolor;
     border-radius: 15px;
     padding: 2px 15px 0px 10px;
     margin: 8px 15px 8px 0px;
@@ -462,14 +462,14 @@ window#waybar.empty #window {
 }
 
 #battery.charging, #battery.plugged {
-    color: @textcolor2;
-    background-color: @backgroundlight;
+    color: @textcolor;
+    background-color: @backgroundbutton;
 }
 
 @keyframes blink {
     to {
-        background-color: @backgroundlight;
-        color: @textcolor2;
+        background-color: @backgroundbutton;
+        color: @textcolor;
     }
 }
 

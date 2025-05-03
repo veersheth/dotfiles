@@ -1,32 +1,32 @@
 {
-    "e87a962e-bf23-49c5-8628-515b8c0ea79e": {
-        "id": "e87a962e-bf23-49c5-8628-515b8c0ea79e",
+    "496a67ee-cfa8-45a4-867a-8adaf56f315c": {
+        "id": "496a67ee-cfa8-45a4-867a-8adaf56f315c",
         "name": "Google Search",
         "keyword": "g",
         "cmd": "https://google.com/search?q=%s",
         "icon": "/usr/share/ulauncher/media/google-search-icon.png",
         "is_default_search": true,
         "run_without_argument": false,
-        "added": 1745663039.00169
+        "added": 1746243514.0936556
     },
-    "ea5ca0cb-7661-411b-9ccd-e85eed7e5668": {
-        "id": "ea5ca0cb-7661-411b-9ccd-e85eed7e5668",
+    "a356da1a-c3e0-4e98-b7e0-841ef8e6aa37": {
+        "id": "a356da1a-c3e0-4e98-b7e0-841ef8e6aa37",
         "name": "Stack Overflow",
         "keyword": "so",
         "cmd": "https://stackoverflow.com/search?q=%s",
         "icon": "/usr/share/ulauncher/media/stackoverflow-icon.svg",
         "is_default_search": true,
         "run_without_argument": false,
-        "added": 1745663039.001712
+        "added": 1746243514.0936701
     },
-    "b0da6bcc-84f4-48ae-b633-c8797c0140b3": {
-        "id": "b0da6bcc-84f4-48ae-b633-c8797c0140b3",
+    "49d3c509-0224-486e-bc1f-c2549be134d7": {
+        "id": "49d3c509-0224-486e-bc1f-c2549be134d7",
         "name": "Wikipedia",
         "keyword": "wiki",
         "cmd": "https://en.wikipedia.org/wiki/%s",
         "icon": "/usr/share/ulauncher/media/wikipedia-icon.png",
         "is_default_search": true,
         "run_without_argument": false,
-        "added": 1745663039.0017266
+        "added": 1746243514.0936792
     }
 }
