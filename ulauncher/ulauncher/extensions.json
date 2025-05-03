@@ -1,0 +1,65 @@
+{
+    "com.github.ooo-w.ulauncher-hypr-window-switcher": {
+        "id": "com.github.ooo-w.ulauncher-hypr-window-switcher",
+        "url": "https://github.com/oOo-w/ulauncher-hypr-window-switcher",
+        "updated_at": "2025-05-03T13:01:41.555523",
+        "last_commit": "d93e781dc3ef363c28168265ca43860e0aedcd19",
+        "last_commit_time": "2025-02-09T12:48:39"
+    },
+    "com.github.ubuntupunk.ulauncher-vim": {
+        "id": "com.github.ubuntupunk.ulauncher-vim",
+        "url": "https://github.com/ubuntupunk/ulauncher-vim",
+        "updated_at": "2025-05-03T13:04:23.864649",
+        "last_commit": "d5ef71e2711487326e856a1c40486005199890cb",
+        "last_commit_time": "2025-01-08T06:48:20"
+    },
+    "com.github.rapha149.ulauncher-bluetooth": {
+        "id": "com.github.rapha149.ulauncher-bluetooth",
+        "url": "https://github.com/Rapha149/ulauncher-bluetooth",
+        "updated_at": "2025-05-03T13:04:38.030862",
+        "last_commit": "aa84798f539c9cb312cf3be01415a58901ace8d6",
+        "last_commit_time": "2022-04-27T10:56:00"
+    },
+    "com.github.tchar.ulauncher-albert-calculate-anything": {
+        "id": "com.github.tchar.ulauncher-albert-calculate-anything",
+        "url": "https://github.com/tchar/ulauncher-albert-calculate-anything",
+        "updated_at": "2025-05-03T13:04:55.315745",
+        "last_commit": "037965a44e6f6f496e7ad71ec1651b9edfcde32d",
+        "last_commit_time": "2024-05-29T21:57:26"
+    },
+    "com.github.friday.ulauncher-clipboard": {
+        "id": "com.github.friday.ulauncher-clipboard",
+        "url": "https://github.com/friday/ulauncher-clipboard",
+        "updated_at": "2025-05-03T13:05:02.913053",
+        "last_commit": "73420cf4816f925321db15379c9c981c8f28c6fe",
+        "last_commit_time": "2022-08-03T20:22:13"
+    },
+    "com.github.hillaryychan.ulauncher-fzf": {
+        "id": "com.github.hillaryychan.ulauncher-fzf",
+        "url": "https://github.com/hillaryychan/ulauncher-fzf",
+        "updated_at": "2025-05-03T13:05:38.367733",
+        "last_commit": "e8137dae6448041fc53ae418263501b068857073",
+        "last_commit_time": "2023-05-16T12:35:35"
+    },
+    "com.github.fisadev.ulauncher-better-file-browser": {
+        "id": "com.github.fisadev.ulauncher-better-file-browser",
+        "url": "https://github.com/fisadev/ulauncher-better-file-browser",
+        "updated_at": "2025-05-03T13:05:49.567065",
+        "last_commit": "8ec8a0dda09e172de62051cd1f251816ce4af368",
+        "last_commit_time": "2019-09-06T19:20:09"
+    },
+    "com.github.ulauncher.ulauncher-kill": {
+        "id": "com.github.ulauncher.ulauncher-kill",
+        "url": "https://github.com/Ulauncher/ulauncher-kill",
+        "updated_at": "2025-05-03T13:05:54.796468",
+        "last_commit": "00ffe8266dbb6c2aea7d86a6363e51cec4b1981f",
+        "last_commit_time": "2022-11-26T16:15:05"
+    },
+    "com.github.melianmiko.ulauncher-nmcli": {
+        "id": "com.github.melianmiko.ulauncher-nmcli",
+        "url": "https://github.com/melianmiko/ulauncher-nmcli",
+        "updated_at": "2025-05-03T13:06:08.659547",
+        "last_commit": "13f226d83f8feac3cf6f73532cce1ffc23f42700",
+        "last_commit_time": "2024-10-11T14:18:16"
+    }
+}
