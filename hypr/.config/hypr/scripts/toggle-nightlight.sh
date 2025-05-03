@@ -1,4 +1,3 @@
-#!/bin/bash
 
 PID=$(pgrep wlsunset)
 
