@@ -14,6 +14,9 @@ alias ...="cd ../.."
 alias ....="cd ../../.."
 alias c="clear"
 
+bindkey '^H' backward-kill-word
+bindkey '5~' kill-word
+
 export PNPM_HOME="/home/veer/.local/share/pnpm"
 ZSH_THEME="bureau"
 

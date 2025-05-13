@@ -1,3 +1,4 @@
+-- vim.opt.guicursor = ""
 vim.cmd("set expandtab")
 vim.cmd("set tabstop=4")
 vim.cmd("set softtabstop=4")
@@ -9,7 +10,7 @@ vim.opt.updatetime = 800
 
 vim.opt.swapfile = false
 vim.opt.scrolloff = 10
-vim.keymap.set("i", "", "") -- remap ctrl backspace to delete a word
+vim.keymap.set("i", "<C-BS>", "") -- remap ctrl backspace to delete a word
 
 -- copy visual selection to system clipboard
 vim.keymap.set("v", "Y", '"+y', { desc = "Copy to system" })
