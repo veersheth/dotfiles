@@ -1,7 +1,6 @@
 {
     // General Settings
     "layer": "top",
-    "margin-bottom": 4,
     "spacing": 0,
 
     // Load Modules
@@ -12,13 +11,14 @@
     // Modules Left
     "modules-left": [
         "hyprland/workspaces",
+        "custom/media",
     ],
 
     // Modules Center
     "modules-center": [
-        "custom/notification",
-        "clock",
         "custom/exit",
+        "clock",
+        "custom/notification",
     ],
 
     // Modules Right    
