@@ -5,7 +5,7 @@
 @define-color iconcolor #cba6f7;
 @define-color iconhover #f5c2e7;
 @define-color textcolor #ffffff;
-@define-color warningcolor #f38ba8;
+@define-color warningcolor #f53c3c;
 @define-color successcolor #a6e3a1;
 @define-color yellow #FDFD96;
 @define-color infocolor #89dceb;
@@ -347,8 +347,8 @@ window#waybar.empty #window {
     margin: 0 12px;
 }
 
-#power-profiles-daemon.power {
-    background-color: #ff2626;
+#power-profiles-daemon.performance {
+    background-color: @warningcolor;
 }
 
 /* -----------------------------------------------------
@@ -472,11 +472,11 @@ window#waybar.empty #window {
 }
 
 #battery.low:not(.charging) {
-    color: #f53c3c;
+    color: @warningcolor;
 }
 
 #battery.critical:not(.charging) {
-    background-color: #f53c3c;
+    background-color: @warningcolor;
     color: @textcolor3;
     animation-name: blink;
     animation-duration: 0.5s;
