@@ -347,6 +347,10 @@ window#waybar.empty #window {
     margin: 0 12px;
 }
 
+#power-profiles-daemon.power {
+    background-color: #ff2626;
+}
+
 /* -----------------------------------------------------
  * Clock
  * ----------------------------------------------------- */
