@@ -100,8 +100,11 @@ tooltip label {
 #window {
     border-radius: 12px;
     color: @textcolor;
+    background: @backgroundbutton;
     font-weight: normal;
     opacity: 1;
+    padding: 8px 15px;
+    margin: 0 8px;
 }
 
 window#waybar.empty #window {
