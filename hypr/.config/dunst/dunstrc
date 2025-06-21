@@ -1,0 +1,73 @@
+[global]
+    monitor = 0
+    follow = mouse
+    width = 500
+    height = 200
+    offset = 0x20
+    scale = 0
+    notification_limit = 3
+
+    transparency = 10
+    frame_color = "#FFFFFF"
+    separator_color = frame
+    padding = 16
+    horizontal_padding = 24
+    text_icon_padding = 12
+    frame_width = 2
+    corner_radius = 8
+
+    font = JetBrains Mono 14
+    line_height = 4
+    markup = full
+
+    format = "<b>%s</b>\n%b"
+    show_age_threshold = 60
+    word_wrap = yes
+    ellipsize = middle
+    ignore_newline = no
+
+    idle_threshold = 120
+    show_indicators = no
+
+    icon_position = left
+    min_icon_size = 32
+    max_icon_size = 64
+
+    sticky_history = yes
+    history_length = 20
+
+    dmenu = rofi -dmenu -p dunst:
+    browser = xdg-open
+    always_run_script = true
+
+    title = Dunst
+    class = Dunst
+
+    startup_notification = false
+
+    timeout = 1500
+    max_timeout = 5000
+    min_timeout = 300
+
+    relevance_sort = yes
+
+[frame]
+    width = 4
+    color = "#44475a"
+
+[urgency_low]
+    background = "#2E3440"
+    foreground = "#D8DEE9"
+    timeout = 1000
+
+[urgency_normal]
+    background = "#2E3440"
+    foreground = "#ECEFF4"
+    timeout = 2000
+
+[urgency_critical]
+    background = "#BF616A"
+    foreground = "#ECEFF4"
+    frame_color = "#BF616A"
+    timeout = 0
+
