@@ -12,7 +12,7 @@ if [ $? -eq 0 ]; then
   cp "$TEMP_FILE" "$FULL_PATH"
   wl-copy < "$TEMP_FILE"
   rm "$TEMP_FILE"
-  notify-send "Screenshot saved as $FILENAME and copied to clipboard"
+  notify-send -t 1000 "Screenshot saved as $FILENAME and copied to clipboard"
 else
-  notify-send "Error taking screenshot" -u critical
+  notify-send -t 1000 "Error taking screenshot" 
 fi
