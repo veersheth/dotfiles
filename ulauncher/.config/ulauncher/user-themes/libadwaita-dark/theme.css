@@ -52,6 +52,7 @@
 
 .item-text {
     color: @item_text;
+    font-size: 20px;
 }
 
 .item-name {
@@ -65,10 +66,6 @@
 
 .selected.item-box .item-text {
     color: @item_text_selected;
-}
-
-.item-box > :nth-child(1) {
-    padding: 6px 8px;
 }
 
 .item-box > :nth-child(1) > :nth-child(2) {
