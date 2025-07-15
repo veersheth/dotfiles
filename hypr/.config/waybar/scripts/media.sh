@@ -13,7 +13,7 @@ else
     exit
 fi
 
-echo "{\"text\": \"$icon   $artist - $title\", \"class\": \"$status\"}"
+echo "{\"text\": \"  $title - $artist \", \"class\": \"$status\"}"
 
 # #!/bin/bash
 #
@@ -29,3 +29,4 @@ echo "{\"text\": \"$icon   $artist - $title\", \"class\": \"$status\"}"
 #     echo "{\"text\": \"\", \"class\": \"stopped\"}"
 # fi
 #
+
