@@ -1,0 +1,14 @@
+map d scroll half-down
+map u scroll half-up
+map D toggle_page_mode
+map K zoom in
+map J zoom out
+map i recolor
+map p print
+map r reload
+map R rotate
+
+map j feedkeys "<C-Down>"
+map k feedkeys "<C-Up>"
+map h feedkeys "<C-Left>"
+map l feedkeys "<C-Right>"
