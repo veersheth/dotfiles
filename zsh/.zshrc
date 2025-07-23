@@ -20,6 +20,7 @@ alias ll="ls -l --color=auto"
 alias ..="cd .."
 alias ...="cd ../.."
 alias open="xdg-open"
+alias lg="lazygit"
 
 if command -v bat &> /dev/null; then
     alias cat='bat'
@@ -28,6 +29,8 @@ elif command -v batcat &> /dev/null; then
 else
     alias cat='cat'
 fi
+
+bindkey '^[[A' history-beginning-search-backward
 
 alias sshunsw="ssh z5494316@cse.unsw.edu.au"
 alias unsw="sshfs z5494316@cse.unsw.edu.au:/import/adams/8/z5494316/cse/ ~/mnt; cd ~/mnt"
