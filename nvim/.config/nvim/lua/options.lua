@@ -67,7 +67,7 @@ vim.opt.modifiable = true              -- Allow buffer modifications
 vim.opt.encoding = "UTF-8"             -- Set encoding
 
 -- normal mode mappings
-vim.keymap.set("n", "Esc", ":nohlsearch<CR>", { desc = "unhighlight searches" })
+vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>", { desc = "unhighlight searches" })
 
 -- yank to clipboard
 vim.keymap.set("v", "Y", '"+y', { desc = "Copy to system" })

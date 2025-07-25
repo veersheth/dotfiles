@@ -30,11 +30,15 @@ else
     alias cat='cat'
 fi
 
+opengui() {
+    xdg-open .
+}
+zle -N opengui
+bindkey '^e' opengui
+
+autoload -U compinit && compinit
+autoload -U colors && colors
+zmodload zsh/complist
+
 bindkey '^[[A' history-beginning-search-backward
-
-alias sshunsw="ssh z5494316@cse.unsw.edu.au"
-alias unsw="sshfs z5494316@cse.unsw.edu.au:/import/adams/8/z5494316/cse/ ~/mnt; cd ~/mnt"
-alias unswstop='fusermount -uz ~/mnt && pkill -f "sshfs.*mnt"'
-alias unswreset="killall -9 sshfs; fusermount -u ~/mnt; sshfs z5494316@cse.unsw.edu.au:/import/adams/8/z5494316/cse/ ~/mnt; cd ~/mnt"
-
 bindkey -s ^f "~/scripts/tmux-sessionizer\n"

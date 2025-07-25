@@ -3,7 +3,7 @@
 if [[ $# -eq 1 ]]; then
     selected=$1
 else
-    selected=$(find ~/ ~/.config ~/dev ~/dev/unsw-cse ~/gits -mindepth 1 -maxdepth 2 -type d | \
+    selected=$(find ~/ ~/.config ~/code/unsw-cse ~/code/personal ~/notes -mindepth 1 -maxdepth 2 -type d | \
         sort | \
         fzf --margin=20%)
 fi
