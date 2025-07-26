@@ -1,0 +1,1 @@
+ssh z5494316@cse.unsw.edu.au -t "exec zsh -l"

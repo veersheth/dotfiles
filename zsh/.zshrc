@@ -41,4 +41,4 @@ autoload -U colors && colors
 zmodload zsh/complist
 
 bindkey '^[[A' history-beginning-search-backward
-bindkey -s ^f "~/scripts/tmux-sessionizer\n"
+alias cse="ssh -t z5494316@cse.unsw.edu.au 'cd ~/cse; exec zsh -l'"

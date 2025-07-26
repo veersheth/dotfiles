@@ -1,23 +1,40 @@
-#!/bin/bash
+#!/bin/env bash
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SSH_LIST_FILE="$SCRIPT_DIR/ssh_hosts.txt"
 
 if [[ $# -eq 1 ]]; then
     selected=$1
 else
-    selected=$(find ~/ ~/.config ~/code/unsw-cse ~/code/personal ~/notes -mindepth 1 -maxdepth 2 -type d | \
+    selected=$( \
+        (
+            find ~/ ~/.config ~/code/unsw-cse ~/code/personal ~/notes -mindepth 1 -maxdepth 2 -type d
+            [[ -f "$SSH_LIST_FILE" ]] && cat "$SSH_LIST_FILE"
+        ) | \
         sort | \
-        fzf --margin=20%)
+        fzf --margin=20%
+    )
 fi
 
 [[ -z "$selected" ]] && exit 0
 
 selected=$(realpath "$selected")
-selected_name=$(basename "$selected" | tr . _)
+selected_name=$(basename "$selected")
 tmux_running=$(pgrep tmux)
 
-if [[ -z "$TMUX" && -z "$tmux_running" ]]; then
-    tmux new-session -s "$selected_name" -c "$selected"
-    exit 0
+
+if grep -qF -- "$selected_name" "$SSH_LIST_FILE"; then
+    selected_name_sanitized=$(echo "$selected_name" | tr ' /@.' '_')
+    if ! tmux has-session -t "$selected_name_sanitized" 2>/dev/null; then
+        tmux new-session -d -s "$selected_name_sanitized" "$selected_name"
+    fi
+    tmux switch-client -t "$selected_name_sanitized"
 fi
+
+# if [[ -z "$TMUX" && -z "$tmux_running" ]]; then
+#     tmux new-session -s "$selected_name" -c "$selected"
+#     exit 0
+# fi
 
 if ! tmux has-session -t="$selected_name" 2> /dev/null; then
     tmux new-session -ds "$selected_name" -c "$selected"
@@ -25,4 +42,5 @@ if ! tmux has-session -t="$selected_name" 2> /dev/null; then
 fi
 
 tmux switch-client -t "$selected_name"
+
 
