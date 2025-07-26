@@ -1,0 +1,22 @@
+[env]
+TERM = "screen-256color"
+
+[font]
+size = 15
+
+[font.normal]
+family = "JetBrainsMono Nerd Font"
+style = "Regular"
+
+[window]
+opacity = 0.95
+decorations = "none"
+dynamic_padding = true
+
+[window.padding]
+x = 10
+y = 10
+
+[terminal.shell]
+program = "tmux"
+args = ["attach"]
