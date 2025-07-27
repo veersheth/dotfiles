@@ -1,4 +1,4 @@
--- key mappings
+-- key mapping
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
@@ -109,20 +109,25 @@ vim.keymap.set("v", ">", ">gv", { desc = "Indent right and reselect" })
 
 -- session management
 
--- Save session in .nvim/session.vim under the project root
 vim.keymap.set('n', '<leader>ss', function()
-  local session_path = vim.fn.getcwd() .. '/.nvim/session.vim'
-  vim.fn.mkdir(vim.fn.getcwd() .. '/.nvim', 'p') -- Ensure the .nvim dir exists
-  vim.cmd('mksession! ' .. session_path)
-end, { desc = 'Save session in project dir', silent = true })
+  local stdpath_cache = vim.fn.stdpath('cache')
+  local project = vim.fn.fnamemodify(vim.fn.getcwd(), ':t')
+  local cache_dir = stdpath_cache .. '/sessions'
+  local session_file = cache_dir .. '/' .. project .. '.vim'
+  vim.fn.mkdir(cache_dir, 'p')
+  vim.cmd('mksession! ' .. session_file)
+  print("session saved")
+end, { desc = 'save project session to cache', silent = true })
 
--- Load session from .nvim/session.vim
 vim.keymap.set('n', '<leader>sl', function()
-  local session_path = vim.fn.getcwd() .. '/.nvim/session.vim'
-  if vim.fn.filereadable(session_path) == 1 then
-    vim.cmd('source ' .. session_path)
+  local stdpath_cache = vim.fn.stdpath('cache')
+  local project = vim.fn.fnamemodify(vim.fn.getcwd(), ':t')
+  local session_file = stdpath_cache .. '/sessions/' .. project .. '.vim'
+  if vim.fn.filereadable(session_file) == 1 then
+    vim.cmd('source ' .. session_file)
   else
-    print('Session file not found in project directory.')
+    print('session file not found in cache')
   end
-end, { desc = 'Load session from project dir', silent = true })
+end, { desc = 'load session from cache', silent = true })
+
 
