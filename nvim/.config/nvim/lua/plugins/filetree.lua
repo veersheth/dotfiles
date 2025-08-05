@@ -7,4 +7,7 @@ return {
         "nvim-tree/nvim-web-devicons",
     },
     lazy = false,
+    config = function()
+        vim.keymap.set("n", "<leader>-", ":Neotree toggle right<CR>", { desc = "Toggle file tree" })
+    end
 }
