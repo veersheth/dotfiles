@@ -7,8 +7,6 @@ return {
             extensions = {
                 fzf = {
                     fuzzy = true,
-                    override_generic_sorter = true,
-                    override_file_sorter = true,
                     case_mode = "smart_case",
                 }
             }
@@ -16,7 +14,7 @@ return {
         local builtin = require('telescope.builtin')
         local previewers = require('telescope.previewers')
         vim.keymap.set('n', '<leader>fd', builtin.find_files, { silent = true })
-        vim.keymap.set("n", "<leader>fg", builtin.live_grep, { silent = true })
+        vim.keymap.set("n", "<leader>fs", builtin.live_grep, { silent = true })
         vim.keymap.set("n", "<leader>fr", ":Telescope oldfiles<CR>", { silent = true })
         vim.keymap.set('n', '<leader>fh', builtin.help_tags, { desc = 'Telescope help tags' })
         vim.keymap.set('n', '<leader>lt', builtin.treesitter, { desc = 'List functions' })

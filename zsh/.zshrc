@@ -71,7 +71,7 @@ nixadd() {
   done
   # Prefix Exec lines with nixGL
   for desktopfile in "$applications_dir"/*.desktop; do
-    sed -i '/^Exec=/ s|^Exec=\(.*\)|Exec=nixGL \1|' "$desktopfile"
+    sed -i '/^Exec=/ {/Exec=nixGL/! s|^Exec=\(.*\)|Exec=nixGL \1|}' "$desktopfile"
   done
   update-desktop-database "$applications_dir"
 }
