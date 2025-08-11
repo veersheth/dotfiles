@@ -8,7 +8,7 @@ map p print
 map r reload
 map R rotate
 
-map j feedkeys "<C-Down>"
-map k feedkeys "<C-Up>"
-map h feedkeys "<C-Left>"
-map l feedkeys "<C-Right>"
+# map j feedkeys "<C-Down>"
+# map k feedkeys "<C-Up>"
+# map h feedkeys "<C-Left>"
+# map l feedkeys "<C-Right>"

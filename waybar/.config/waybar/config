@@ -15,10 +15,12 @@
         "tray",
         "custom/notification",
         "bluetooth",
+        "backlight",
         "network",
         "pulseaudio",
         "battery",
-        "power-profiles-daemon"
+        "power-profiles-daemon",
+        "tuned"
     ],
 
     "tray": {
@@ -49,7 +51,11 @@
         "actions": { "on-click": "tz_up" }
     },
 
-
+    "backlight": {
+        "device": "intel_backlight",
+        "format": "{icon} {percent}%",
+        "format-icons": ["","󰖨"]
+    },
 
     "battery": {
         "states": {

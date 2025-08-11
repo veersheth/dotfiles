@@ -2,7 +2,7 @@ autoload -U colors && colors
 setopt PROMPT_SUBST
 
 NEWLINE=$'\n'
-PROMPT="${NEWLINE} %{$fg[yellow]%}%~%{$fg[blue]%}%{$reset_color%} "
+PROMPT="${NEWLINE} %{$fg[yellow]%}%~%{$fg[blue]%}%{$reset_color%} $ "
 # PROMPT="${NEWLINE} %{$fg[yellow]%}%~%{$fg[blue]%}%{$reset_color%}${NEWLINE} $ "
 
 HISTFILE=~/.zsh_history
