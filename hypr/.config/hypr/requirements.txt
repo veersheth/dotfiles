@@ -1,2 +1,2 @@
-sudo dnf install hyprland waybar ulauncher hyprpaper hypridle hyprlock
+sudo dnf install hyprland waybar ulauncher hyprpaper hypridle hyprlock dunst
 nix profile add nixpkgs#flameshot nixpkgs#rofi-wayland
