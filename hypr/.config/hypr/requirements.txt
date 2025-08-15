@@ -1,2 +1,16 @@
-sudo dnf install hyprland waybar ulauncher hyprpaper hypridle hyprlock dunst
-nix profile add nixpkgs#flameshot nixpkgs#rofi-wayland
+#!/bin/bash
+
+sudo dnf install hyprland waybar ulauncher hyprpaper hypridle hyprlock dunst hyprsunset
+
+# - hyprland, hyprpaper, hyprlock, hypridle
+# - waybar for the status bar
+# - ulauncher as the catch-all app launcher
+# - dunst for notifications
+# - hyprsunset for night mode (SUPER SHIFT N)
+
+nix profile add nixpkgs#flameshot nixpkgs#rofi-wayland nixpkgs#sox nixpkgs#hyprpicker
+
+# - flameshot for screenshots
+# - rofi for an option picker
+# - sox for whitenoise (SUPER SHIFT P)
+# - hyprpicker for color picking (SUPER SHIFT C)
