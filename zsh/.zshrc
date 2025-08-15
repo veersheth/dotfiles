@@ -50,12 +50,14 @@ zle -N opengui
 bindkey '^e' opengui
 
 autoload -U compinit && compinit
+zstyle ':completion:*' menu select
+zmodload zsh/complist
 autoload -U colors && colors
 zmodload zsh/complist
 
 # unsw based shortcuts to mount/ssh
 alias unsw="sshfs z5494316@cse.unsw.edu.au:/import/adams/8/z5494316/cse/ ~/mnt; cd ~/mnt"
-alias unswstop='fusermount -uz ~/mnt && pkill -f "sshfs.*mnt"'
+alias unswstop='fusermount -uz ~/mnt && pkill -f "sshfs.*mnt" & pkill ssh'
 alias unswreset="killall -9 sshfs; fusermount -u ~/mnt; sshfs z5494316@cse.unsw.edu.au:/import/adams/8/z5494316/cse/ ~/mnt; cd ~/mnt"
 alias cse="ssh -t z5494316@cse.unsw.edu.au 'cd ~/cse; exec zsh -l'"
 

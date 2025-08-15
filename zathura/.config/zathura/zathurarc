@@ -1,4 +1,6 @@
+GTK_OVERLAY_SCROLLING=1 GTK_ENABLE_PRIMARY_PASTE=0 zathura
 set selection-clipboard clipboard
+set smooth-scroll true
 map d scroll half-down
 map u scroll half-up
 map D toggle_page_mode
