@@ -1,21 +1,20 @@
 {
     "layer": "top",
     "position": "top",
-    "height": 32,
-    "spacing": 0,
+    "spacing": 8,
     "modules-left": [
-        // "hyprland/workspaces",
+        // "custom/notification",
+        "clock",
         "custom/media",
-        "hyprland/window",
     ],
     "modules-center": [
-        "clock"
+        // "hyprland/workspaces",
+        "hyprland/window",
     ],
     "modules-right": [
         "tray",
-        "custom/notification",
         "bluetooth",
-        "backlight",
+        // "backlight",
         "network",
         "pulseaudio",
         "battery",
@@ -25,16 +24,25 @@
 
     "tray": {
         "icon-size": 18,
-        "spacing": 8,
+        "spacing": 12,
         "show-passive-items": true,
         "reverse-direction": false
     },
 
-    "hyprland/workspaces": {
-        "disable-scroll": false,
-        "all-outputs": true,
-        "format": "{icon}",
-    },
+//     "hyprland/workspaces": {
+//         "disable-scroll": false,
+//         "all-outputs": true,
+//         "format": "{icon}",
+//     },
+      "hyprland/workspaces": {
+          "format": "{icon}",
+          "format-icons": {
+              "default": "+",
+              "active": "x",
+              "urgent": "💢"
+          }
+      },
+
 
     "hyprland/window": {
         "format": "{class}",
@@ -43,8 +51,7 @@
     },
 
     "clock": {
-        "format": "{:%I:%M - %a, %d %b}",                   
-        // "format-alt": "{:%I:%M - %a, %d %b}",              
+        "format": "{:%I:%M %a %d}",                   
         "timezones": ["", "Asia/Kolkata"],
         "tooltip": true,
         "tooltip-format": "Mumbai: {1:Asia/Kolkata:%I:%M %p %Z}",
@@ -110,26 +117,38 @@
         "on-click": "blueman-manager"
     },
 
-    "custom/notification": {
-        "tooltip": false,
-        "format": "{icon}",
-        "format-icons": {
-            "notification": "󰂚",
-            "none": "󰂜",
-            "dnd-notification": "󰂛",
-            "dnd-none": "󰪑",
-            "inhibited-notification": "󰂚",
-            "inhibited-none": "󰂜",
-            "dnd-inhibited-notification": "󰂛",
-            "dnd-inhibited-none": "󰪑"
-        },
-        "return-type": "json",
-        "exec-if": "which swaync-client",
-        "exec": "swaync-client -swb",
-        "on-click": "swaync-client -t -sw",
-        "on-click-right": "swaync-client -d -sw",
-        "escape": true
-    },
+//    "custom/notification": {
+//        "tooltip": false,
+//        "format": "{icon}",
+//        "format-icons": {
+//            "notification": "󰂚",
+//            "none": "󰂜",
+//            "dnd-notification": "󰂛",
+//            "dnd-none": "󰪑",
+//            "inhibited-notification": "󰂚",
+//            "inhibited-none": "󰂜",
+//            "dnd-inhibited-notification": "󰂛",
+//            "dnd-inhibited-none": "󰪑"
+//        },
+//        "return-type": "json",
+//        "exec-if": "which swaync-client",
+//        "exec": "swaync-client -swb",
+//        "on-click": "swaync-client -t -sw",
+//        "on-click-right": "swaync-client -d -sw",
+//        "escape": true
+//    },
+
+      "custom/notification": {
+          "tooltip": false,
+          "format": "󰂚",  // always show the bell
+          "return-type": "string",
+          "exec-if": "which dunstctl",
+          "exec": "if dunstctl is-paused | grep -q true; then echo 'paused'; else echo 'running'; fi",
+          "on-click": "bash -c 'dunstctl history | zenity --list --title=\"Notifications\" --column=\"Message\"'",
+          "on-click-right": "dunstctl set-paused toggle",  // toggle pause
+          "interval": 2,
+          "escape": true
+      },
 
     "power-profiles-daemon": {
         "format": "{icon}",
