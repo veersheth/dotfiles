@@ -13,9 +13,7 @@ turn_off() {
 }
 
 notify_short() {
-    notify-send "Hyprsunset" "$1"
-    sleep 0.5
-    dunstctl close
+    notify-send -t 500 "Sunset" "$1"
 }
 
 case "$STATE" in
