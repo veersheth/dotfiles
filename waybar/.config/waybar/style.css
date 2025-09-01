@@ -5,7 +5,7 @@
 @define-color fg-muted #111111;
 
 @define-color accent-blue #66a7e8;
-@define-color accent-red #ff5254;
+@define-color accent-red #A14742;
 @define-color accent-orange #fab387;
 @define-color accent-green #a6e3a1;
 
@@ -22,7 +22,7 @@
 
 #waybar {
     border-radius: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, .5);
     /* background: linear-gradient(to bottom,
         rgba(0,0,0,0.6) 0%,
         rgba(0,0,0,0.2) 70%,
@@ -30,13 +30,19 @@
     ); */
 }
 
-window#waybar .modules-center ,
+/* window#waybar .modules-center , */
 window#waybar .modules-left ,
+window#waybar .modules-center ,
 window#waybar .modules-right { 
     /* border: 1px solid rgba(255,255,255,.25); */
     margin: 0px 8px;
-    padding: 4px 12px;
-    background: rgba(0,0,0,.8);
+    padding: 2px 12px;
+    background: rgba(0,0,0,.4);
+}
+
+window#waybar .modules-center {
+    background: none;
+    padding: 0 40px;
 }
 
 #workspaces button {
@@ -54,10 +60,8 @@ window#waybar .modules-right {
     padding: 0 10px;
 }
 
-#window {
-    padding-left: 20px;
-    padding-right: 20px;
-    transition: width 0.3s ease, height 0.3s ease;
+#window * {
+    color: @accent-blue;
 }
 
 #tray,
@@ -67,6 +71,7 @@ window#waybar .modules-right {
 #network,
 #bluetooth,
 #power-profiles-daemon,
+#custom-powermenu,
 #custom-notification {
     padding: 0px 10px;
     /* margin: 4px 4px; */
@@ -149,4 +154,8 @@ tooltip {
 
 #custom-media {
     color: @accent-blue;
+}
+
+#custom-powermenu {
+  opacity: .5;
 }

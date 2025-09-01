@@ -2,7 +2,7 @@ autoload -U colors && colors
 setopt PROMPT_SUBST
 
 NEWLINE=$'\n'
-PROMPT="${NEWLINE} %{$fg[yellow]%}%~%{$fg[blue]%}%{$reset_color%} $ "
+PROMPT="${NEWLINE} %{$fg[yellow]%}%~%{$fg[blue]%}%{$reset_color%} "
 # PROMPT="${NEWLINE} %{$fg[yellow]%}%~%{$fg[blue]%}%{$reset_color%}${NEWLINE} $ "
 
 HISTFILE=~/.zsh_history
@@ -21,6 +21,7 @@ alias l="ls -la --color=auto"
 alias ls="ls --color=auto"
 alias open="xdg-open"
 alias lg="lazygit"
+alias jj="tmux a || cd ~ ; tmux"
 source <(fzf --zsh) # allow for fzf history widget
 
 # binds
@@ -62,7 +63,8 @@ alias unswreset="killall -9 sshfs; fusermount -u ~/mnt; sshfs z5494316@cse.unsw.
 alias cse="ssh -t z5494316@cse.unsw.edu.au 'cd ~/cse; exec zsh -l'"
 
 
-# nix scripts that also update desktop entries (note use --impure to installed apps that fail)
+# nix scripts that also update desktop entries (use --impure to installed apps that fail)
+alias nix-fedora-upgrade-all="sudo dnf upgrade --refresh --best --allowerasing; nix profile upgrade --all"
 nixadd() {
   nix profile add "$@"
   applications_dir="$HOME/.local/share/applications"
@@ -93,3 +95,4 @@ alias nixremove='nixremove'
 
 export XDG_DATA_DIRS="$HOME/.nix-profile/share:$XDG_DATA_DIRS"
 export PATH="$HOME/.nix-profile/bin:/etc/profiles/per-user/$USER/bin:/run/current-system/sw/bin:$PATH"
+

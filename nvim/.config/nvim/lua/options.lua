@@ -2,8 +2,39 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+-- typst zathura preview
+vim.keymap.set("n", "<leader>tt", function()
+    local file = vim.fn.expand("%:p")
+    local pdf  = vim.fn.expand("%:r") .. ".pdf"
+    local cmd  = string.format("typst watch %s & zathura %s", file, pdf)
+    vim.fn.jobstart({ "bash", "-c", cmd }, { detach = true })
+end, { desc = "Typst / Zathura preview" })
 
--- for when plugins arent installed
+-- writing mode
+local writing_mode = false
+
+vim.keymap.set("n", "<leader>w", function()
+    writing_mode = not writing_mode
+
+    if writing_mode then
+        vim.opt_local.wrapmargin = 6
+        vim.opt_local.formatoptions:append("t")
+        vim.opt_local.linebreak = true
+        vim.opt_local.wrap = true
+        vim.opt_local.spell = true
+        vim.notify("Writing mode enabled 😁👍", vim.log.levels.INFO)
+    else
+        -- Reset to defaults (adjust if needed)
+        vim.opt_local.wrapmargin = 0
+        vim.opt_local.formatoptions:remove("t")
+        vim.opt_local.linebreak = false
+        vim.opt_local.wrap = false
+        vim.opt_local.spell = false
+        vim.notify("Writing mode disabled 😔🖕", vim.log.levels.INFO)
+    end
+end, { desc = "Toggle writing mode" })
+
+-- explorer for when plugins arent installed
 vim.keymap.set("n", "<leader>/", vim.cmd.Ex, { desc = "Indent right and reselect" })
 
 -- theme & transparency
@@ -111,24 +142,22 @@ vim.keymap.set("v", ">", ">gv", { desc = "Indent right and reselect" })
 -- session management
 
 vim.keymap.set('n', '<leader>ss', function()
-  local stdpath_cache = vim.fn.stdpath('cache')
-  local project = vim.fn.fnamemodify(vim.fn.getcwd(), ':t')
-  local cache_dir = stdpath_cache .. '/sessions'
-  local session_file = cache_dir .. '/' .. project .. '.vim'
-  vim.fn.mkdir(cache_dir, 'p')
-  vim.cmd('mksession! ' .. session_file)
-  print("session saved")
+    local stdpath_cache = vim.fn.stdpath('cache')
+    local project = vim.fn.fnamemodify(vim.fn.getcwd(), ':t')
+    local cache_dir = stdpath_cache .. '/sessions'
+    local session_file = cache_dir .. '/' .. project .. '.vim'
+    vim.fn.mkdir(cache_dir, 'p')
+    vim.cmd('mksession! ' .. session_file)
+    print("session saved")
 end, { desc = 'save project session to cache', silent = true })
 
 vim.keymap.set('n', '<leader>sl', function()
-  local stdpath_cache = vim.fn.stdpath('cache')
-  local project = vim.fn.fnamemodify(vim.fn.getcwd(), ':t')
-  local session_file = stdpath_cache .. '/sessions/' .. project .. '.vim'
-  if vim.fn.filereadable(session_file) == 1 then
-    vim.cmd('source ' .. session_file)
-  else
-    print('session file not found in cache')
-  end
+    local stdpath_cache = vim.fn.stdpath('cache')
+    local project = vim.fn.fnamemodify(vim.fn.getcwd(), ':t')
+    local session_file = stdpath_cache .. '/sessions/' .. project .. '.vim'
+    if vim.fn.filereadable(session_file) == 1 then
+        vim.cmd('source ' .. session_file)
+    else
+        print('session file not found in cache')
+    end
 end, { desc = 'load session from cache', silent = true })
-
-

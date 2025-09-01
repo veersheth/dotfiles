@@ -1,14 +1,15 @@
 {
     "layer": "top",
     "position": "top",
-    "spacing": 8,
+    "height": 32,
+    "spacing": 5,
     "modules-left": [
+        "custom/powermenu",
         // "custom/notification",
         "clock",
-        "custom/media",
+        "hyprland/workspaces",
     ],
     "modules-center": [
-        // "hyprland/workspaces",
         "hyprland/window",
     ],
     "modules-right": [
@@ -29,17 +30,9 @@
         "reverse-direction": false
     },
 
-//     "hyprland/workspaces": {
-//         "disable-scroll": false,
-//         "all-outputs": true,
-//         "format": "{icon}",
-//     },
       "hyprland/workspaces": {
           "format": "{icon}",
           "format-icons": {
-              "default": "+",
-              "active": "x",
-              "urgent": "💢"
           }
       },
 
@@ -171,5 +164,12 @@
       "on-scroll-up": "playerctl next",
       "on-scroll-down": "playerctl previous",
       "return-type": "json"
+    },
+
+    "custom/powermenu": {
+      "format": "",
+      "tooltip": false,
+      "on-click": "~/.config/waybar/scripts/powermenu.sh"
     }
+
 }

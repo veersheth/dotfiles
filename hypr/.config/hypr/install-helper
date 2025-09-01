@@ -1,0 +1,52 @@
+#!/bin/bash
+
+read -p "Is Nix installed on your system? (yes/no): " answer
+if [[ "$answer" != "y" ]]; then
+  echo "Nix is not installed. Exiting."
+  exit 1
+fi
+
+if ! sudo dnf copr list --enabled | grep -q 'solopasha/hyprland'; then
+  sudo dnf copr enable solopasha/hyprland
+fi
+
+read -p "Proceed with dnf installation? y/n: " answer
+if [[ "$answer" == "y" ]]; then
+  sudo dnf install hyprland waybar ulauncher hyprpaper hypridle hyprlock dunst hyprsunset
+fi
+
+# - hyprland, hyprpaper, hyprlock, hypridle
+# - waybar for the status bar
+# - ulauncher as the catch-all app launcher
+# - dunst for notifications
+# - hyprsunset for night mode (SUPER SHIFT N)
+
+read -p "Proceed with nix profile installation? y/n: " answer
+if [[ "$answer" == "y" ]]; then
+  nix profile add nixpkgs#flameshot nixpkgs#rofi-wayland nixpkgs#sox nixpkgs#hyprpicker nixpkgs#nwg-displays
+fi
+
+# - flameshot for screenshots
+# - rofi for an option picker
+# - sox for whitenoise (SUPER SHIFT P)
+# - hyprpicker for color picking (SUPER SHIFT C)
+# - nwg-displays for display management
+
+
+read -p "Proceed with pam configuration for hyprlock? y/n: " answer
+if [[ "$answer" == "y" ]]; then
+  echo "Set the pam configuration for hyprlock to this:\n"
+  echo
+  echo "# PAM configuration file for hyprlock"
+  echo "# the 'login' configuration file (see /etc/pam.d/login)"
+  echo ""
+  echo "auth       sufficient    pam_unix.so nullok try_first_pass"
+  echo "auth       sufficient    pam_fprintd.so"
+  echo "auth       required      pam_deny.so"
+  echo "account    required      pam_unix.so"
+  echo "password   required      pam_unix.so"
+  echo "session    required      pam_unix.so"
+
+  sleep 5
+  sudo vi /etc/pam.d/hyprlock
+fi
