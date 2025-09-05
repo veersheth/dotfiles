@@ -5,8 +5,6 @@ CRITICAL=5             # suspend threshold
 INTERVAL=60            # seconds between checks
 declare -A NOTIFIED     # associative array to track notifications for each threshold
 
-notify-send "Battery monitor started" "~/.config/hypr/scripts/battery-low-check.sh"
-
 while true; do
     PERCENT=$(cat /sys/class/power_supply/BAT*/capacity)
     STATUS=$(cat /sys/class/power_supply/BAT*/status)  # "Charging", "Discharging", "Full"
