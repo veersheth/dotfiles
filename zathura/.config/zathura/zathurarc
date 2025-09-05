@@ -12,6 +12,9 @@ map p print
 map r reload
 map R rotate
 
+map l navigate next
+map h navigate previous
+
 # map j feedkeys "<C-Down>"
 # map k feedkeys "<C-Up>"
 # map h feedkeys "<C-Left>"
