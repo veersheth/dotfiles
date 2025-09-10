@@ -3,7 +3,7 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 -- typst zathura preview
-vim.keymap.set("n", "<leader>tt", function()
+vim.keymap.set("n", "<leader>tp", function()
     local file = vim.fn.expand("%:p")
     local pdf  = vim.fn.expand("%:r") .. ".pdf"
     local cmd  = string.format("typst watch %s & zathura %s", file, pdf)
@@ -17,14 +17,14 @@ vim.keymap.set("n", "<leader>w", function()
     writing_mode = not writing_mode
 
     if writing_mode then
-        vim.opt_local.wrapmargin = 30
+        vim.opt_local.wrapmargin = 10
         vim.opt_local.formatoptions:append("t")
         vim.opt_local.linebreak = true
         vim.opt_local.wrap = true
         vim.opt_local.spell = true
         -- fake margins
-        vim.opt_local.foldcolumn = "9"
-        vim.opt_local.signcolumn = "yes:9"
+        vim.opt_local.foldcolumn = "4"
+        vim.opt_local.signcolumn = "yes:1"
         vim.notify("Writing mode enabled", vim.log.levels.INFO)
     else
         vim.opt_local.wrapmargin = 0
@@ -33,7 +33,7 @@ vim.keymap.set("n", "<leader>w", function()
         vim.opt_local.wrap = false
         vim.opt_local.spell = false
         -- reset margins
-        vim.opt_local.foldcolumn = "0" 
+        vim.opt_local.foldcolumn = "0"
         vim.opt_local.signcolumn = "yes"
         vim.notify("Writing mode disabled", vim.log.levels.INFO)
     end
@@ -111,6 +111,7 @@ vim.keymap.set("v", "Y", '"+y', { desc = "Copy to system" })
 
 -- select document vid
 vim.keymap.set("v", "id", "<Esc>ggVG", { desc = "Entire document" })
+vim.keymap.set("n", "<leader>Y", "<Esc>ggVG\"+y<C-o>", { desc = "Copy entire document" })
 
 -- center screen when jumping
 vim.keymap.set("n", "n", "nzzzv", {})
@@ -145,7 +146,6 @@ vim.keymap.set("v", "<", "<gv", { desc = "Indent left and reselect" })
 vim.keymap.set("v", ">", ">gv", { desc = "Indent right and reselect" })
 
 -- session management
-
 vim.keymap.set('n', '<leader>ss', function()
     local stdpath_cache = vim.fn.stdpath('cache')
     local project = vim.fn.fnamemodify(vim.fn.getcwd(), ':t')

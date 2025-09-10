@@ -4,22 +4,36 @@ return {
     dependencies = {
         "nvim-lua/plenary.nvim",
         "MunifTanjim/nui.nvim",
-        "nvim-tree/nvim-web-devicons",
+        "nvim-tree/nvim-web-devicons", 
     },
     lazy = false,
     config = function()
         require("neo-tree").setup({
-            window = {
-                width = 25,
+            close_if_last_window = true,
+            popup_border_style = "rounded",
+            enable_git_status = true,
+            enable_diagnostics = false,
+            default_component_configs = {
+                indent = { padding = 1 },
+                icon = { folder_closed = "", folder_open = "", folder_empty = "ﰊ" },
             },
             filesystem = {
+                bind_to_cwd = true,
+                hijack_netrw_behavior = "disabled", 
                 follow_current_file = {
-                    enabled = true,
+                    enabled = true, 
+                    leave_dirs_open = false,
                 },
-                use_libuv_file_watcher = true,
+            },
+            window = {
+                position = "right", -- always on the left
+                width = 35,
             },
         })
 
-        vim.keymap.set("n", "<leader>-", ":Neotree toggle right<CR>", { desc = "Toggle file tree" })
+        vim.keymap.set("n", "<leader>-", function()
+            vim.cmd("Neotree toggle right")
+        end, { desc = "Toggle file tree" })
     end,
 }
+

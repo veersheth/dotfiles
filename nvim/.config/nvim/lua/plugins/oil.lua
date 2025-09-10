@@ -1,12 +1,17 @@
 return {
-    'stevearc/oil.nvim',
-    opts = {
-        view_options = { show_hidden = true, }
-    },
+  'stevearc/oil.nvim',
+  dependencies = { "nvim-tree/nvim-web-devicons" },
+  opts = {
+    view_options = { show_hidden = true },
+  },
+  config = function()
+    local oil = require("oil")
+    oil.setup({})
 
-    dependencies = { "nvim-tree/nvim-web-devicons" },
-    config = function()
-        require("oil").setup({})
-        vim.keymap.set({ "n", "x" }, "<leader>/", function() require("oil").open() end, { silent = true })
-    end
+    -- oil in current window
+    vim.keymap.set({ "n", "x" }, "<leader>/", function()
+      oil.open()
+    end, { silent = true, desc = "Open Oil in current window" })
+  end,
 }
+
