@@ -22,39 +22,32 @@ if [[ "$XDG_CURRENT_DESKTOP" == "Hyprland" || -n "$HYPRLAND_INSTANCE_SIGNATURE" 
         "OFF")
             hyprsunset -t 6000 &
             echo "6000" > "$STATE_FILE"
-            notify_short "Temperature: 6000K"
             ;;
         "6000")
             turn_off
             hyprsunset -t 4000 &
             echo "4000" > "$STATE_FILE"
-            notify_short "Temperature: 4000K"
             ;;
         "4000")
             turn_off
             hyprsunset -t 2000 &
             echo "2000" > "$STATE_FILE"
-            notify_short "Temperature: 2000K"
             ;;
         "2000")
             turn_off
             echo "OFF" > "$STATE_FILE"
-            notify_short "Hyprsunset Off"
             ;;
         *)
             turn_off
             echo "OFF" > "$STATE_FILE"
-            notify_short "Hyprsunset Off"
             ;;
     esac
 
 elif [[ "$XDG_CURRENT_DESKTOP" == "GNOME" ]]; then
     bash -c 'if [[ $(gsettings get org.gnome.settings-daemon.plugins.color night-light-enabled) == "true" ]]; then
         gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled false
-        notify-send -t 500 "Night Light" "Disabled"
     else
         gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
-        notify-send -t 500 "Night Light" "Enabled"
     fi'
 
 else
