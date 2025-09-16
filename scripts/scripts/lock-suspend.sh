@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 hyprlock &
 sleep 0.5

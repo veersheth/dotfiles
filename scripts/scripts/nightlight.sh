@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 STATE_FILE="/tmp/hyprsunset_state"
 
