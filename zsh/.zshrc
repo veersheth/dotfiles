@@ -3,7 +3,6 @@ setopt PROMPT_SUBST
 
 NEWLINE=$'\n'
 PROMPT="${NEWLINE} %{$fg[yellow]%}%~%{$fg[blue]%}%{$reset_color%} "
-# PROMPT="${NEWLINE} %{$fg[yellow]%}%~%{$fg[blue]%}%{$reset_color%}${NEWLINE} $ "
 
 HISTFILE=~/.zsh_history
 HISTSIZE=100
@@ -22,16 +21,13 @@ alias ls="ls --color=auto"
 alias open="xdg-open"
 alias lg="lazygit"
 alias jj="tmux a || cd ~ ; tmux"
-source <(fzf --zsh) # allow for fzf history widget
 
-# binds
 bindkey "^a" beginning-of-line
 bindkey "^e" end-of-line
 bindkey "^k" kill-line
 bindkey "^j" backward-word
 bindkey "^k" forward-word
 bindkey "^H" backward-kill-word
-# ctrl n & p for going up and down in prev commands
 bindkey "^N" history-search-forward
 bindkey "^P" history-search-backward
 bindkey '^R' fzf-history-widget
@@ -61,38 +57,3 @@ alias unsw="sshfs z5494316@cse.unsw.edu.au:/import/adams/8/z5494316/cse/ ~/mnt; 
 alias unswstop='fusermount -uz ~/mnt && pkill -f "sshfs.*mnt" & pkill ssh'
 alias unswreset="killall -9 sshfs; fusermount -u ~/mnt; sshfs z5494316@cse.unsw.edu.au:/import/adams/8/z5494316/cse/ ~/mnt; cd ~/mnt"
 alias cse="ssh -t z5494316@cse.unsw.edu.au 'cd ~/cse; exec zsh -l'"
-
-
-# nix scripts that also update desktop entries (use --impure to installed apps that fail)
-alias nix-fedora-upgrade-all="sudo dnf upgrade --refresh --best --allowerasing; nix profile upgrade --all"
-nixadd() {
-  nix profile add "$@"
-  applications_dir="$HOME/.local/share/applications"
-  profile_dir="$HOME/.nix-profile"
-  find "$applications_dir" -type l -lname "$profile_dir/*" -delete
-  find "$profile_dir/share/applications" -name '*.desktop' | while read -r desktopfile; do
-    ln -sf "$desktopfile" "$applications_dir/"
-  done
-  # Prefix Exec lines with nixGL
-  for desktopfile in "$applications_dir"/*.desktop; do
-    sed -i '/^Exec=/ {/Exec=nixGL/! s|^Exec=\(.*\)|Exec=nixGL \1|}' "$desktopfile"
-  done
-  update-desktop-database "$applications_dir"
-}
-alias nixadd='nixadd'
-
-nixremove() {
-  nix profile remove "$@"
-  applications_dir="$HOME/.local/share/applications"
-  profile_dir="$HOME/.nix-profile"
-  find "$applications_dir" -type l -lname "$profile_dir/*" -delete
-  find "$profile_dir/share/applications" -name '*.desktop' | while read -r desktopfile; do
-    ln -sf "$desktopfile" "$applications_dir/"
-  done
-  update-desktop-database "$applications_dir"
-}
-alias nixremove='nixremove'
-
-export XDG_DATA_DIRS="$HOME/.nix-profile/share:$XDG_DATA_DIRS"
-export PATH="$HOME/.nix-profile/bin:/etc/profiles/per-user/$USER/bin:/run/current-system/sw/bin:$PATH"
-
