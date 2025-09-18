@@ -85,7 +85,6 @@
     description = "Veer";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
-      neofetch
       vscode
       lazygit
       typst
@@ -118,19 +117,18 @@
 
   # List packages installed in system profile. To search, run:
   environment.systemPackages = with pkgs; [
+    gnome-tweaks
     libnotify
     xclip
     git
-    vim 
+    vim neovim
     wget
     gcc clang zig
     keyd
     vim 
     wget
-    neovim
     tmux
     stow
-    gnome-tweaks
     fzf
     fd
     ripgrep
