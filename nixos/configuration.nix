@@ -1,3 +1,4 @@
+
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
@@ -85,6 +86,7 @@
     description = "Veer";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
+      neofetch
       vscode
       lazygit
       typst
@@ -117,6 +119,7 @@
 
   # List packages installed in system profile. To search, run:
   environment.systemPackages = with pkgs; [
+    xclip
     git
     vim 
     wget
@@ -191,3 +194,4 @@
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.05"; # Did you read the comment?
 }
+
