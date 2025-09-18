@@ -119,6 +119,7 @@
 
   # List packages installed in system profile. To search, run:
   environment.systemPackages = with pkgs; [
+    libnotify
     xclip
     git
     vim 
