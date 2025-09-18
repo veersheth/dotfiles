@@ -13,10 +13,10 @@
 set -e
 
 # Edit your config
-$EDITOR ~/dotfiles/nixos/configuration.nix
+$EDITOR /home/veer/dotfiles/nixos/configuration.nix
 
 # cd to your config dir
-pushd ~/dotfiles/nixos
+pushd /home/veer/dotfiles/nixos
 
 # Early return if no changes were detected (thanks @singiamtel!)
 if git diff --quiet '*.nix'; then
@@ -31,13 +31,13 @@ git diff -U0 '*.nix'
 echo "NixOS Rebuilding..."
 
 # Rebuild, output simplified errors, log trackebacks
-sudo nixos-rebuild switch &>nixos-switch.log || (cat nixos-switch.log | grep --color error && exit 1)
+sudo nixos-rebuild switch -I nixos-config=/home/veer/dotfiles/nixos/configuration.nix &>nixos-switch.log || (cat nixos-switch.log | grep --color error && exit 1)
 
 # Get current generation metadata
 current=$(nixos-rebuild list-generations | grep current)
 
 # Commit all changes witih the generation metadata
-git commit -am "$current"
+git commit -am "NIX_AUTO_CONFIG: $current"
 
 # Back to where you were
 popd
