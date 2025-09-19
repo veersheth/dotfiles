@@ -117,7 +117,7 @@
 
   # List packages installed in system profile. To search, run:
   environment.systemPackages = with pkgs; [
-    gnome-tweaks
+    pkgconf
     libnotify
     xclip
     git
@@ -134,6 +134,7 @@
     fzf
     fd
     ripgrep
+    gnome-tweaks
     fprintd
   ];
 
