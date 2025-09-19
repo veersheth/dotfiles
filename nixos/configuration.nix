@@ -126,6 +126,7 @@
     gcc clang zig
     keyd
     vim 
+    tree
     wget
     tmux
     stow
