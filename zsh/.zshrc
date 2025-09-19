@@ -58,14 +58,6 @@ alias unswstop='fusermount -uz ~/mnt && pkill -f "sshfs.*mnt" & pkill ssh'
 alias unswreset="killall -9 sshfs; fusermount -u ~/mnt; sshfs z5494316@cse.unsw.edu.au:/import/adams/8/z5494316/cse/ ~/mnt; cd ~/mnt"
 alias cse="ssh -t z5494316@cse.unsw.edu.au 'cd ~/cse; exec zsh -l'"
 
-
-
-
-
-
-
-
-
 alias nixx="echo Rebuilding; sudo nixos-rebuild switch"
 # YO PATH 
 export PATH="$HOME/scripts:$PATH"
