@@ -178,6 +178,10 @@
     fprintd.tod.driver = pkgs.libfprint-2-tod1-goodix;
   };
 
+  virtualisation.virtualbox.host.enable = true;
+  virtualisation.virtualbox.host.enableExtensionPack = true;
+  users.extraGroups.vboxusers.members = [ "veer" ];
+
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
 
