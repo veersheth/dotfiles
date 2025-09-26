@@ -15,6 +15,7 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 6; # keeps 6 generations 
+  boot.kernelParams = [ "kvm.enable_virt_at_load=0" ]; # this is for virtual box (for COMP3431)
 
   networking.hostName = "framework-nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -85,7 +86,7 @@
     description = "Veer";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
-      vscode
+      obs-studio
       lazygit
       typst
       obsidian      	
@@ -97,6 +98,7 @@
       gnome-extension-manager
       alacritty
       sshfs
+      sox
     ];
   };
 
@@ -135,8 +137,11 @@
     fd
     ripgrep
     gnome-tweaks
-    fprintd
   ];
+
+  environment.etc."keyd/default.conf" = {
+    source = files/keyd/default.conf;
+  };
 
   users.defaultUserShell=pkgs.zsh; 
   users.users.veer.shell = pkgs.zsh; 
