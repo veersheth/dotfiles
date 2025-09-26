@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-# A rebuild script that commits on a successful build (optionally)
+# nixOS rebuild script that commits on a successful build (optionally)
+# configuration.nix MUST BE STORED IN /home/veer/dotfiles/nixos
 set -e
-
-# Usage: ./rebuild.sh [--verbose]
 
 VERBOSE=false
 
@@ -25,7 +24,7 @@ if git diff --quiet '*.nix'; then
     exit 0
 fi
 
-# Show your changes
+# show your changes
 git diff -U0 '*.nix'
 
 echo "NixOS Rebuilding..."
@@ -41,20 +40,18 @@ fi
 # Get current generation metadata
 current=$(nixos-rebuild list-generations | grep current)
 
-# Ask for a commit message
+# ask for a commit message
 echo
 read -rp "Enter a commit message (leave empty to skip committing): " commit_msg
 
 if [[ -n "$commit_msg" ]]; then
     git commit -am "$commit_msg"
-    echo "✅ Changes committed."
+    echo "!!! Changes committed."
 else
-    echo "ℹ️  No commit message entered. Skipping commit."
+    echo "!!! No commit message entered. Skipping commit."
 fi
 
-# Back to where you were
 popd > /dev/null
 
-# Notify all OK!
 notify-send -e "NixOS Rebuilt OK!" --icon=software-update-available
 
