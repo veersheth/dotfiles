@@ -6,7 +6,7 @@ return {
             mappings = { choose_marked = "<leader>fm" }
         })
 
-        vim.keymap.set('n', '<leader>ff', ":Pick resume<CR>", { desc = "Continue picking" })
+        vim.keymap.set('n', '<leader>fp', ":Pick resume<CR>", { desc = "Continue picking" })
         vim.keymap.set('n', '<leader>fd', ":Pick files<CR>", { desc = "Search files" })
         vim.keymap.set('n', '<leader>fs', ":Pick grep_live<CR>", { desc = "Search grep" })
         vim.keymap.set('n', '<leader>fh', ":Pick help<CR>", { desc = "Search help" })
