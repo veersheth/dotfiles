@@ -50,6 +50,7 @@
 
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
+  services.xserver.displayManager.gdm.wayland = true;
   services.xserver.desktopManager.gnome.enable = true;
 
   # Configure keymap in X11
@@ -119,9 +120,13 @@
 
   # List packages installed in system profile. To search, run:
   environment.systemPackages = with pkgs; [
+    bibata-cursors
+    python313 python313Packages.pip
+    bat
     pkg-config
     libnotify
     xclip
+    unzip
     git
     vim neovim
     wget
@@ -137,7 +142,13 @@
     fd
     ripgrep
     gnome-tweaks
+    copyq brightnessctl waybar dunst ulauncher hyprpaper hypridle hyprlock hyprsunset flameshot rofi-wayland hyprcursor
   ];
+
+  environment.sessionVariables = {
+    XCURSOR_THEME = "Bibata-Modern-Ice"; # Replace with your theme name
+    XCURSOR_SIZE = "24"; # Adjust size
+  };
 
   environment.etc."keyd/default.conf" = {
     source = files/keyd/default.conf;
@@ -149,6 +160,10 @@
   programs = {
     zsh = {
       enable = true;
+    };
+    hyprland = {
+      enable = true;
+      xwayland.enable = true;
     };
     neovim = {
       enable = true;

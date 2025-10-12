@@ -9,7 +9,7 @@ family = "JetBrainsMono Nerd Font"
 style = "Regular"
 
 [window]
-opacity = 0.8
+opacity = 0.9
 decorations = "none"
 dynamic_padding = true
 
@@ -22,7 +22,7 @@ columns = 140
 lines = 80
 
 [colors.primary]
-background= '#0e0e0e'
+background= '#000000'
 foreground= '#ffffff'
 
 [colors.normal]
