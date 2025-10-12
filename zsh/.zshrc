@@ -20,29 +20,22 @@ alias l="ls -la --color=auto"
 alias ls="ls --color=auto"
 alias open="xdg-open"
 alias lg="lazygit"
-alias jj="tmux a || cd ~ ; tmux"
 
-bindkey "^a" beginning-of-line
-bindkey "^e" end-of-line
-bindkey "^k" kill-line
-bindkey "^j" backward-word
-bindkey "^k" forward-word
+jj() {
+    if ! tmux attach; then
+        mkdir -p /tmp/temptmux
+        tmux new-session -d -s TEMP -c /tmp/temptmux
+        tmux new-session -d -s HOME -c ~
+        tmux attach -t HOME
+    fi
+}
+
 bindkey "^H" backward-kill-word
 bindkey "^N" history-search-forward
 bindkey "^P" history-search-backward
 bindkey '^R' fzf-history-widget
 
-if command -v bat &> /dev/null; then;
-    alias cat='bat'
-elif command -v batcat &> /dev/null; then
-    alias cat='batcat'
-else
-    alias cat='cat'
-fi
-
-opengui() {
-    xdg-open . &
-}
+opengui() { xdg-open . & }
 zle -N opengui
 bindkey '^e' opengui
 

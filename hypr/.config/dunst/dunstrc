@@ -8,7 +8,7 @@
     separator_height = 2
     idle_threshold = 0
     width = 480
-    origin = top-center
+    origin = top-right
     offset = 20
 
     progress_bar = true

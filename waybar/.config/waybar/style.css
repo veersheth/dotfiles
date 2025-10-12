@@ -11,12 +11,12 @@
 
 * {
     font-family: "JetBrainsMono Nerd Font", monospace;
-    font-weight: 900; 
+    font-weight: 500; 
     font-size: 18px;
-    border-radius: 14px;
+    border-radius: 17px;
     background: transparent;
     color: @fg-main;
-    margin: 2px 0;
+    margin: 1px 0;
     padding: 0;
 }
 
@@ -61,7 +61,9 @@ window#waybar .modules-center {
 }
 
 #window * {
-    color: @accent-blue;
+    /* color: @accent-blue; */
+  color: white;
+  opacity: 0.5;
 }
 
 #tray,

@@ -100,6 +100,7 @@
       alacritty
       sshfs
       sox
+      tofi
     ];
   };
 
@@ -142,7 +143,8 @@
     fd
     ripgrep
     gnome-tweaks
-    copyq brightnessctl waybar dunst ulauncher hyprpaper hypridle hyprlock hyprsunset flameshot rofi-wayland hyprcursor
+    wl-clipboard copyq brightnessctl waybar dunst ulauncher hyprpaper hypridle 
+    hyprlock hyprsunset flameshot rofi-wayland hyprcursor cliphist
   ];
 
   environment.sessionVariables = {

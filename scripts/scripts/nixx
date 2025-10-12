@@ -7,7 +7,7 @@ set -e
 VERBOSE=false
 
 # Check if user passed --verbose
-if [[ "$1" == "--verbose" ]]; then
+if [[ "$1" == "-v" ]]; then
     VERBOSE=true
 fi
 
