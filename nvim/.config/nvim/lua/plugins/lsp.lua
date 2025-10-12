@@ -1,6 +1,7 @@
 -- grn: vim.lsp.buf.rename()
 -- grr: vim.lsp.buf.references()
 -- gra: vim.lsp.buf.code_actions()
+-- gd: vim.lsp.buf.definition()
 
 return {
   {
@@ -8,7 +9,7 @@ return {
     opts = {
       ensure_installed = {
         "lua_ls", "svelte", "tinymist", "rust_analyzer",
-        "tailwindcss", "ts_ls", "pyright"
+        "tailwindcss", "ts_ls", "pyright", "clangd"
       }
     }
   },
@@ -36,29 +37,56 @@ return {
       }
     },
     config = function()
-      require("lspconfig").lua_ls.setup({})
-      require("lspconfig").svelte.setup({})
-      require("lspconfig").tinymist.setup({})
-      require("lspconfig").rust_analyzer.setup({})
-      require("lspconfig").tailwindcss.setup({})
-      require("lspconfig").ts_ls.setup({})
-      require("lspconfig").pyright.setup({})
-
-      vim.keymap.set("n", "<leader>lf", vim.lsp.buf.format)
-      vim.keymap.set("n", "<leader>lp", vim.diagnostic.goto_prev)
-      vim.keymap.set("n", "<leader>ln", vim.diagnostic.goto_next)
-
-      -- auto command for omnicomplete
-      vim.api.nvim_create_autocmd('LspAttach', {
-        callback = function(ev)
-          local client = vim.lsp.get_client_by_id(ev.data.client_id)
-          if client:supports_method('textDocument/completion') then
-            vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
-          end
-        end
-        ,
+      vim.lsp.enable({
+        lua_ls,
+        svelte,
+        tinymist,
+        rust_analyzer,
+        tailwindcss,
+        ts_ls,
+        pyright,
       })
-      vim.cmd("set completeopt+=noselect")
+
+      vim.keymap.set("n", "<leader>lf", vim.lsp.buf.format)                                          -- format doc
+      vim.keymap.set("n", "<leader>lp", function() vim.diagnostic.jump({ count = -1, float = true }) end) -- prev diagnostic
+      vim.keymap.set("n", "<leader>ln", function() vim.diagnostic.jump({ count = 1, float = true }) end) -- next diagnostic
+      vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end)
+
+      --   -- auto command for omnicomplete
+      --   vim.api.nvim_create_autocmd('LspAttach', {
+      --     callback = function(ev)
+      --       local client = vim.lsp.get_client_by_id(ev.data.client_id)
+      --       if client:supports_method('textDocument/completion') then
+      --         vim.lsp.completion.enable(true, client.id, ev.buf, { autotrigger = true })
+      --       end
+      --     end
+      --     ,
+      --   })
+      --   vim.cmd("set completeopt+=noselect")
     end
+  },
+  {
+    'saghen/blink.cmp',
+    dependencies = { 'rafamadriz/friendly-snippets' },
+    version = '1.*',
+    opts = {
+      keymap = { preset = 'default' },
+      appearance = { nerd_font_variant = 'mono' },
+
+      -- (Default) Only show the documentation popup when manually triggered
+      completion = { documentation = { auto_show = true } },
+      sources = {
+        default = { 'lsp', 'path', 'snippets', 'buffer' },
+      },
+
+      -- (Default) Rust fuzzy matcher for typo resistance and significantly better performance
+      -- You may use a lua implementation instead by using `implementation = "lua"` or fallback to the lua implementation,
+      -- when the Rust fuzzy matcher is not available, by using `implementation = "prefer_rust"`
+      --
+      -- See the fuzzy documentation for more information
+      -- fuzzy = { implementation = "prefer_rust" }
+      fuzzy = { implementation = "lua" }
+    },
+    opts_extend = { "sources.default" }
   }
 }

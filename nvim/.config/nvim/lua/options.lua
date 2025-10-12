@@ -10,7 +10,9 @@ vim.api.nvim_set_hl(0, "EndOfBuffer", { bg = "none" })
 -- basic settings
 vim.opt.number = true         -- Line numbers
 vim.opt.relativenumber = true -- Relative line numbers
-vim.opt.cursorline = true     -- Highlight current line
+
+vim.opt.cursorline = false     -- DON'T Highlight current line
+
 vim.opt.wrap = false          -- Don't wrap lines
 vim.opt.scrolloff = 10        -- Keep 10 lines above/below cursor
 vim.opt.sidescrolloff = 8     -- Keep 8 columns left/right of cursor
@@ -64,14 +66,15 @@ vim.opt.modifiable = true              -- Allow buffer modifications
 vim.opt.encoding = "UTF-8"             -- Set encoding
 
 -- normal mode mappings
-vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>", { desc = "unhighlight searches" })
+vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>")
+vim.keymap.set("v", "<leader>n", ":norm ")
+vim.keymap.set("v", "id", "<Esc>ggVG")                  -- select document vid
 
--- yank to clipboard
-vim.keymap.set("v", "Y", '"+y', { desc = "Copy to system" })
+-- system clipboard
+vim.keymap.set("v", "<leader>y", '"+y')                 -- copy visual to clipboard
+vim.keymap.set("n", "<leader>y", "<Esc>ggVG\"+y<C-o>")  -- copy file to clipboera
+vim.keymap.set("n", "<leader>p", '"+p')
 
--- select document vid
-vim.keymap.set("v", "id", "<Esc>ggVG", { desc = "Entire document" })
-vim.keymap.set("n", "<leader>Y", "<Esc>ggVG\"+y<C-o>", { desc = "Copy entire document" })
 
 -- center screen when jumping
 vim.keymap.set("n", "n", "nzzzv", {})
@@ -79,31 +82,23 @@ vim.keymap.set("n", "N", "Nzzzv", {})
 vim.keymap.set("n", "<C-d>", "<C-d>zz", {})
 vim.keymap.set("n", "<C-u>", "<C-u>zz", {})
 
--- buffer navigation
-vim.keymap.set("n", "<leader>bn", ":bnext<CR>", { desc = "Next buffer" })
-vim.keymap.set("n", "<leader>bp", ":bprevious<CR>", { desc = "Previous buffer" })
-
--- better window navigation
-vim.keymap.set("n", "<M-h>", "<C-w>h", { desc = "Move to left window" })
-vim.keymap.set("n", "<M-j>", "<C-w>j", { desc = "Move to bottom window" })
-vim.keymap.set("n", "<M-k>", "<C-w>k", { desc = "Move to top window" })
-vim.keymap.set("n", "<M-l>", "<C-w>l", { desc = "Move to right window" })
+-- better window navigation using alt
+vim.keymap.set("n", "<M-h>", "<C-w>h")
+vim.keymap.set("n", "<M-j>", "<C-w>j")
+vim.keymap.set("n", "<M-k>", "<C-w>k")
+vim.keymap.set("n", "<M-l>", "<C-w>l")
 
 -- splitting & resizing
-vim.keymap.set("n", "<leader>sv", ":vsplit<CR>", { desc = "Split window vertically" })
-vim.keymap.set("n", "<leader>sh", ":split<CR>", { desc = "Split window horizontally" })
-vim.keymap.set("n", "<C-Up>", ":resize +2<CR>", { desc = "Increase window height" })
-vim.keymap.set("n", "<C-Down>", ":resize -2<CR>", { desc = "Decrease window height" })
-vim.keymap.set("n", "<C-Left>", ":vertical resize -2<CR>", { desc = "Decrease window width" })
-vim.keymap.set("n", "<C-Right>", ":vertical resize +2<CR>", { desc = "Increase window width" })
-
--- move lines up/down
-vim.keymap.set("v", "<C-k>", ":m .-2<CR>==", { desc = "Move line up" })
-vim.keymap.set("v", "<C-j>", ":m .+1<CR>==", { desc = "Move line down" })
+vim.keymap.set("n", "<leader>sv", ":vsplit<CR>")
+vim.keymap.set("n", "<leader>sh", ":split<CR>")
+vim.keymap.set("n", "<C-Up>", ":resize +2<CR>")
+vim.keymap.set("n", "<C-Down>", ":resize -2<CR>")
+vim.keymap.set("n", "<C-Left>", ":vertical resize -2<CR>")
+vim.keymap.set("n", "<C-Right>", ":vertical resize +2<CR>")
 
 -- better indenting in visual mode
-vim.keymap.set("v", "<", "<gv", { desc = "Indent left and reselect" })
-vim.keymap.set("v", ">", ">gv", { desc = "Indent right and reselect" })
+vim.keymap.set("v", "<", "<gv")
+vim.keymap.set("v", ">", ">gv")
 
 -- session management
 vim.keymap.set('n', '<leader>ss', function()
