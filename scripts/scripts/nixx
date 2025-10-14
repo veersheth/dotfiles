@@ -40,17 +40,6 @@ fi
 # Get current generation metadata
 current=$(nixos-rebuild list-generations | grep current)
 
-# ask for a commit message
-echo
-read -rp "Enter a commit message (leave empty to skip committing): " commit_msg
-
-if [[ -n "$commit_msg" ]]; then
-    git commit -am "$commit_msg"
-    echo "!!! Changes committed."
-else
-    echo "!!! No commit message entered. Skipping commit."
-fi
-
 popd > /dev/null
 
 notify-send -e "NixOS Rebuilt OK!" --icon=software-update-available

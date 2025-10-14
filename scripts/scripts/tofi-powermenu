@@ -1,0 +1,13 @@
+#!/bin/sh
+
+CHOSEN=$(printf "Lock\nSuspend\nHibernate\nReboot\nShutdown\nLog Out" | tofi --config "$HOME"/.config/tofi/config-fullscreen)
+
+case "$CHOSEN" in
+	"Lock") loginctl lock-session ;;
+	"Suspend") systemctl suspend-then-hibernate ;;
+	"Hibernate") systemctl hibernate ;;
+	"Reboot") reboot ;;
+	"Shutdown") poweroff ;;
+	"Log Out") hyprctl dispatch exit ;;
+	*) exit 1 ;;
+esac
