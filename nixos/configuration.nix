@@ -53,6 +53,11 @@
   services.xserver.displayManager.gdm.wayland = true;
   services.xserver.desktopManager.gnome.enable = true;
 
+  # Suspend on power button press
+  services.logind.extraConfig = ''
+    HandlePowerKey=suspend
+  '';
+
   # Configure keymap in X11
   services.xserver.xkb = {
     layout = "us";
@@ -87,8 +92,12 @@
     description = "Veer";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
+      spotify
+      brave
+      vscodium
       obs-studio
       lazygit
+      flatpak
       typst
       obsidian      	
       mpv
@@ -104,28 +113,17 @@
     ];
   };
 
-  services.flatpak.enable = true;
-  systemd.services.flatpak-repo = {
-    wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.flatpak ];
-    script = ''
-      flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    '';
-  };
-
-  # Install firefox.
+  nixpkgs.config.allowUnfree = true;
   programs.firefox.enable = true;
 
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
-
-  # List packages installed in system profile. To search, run:
   environment.systemPackages = with pkgs; [
     bibata-cursors
     python313 python313Packages.pip
     bat
     pkg-config
     libnotify
+    playerctl
+    jq
     xclip
     unzip
     git
@@ -144,12 +142,12 @@
     ripgrep
     gnome-tweaks
     wl-clipboard copyq brightnessctl waybar dunst ulauncher hyprpaper hypridle 
-    hyprlock hyprsunset flameshot rofi-wayland hyprcursor cliphist
+    hyprlock hyprsunset hyprpicker hyprshot rofi-wayland hyprcursor cliphist
   ];
 
   environment.sessionVariables = {
-    XCURSOR_THEME = "Bibata-Modern-Ice"; # Replace with your theme name
-    XCURSOR_SIZE = "24"; # Adjust size
+    XCURSOR_THEME = "Bibata-Modern-Ice"; 
+    XCURSOR_SIZE = "24"; 
   };
 
   environment.etc."keyd/default.conf" = {
@@ -162,6 +160,7 @@
   programs = {
     zsh = {
       enable = true;
+      shellAliases = { cat = "bat"; };
     };
     hyprland = {
       enable = true;
