@@ -20,21 +20,22 @@ else
     exit 1
 fi
 
-# hope to god this works on EVERY machine one of these HAS to be instlled
-if command -v xclip >/dev/null 2>&1; then
-    echo -n "$url" | xclip -selection clipboard
-elif command -v wl-copy >/dev/null 2>&1; then
-    echo -n "$url" | wl-copy
-elif command -v pbcopy >/dev/null 2>&1; then
-    echo -n "$url" | pbcopy
-else
-    tmux display-popup -E "no supported clipboard tool installed. insert it manually"
-    tmux display-popup -E "
-    echo 'Copied to clipboard:'; 
-    echo '$url'; 
-    sleep 5;
-    "
-    exit 1
-fi
+# # hope to god this works on EVERY machine one of these HAS to be instlled
+# if command -v xclip >/dev/null 2>&1; then
+#     echo -n "$url" | xclip -selection clipboard
+# elif command -v wl-copy >/dev/null 2>&1; then
+#     echo -n "$url" | wl-copy
+# elif command -v pbcopy >/dev/null 2>&1; then
+#     echo -n "$url" | pbcopy
+# else
+#     tmux display-popup -E "no supported clipboard tool installed. insert it manually"
+#     tmux display-popup -E "
+#     echo 'Copied to clipboard:'; 
+#     echo '$url'; 
+#     sleep 5;
+#     "
+#     exit 1
+# fi
 
 notify-send "URL copied to clipboard" "$url"
+echo "$url"

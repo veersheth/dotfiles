@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CHOSEN=$(printf "Lock\nSuspend\nHibernate\nReboot\nShutdown\nLog Out" | tofi --config "$HOME"/.config/tofi/config-fullscreen)
+CHOSEN=$(printf "Lock\nSuspend\nHibernate\nReboot\nShutdown\nLog Out" | rofi -dmenu -p "> ")
 
 case "$CHOSEN" in
 	"Lock") loginctl lock-session ;;

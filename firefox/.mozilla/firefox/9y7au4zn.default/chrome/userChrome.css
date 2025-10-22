@@ -1,6 +1,6 @@
 /* Tab Toolbar */
 #TabsToolbar {
-  background-color: #1d1d1d !important;
+  background-color: #262b33 !important;
   padding: 2px 0 !important;
   border-bottom: none !important;
   box-shadow: none !important;
@@ -12,7 +12,7 @@
 #urlbar[open="true"],
 #urlbar[breakout][breakout-extend],
 #urlbar-background {
-  background-color: #1d1d1d !important;
+  background-color: #262b33 !important;
   border: 1px solid #ffffff22 !important;
   border-radius: 12px !important;
   padding: 4px !important;
@@ -20,7 +20,7 @@
 
 /* Navigation Bar */
 #nav-bar {
-  background-color: #1d1d1d !important;
+  background-color: #262b33 !important;
   padding: 4px 0 !important;
 }
 
@@ -31,7 +31,7 @@
 
 /* Selected Tab */
 .tabbrowser-tab[selected="true"] .tab-background {
-  background-color: #323232 !important;
+  background-color: #3b434a !important;
   border-radius: 12px !important;
 }
 
@@ -39,7 +39,7 @@
 #navigator-toolbox,
 #navigator-toolbox::after {
   border: none !important;
-  background: #1d1d1d !important;
+  background: #262b33 !important;
   box-shadow: none !important;
 }
 

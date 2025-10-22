@@ -11,9 +11,11 @@ return {
         enabled = true,
         timeout_ms = 1000,
         autosave_changes = true,
+        skip_confirm_for_simple_edits = true,
+        watch_for_changes = true,
       },
       columns = {
-        "permissions",
+        -- "permissions",
         "icon",
       },
       float = {
@@ -23,7 +25,7 @@ return {
       }
     })
 
-    -- oil in current window
+    -- oil in current window 
     vim.keymap.set({ "n", "x" }, "<leader>/", function()
       oil.open()
     end, { silent = true, desc = "Open Oil in current window" })

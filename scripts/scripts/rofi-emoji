@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-EMOJI=$(sed '1,/^### DATA ###$/d' "$0" | tofi -c "$HOME/.config/tofi/config" "$@" | cut -d ' ' -f 1 | tr -d '\n')
+EMOJI=$(sed '1,/^### DATA ###$/d' "$0" | rofi -dmenu "$@" -p "" | cut -d ' ' -f 1 | tr -d '\n')
 echo -n "$EMOJI" | wl-copy
 exit
 ### DATA ###
@@ -11,8 +11,8 @@ exit
 😁 beaming face with smiling eyes face happy smile joy kawaii
 😆 grinning squinting face happy joy lol satisfied haha face glad XD laugh
 😅 grinning face with sweat face hot happy laugh sweat smile relief
+😂 face with tears of joy face cry tears weep happy happytears haha laughing
 🤣 rolling on the floor laughing face rolling floor laughing lol haha rofl
-😂 face with tears of joy face cry tears weep happy happytears haha
 🙂 slightly smiling face face smile
 🙃 upside down face face flipped silly smile
 😉 winking face face happy mischievous secret ;) smile eye

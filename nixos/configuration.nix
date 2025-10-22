@@ -15,7 +15,8 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 6; # keeps 6 generations 
-  boot.kernelParams = [ "kvm.enable_virt_at_load=0" ]; # this is for virtual box (for COMP3431)
+
+  boot.kernelParams = [ "kvm.enable_virt_at_load=0" ]; # virtualization(for COMP3431)
 
   networking.hostName = "framework-nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -93,6 +94,8 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       spotify
+      gimp3-with-plugins
+      figma-linux
       brave
       vscodium
       obs-studio
@@ -117,6 +120,7 @@
   programs.firefox.enable = true;
 
   environment.systemPackages = with pkgs; [
+    maple-mono.NF
     bibata-cursors
     python313 python313Packages.pip
     bat
@@ -199,6 +203,7 @@
     fprintd.tod.driver = pkgs.libfprint-2-tod1-goodix;
   };
 
+  # Virtualization for COMP3431
   virtualisation.virtualbox.host.enable = true;
   virtualisation.virtualbox.host.enableExtensionPack = true;
   users.extraGroups.vboxusers.members = [ "veer" ];

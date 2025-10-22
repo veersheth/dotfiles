@@ -30,16 +30,17 @@
     background = "#101010"
     foreground = "#8a9dff"
     highlight = "#ff000000"
-    timeout = 1
+    timeout = 2
 
 [urgency_normal]
     background = "#101010"
     foreground = "#ffffff"
     highlight = "#a0ebd2"
+    timeout = 2
 
 [urgency_critical]
     background = "#101010"
     foreground = "#E34B4B"
     highlight = "#a0ebd2"
-    timeout = 0
+    timeout = 15
 

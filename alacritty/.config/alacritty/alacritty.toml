@@ -6,16 +6,16 @@ size = 16
 
 [font.normal]
 family = "JetBrainsMono Nerd Font"
-style = "Regular"
+style = "Semibold"
 
 [window]
-opacity = 0.9
+opacity = 0.8
 decorations = "none"
 dynamic_padding = true
 
 [window.padding]
-x = 18
-y = 18
+x = 14
+y = 10
 
 [window.dimensions]
 columns = 140

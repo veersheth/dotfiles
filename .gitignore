@@ -1,3 +1,44 @@
-lazy-lock.json
+*.lazy-lock.json
 .nvim
+
+firefox/*/datareporting
+
+# Ignore cache and offline data
+*/cache2/
+*/offlineCache/
+*/jumpListCache/
+*/startupCache/
+
+# Ignore telemetry and crash reports
+*/telemetry/*
+*/crashreporter-*
+*/pending_pings/
+*/saved-telemetry-pings/
+*/minidumps/
+
+# Ignore backups and non-essential extra folders
+*/bookmarkbackups/
+*/sessionstore-backups/
+*/weave/
+*/datareporting/
+*/corrections/
+*/features/
+*/gmp/
+*/default-release-backup/
+*/storage/temporary/
+*/extensions.json.backup*
+*/search.json.mozlz4.backup*
+
+# Ignore site-specific ephemeral data
+*/storage/shutdown*
+*/storage/permanent/chrome-idb*
+*/storage/permanent/chrome/
+*/storage/default/
+*/storage/obsolete/
+*/storage/morgue/
+
+# Ignore logs and miscellaneous
 *.log
+*.bak
+*.tmp
+*~

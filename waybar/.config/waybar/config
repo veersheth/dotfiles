@@ -8,11 +8,13 @@
         // "custom/notification",
         "clock",
         "hyprland/workspaces",
-    ],
-    "modules-center": [
         "hyprland/window",
     ],
+     //"modules-center": [
+         //// "hyprland/window",
+     //],
     "modules-right": [
+        "custom/media",
         "tray",
         "bluetooth",
         // "backlight",
@@ -33,6 +35,9 @@
       "hyprland/workspaces": {
           "format": "{icon}",
           "format-icons": {
+            // "2": "B",
+            "3": "O",
+            "11": "M",
           }
       },
 
@@ -44,12 +49,14 @@
     },
 
     "clock": {
-        "format": "{:%I:%M %a %d}",                   
+        "format": "{:%I:%M %a %d}",
         "timezones": ["", "Asia/Kolkata"],
         "tooltip": true,
-        "tooltip-format": "Mumbai: {1:Asia/Kolkata:%I:%M %p %Z}",
-        "actions": { "on-click": "tz_up" }
+        "tooltip-format": "{calendar}",
+        "actions": { "on-click": "tz_up" },
+        "exec": "echo '{}' && echo '{}' > /tmp/waybar-calendar"
     },
+
 
     "backlight": {
         "device": "intel_backlight",
@@ -88,15 +95,17 @@
     },
 
     "network": {
-        "format-wifi": "󰤨 {signalStrength}%",
-        "format-ethernet": "󰈀 Connected",
-        "format-disconnected": "󰤭 Disconnected",
-        "tooltip-format": "{ifname} via {gwaddr}",
-        "tooltip-format-wifi": "{essid} ({signalStrength}%)\n󰈀 {ipaddr}/{cidr}",
-        "tooltip-format-ethernet": "{ifname}\n󰈀 {ipaddr}/{cidr}",
-        "tooltip-format-disconnected": "Disconnected",
-        "on-click": "XDG_CURRENT_DESKTOP=GNOME gnome-control-center"
-    },
+    "format-wifi": "󰤨 {signalStrength}%",
+    "format-ethernet": "󰈀 Eth",
+    "format-disconnected": "󰤭 Dis",
+    "tooltip-format": "{ifname} via {gwaddr}",
+    "tooltip-format-wifi": "{essid} ({signalStrength}%)\n󰈀 {ipaddr}/{cidr}",
+    "tooltip-format-ethernet": "{ifname}\n󰈀 {ipaddr}/{cidr}",
+    "tooltip-format-disconnected": "Disconnected",
+    "on-click": "hyprctl dispatch exec '[float]' 'alacritty -e nmtui'",
+    "on-click-right": "XDG_CURRENT_DESKTOP=GNOME gnome-control-center",
+},
+
 
     "bluetooth": {
         "format": "󰂯",
@@ -157,19 +166,18 @@
 
     "custom/media": {
       "format": "{}",
-      "exec": "~/.config/waybar/scripts/media.sh",
-      "interval": 1,
-      "max-length": 30,
+      "exec": "/home/veer/scripts/get-media-info.sh",
+      "interval": 2,
+      "max-length": 58,
       "on-click": "playerctl play-pause",
       "on-scroll-up": "playerctl next",
-      "on-scroll-down": "playerctl previous",
-      "return-type": "json"
+      "on-scroll-down": "playerctl previous"
     },
 
     "custom/powermenu": {
       "format": "",
       "tooltip": false,
-      "on-click": "~/.config/waybar/scripts/powermenu.sh"
+      "on-click": "~/scripts/tofi-powermenu"
     }
 
 }

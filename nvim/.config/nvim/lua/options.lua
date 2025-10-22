@@ -1,7 +1,7 @@
 -- key mapping
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
---
+
 -- theme & transparency
 vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
 vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
@@ -11,7 +11,7 @@ vim.api.nvim_set_hl(0, "EndOfBuffer", { bg = "none" })
 vim.opt.number = true         -- Line numbers
 vim.opt.relativenumber = true -- Relative line numbers
 
-vim.opt.cursorline = false     -- DON'T Highlight current line
+vim.opt.cursorline = true     -- Highlight current line
 
 vim.opt.wrap = false          -- Don't wrap lines
 vim.opt.scrolloff = 10        -- Keep 10 lines above/below cursor
@@ -72,7 +72,7 @@ vim.keymap.set("v", "id", "<Esc>ggVG")                  -- select document vid
 
 -- system clipboard
 vim.keymap.set("v", "<leader>y", '"+y')                 -- copy visual to clipboard
-vim.keymap.set("n", "<leader>y", "<Esc>ggVG\"+y<C-o>")  -- copy file to clipboera
+vim.keymap.set("n", "<leader>y", 'mzggVG"+y`z')
 vim.keymap.set("n", "<leader>p", '"+p')
 
 
@@ -99,6 +99,10 @@ vim.keymap.set("n", "<C-Right>", ":vertical resize +2<CR>")
 -- better indenting in visual mode
 vim.keymap.set("v", "<", "<gv")
 vim.keymap.set("v", ">", ">gv")
+
+-- buffer keymaps
+vim.keymap.set("n", "<leader>bn", ":bnext<CR>")
+vim.keymap.set("n", "<leader>bp", ":bprevious<CR>")
 
 -- session management
 vim.keymap.set('n', '<leader>ss', function()

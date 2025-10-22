@@ -11,7 +11,7 @@ return {
         path_displays = { "smart" },
         layout_config = {
           -- height = 800,
-          width = 900,
+          width = 600,
           prompt_position = "top",
           preview_cutoff = 40,
         }
