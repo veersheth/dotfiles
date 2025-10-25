@@ -7,12 +7,9 @@ vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
 vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
 vim.api.nvim_set_hl(0, "EndOfBuffer", { bg = "none" })
 
--- basic settings
 vim.opt.number = true         -- Line numbers
 vim.opt.relativenumber = true -- Relative line numbers
-
 vim.opt.cursorline = true     -- Highlight current line
-
 vim.opt.wrap = false          -- Don't wrap lines
 vim.opt.scrolloff = 10        -- Keep 10 lines above/below cursor
 vim.opt.sidescrolloff = 8     -- Keep 8 columns left/right of cursor
@@ -67,61 +64,24 @@ vim.opt.encoding = "UTF-8"             -- Set encoding
 
 -- normal mode mappings
 vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>")
-vim.keymap.set("v", "<leader>n", ":norm ")
-vim.keymap.set("v", "id", "<Esc>ggVG")                  -- select document vid
+vim.keymap.set("v", "MN", ":norm ")     -- MN to quick-norm
+vim.keymap.set("v", "id", "<Esc>ggVG")  -- select document vid
 
 -- system clipboard
-vim.keymap.set("v", "<leader>y", '"+y')                 -- copy visual to clipboard
+vim.keymap.set("v", "<leader>y", '"+y') 
 vim.keymap.set("n", "<leader>y", 'mzggVG"+y`z')
 vim.keymap.set("n", "<leader>p", '"+p')
 
-
 -- center screen when jumping
-vim.keymap.set("n", "n", "nzzzv", {})
-vim.keymap.set("n", "N", "Nzzzv", {})
-vim.keymap.set("n", "<C-d>", "<C-d>zz", {})
-vim.keymap.set("n", "<C-u>", "<C-u>zz", {})
+vim.keymap.set("n", "n", "nzzzv" )
+vim.keymap.set("n", "N", "Nzzzv")
+vim.keymap.set("n", "<C-d>", "<C-d>zz")
+vim.keymap.set("n", "<C-u>", "<C-u>zz")
 
--- better window navigation using alt
-vim.keymap.set("n", "<M-h>", "<C-w>h")
-vim.keymap.set("n", "<M-j>", "<C-w>j")
-vim.keymap.set("n", "<M-k>", "<C-w>k")
-vim.keymap.set("n", "<M-l>", "<C-w>l")
-
--- splitting & resizing
-vim.keymap.set("n", "<leader>sv", ":vsplit<CR>")
-vim.keymap.set("n", "<leader>sh", ":split<CR>")
-vim.keymap.set("n", "<C-Up>", ":resize +2<CR>")
-vim.keymap.set("n", "<C-Down>", ":resize -2<CR>")
-vim.keymap.set("n", "<C-Left>", ":vertical resize -2<CR>")
-vim.keymap.set("n", "<C-Right>", ":vertical resize +2<CR>")
-
--- better indenting in visual mode
+-- continuous indenting in visual mode
 vim.keymap.set("v", "<", "<gv")
 vim.keymap.set("v", ">", ">gv")
 
 -- buffer keymaps
 vim.keymap.set("n", "<leader>bn", ":bnext<CR>")
 vim.keymap.set("n", "<leader>bp", ":bprevious<CR>")
-
--- session management
-vim.keymap.set('n', '<leader>ss', function()
-  local stdpath_cache = vim.fn.stdpath('cache')
-  local project = vim.fn.fnamemodify(vim.fn.getcwd(), ':t')
-  local cache_dir = stdpath_cache .. '/sessions'
-  local session_file = cache_dir .. '/' .. project .. '.vim'
-  vim.fn.mkdir(cache_dir, 'p')
-  vim.cmd('mksession! ' .. session_file)
-  print("session saved")
-end, { desc = 'save project session to cache', silent = true })
-
-vim.keymap.set('n', '<leader>sl', function()
-  local stdpath_cache = vim.fn.stdpath('cache')
-  local project = vim.fn.fnamemodify(vim.fn.getcwd(), ':t')
-  local session_file = stdpath_cache .. '/sessions/' .. project .. '.vim'
-  if vim.fn.filereadable(session_file) == 1 then
-    vim.cmd('source ' .. session_file)
-  else
-    print('session file not found in cache')
-  end
-end, { desc = 'load session from cache', silent = true })
