@@ -3,5 +3,5 @@
 # clipboard manager using tofi
 # requires tofi, cliphist and wl-clipboard to function
 
-cliphist list | rofi -dmenu -p "clip: " | cliphist decode | wl-copy
+cliphist list | rofi -dmenu -i -p "Copy: " | cliphist decode | wl-copy
 
