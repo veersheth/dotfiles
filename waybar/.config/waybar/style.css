@@ -12,10 +12,11 @@
 
 * {
     font-family: "JetBrainsMono Nerd Font", monospace;
+    /* font-family: "Adwaita Sans", monospace; */
     font-weight: 500; 
     font-size: 18px;
     border-radius: 14px;
-    background: transparent;
+    /* background: transparent; */
     color: @fg-main;
     margin: 1px 0;
     padding: 0;
@@ -62,7 +63,7 @@ window#waybar .modules-center {
 }
 
 #window * {
-  color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.4);
   margin-left: 10px;
 }
 
@@ -74,6 +75,7 @@ window#waybar .modules-center {
 #bluetooth,
 #power-profiles-daemon,
 #custom-powermenu,
+#custom-hypridle,
 #custom-notification {
     padding: 0 10px;
     /* margin: 4px 4px; */
@@ -140,13 +142,12 @@ tooltip {
 
 
 #tray>.passive {
-    -gtk-icon-effect: dim;
-    opacity: 0.8;
+    /* opacity: 0.8; */
 }
 
 #tray * {
-    opacity: 0.8;
-    padding: 4px;
+    /* opacity: 0.8; */
+  padding: 4px;
 }
 
 #tray>.needs-attention {
@@ -163,3 +164,5 @@ tooltip {
 #custom-powermenu {
   opacity: .5;
 }
+
+

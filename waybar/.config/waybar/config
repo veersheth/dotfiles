@@ -4,30 +4,31 @@
     "height": 32,
     "spacing": 5,
     "modules-left": [
-        "custom/powermenu",
         // "custom/notification",
+        "custom/powermenu",
         "clock",
         "hyprland/workspaces",
         "hyprland/window",
     ],
      //"modules-center": [
          //// "hyprland/window",
-     //],
+     // ],
     "modules-right": [
         "custom/media",
+        "custom/hypridle",
         "tray",
-        "bluetooth",
+        // "bluetooth",
         // "backlight",
-        "network",
+        // "network",
         "pulseaudio",
         "battery",
         "power-profiles-daemon",
-        "tuned"
+        "tuned",
     ],
 
     "tray": {
-        "icon-size": 18,
-        "spacing": 12,
+        "icon-size": 20,
+        "spacing": 14,
         "show-passive-items": true,
         "reverse-direction": false
     },
@@ -38,7 +39,9 @@
             // "2": "B",
             "3": "O",
             "11": "M",
-          }
+          },
+          "on-scroll-down": "hyprctl dispatch workspace e+1",
+          "on-scroll-up": "hyprctl dispatch workspace e-1",
       },
 
 
@@ -165,7 +168,7 @@
     }, 
 
     "custom/media": {
-      "format": "{}",
+      "format": "  {}",
       "exec": "/home/veer/scripts/get-media-info.sh",
       "interval": 2,
       "max-length": 58,
@@ -178,6 +181,13 @@
       "format": "",
       "tooltip": false,
       "on-click": "~/scripts/rofi-powermenu"
-    }
+    }, 
 
+    "custom/hypridle": {
+      "format": "{text}",
+      "return-type": "json",
+      "exec": "/home/veer/.config/waybar/scripts/hypridle-caffeine-waybar.sh",
+      "on-click": "/home/veer/scripts/hypridle-caffeine-toggle.sh",
+      "interval": 5,
+  }
 }
