@@ -105,8 +105,9 @@
       obsidian      	
       mpv
       pnpm_9 
-      nodejs_24 
-      cargo
+      # nodejs_24 
+      nodejs_20 
+      cargo rustup
       zathura
       gnome-extension-manager
       alacritty
@@ -117,10 +118,8 @@
   };
 
   nixpkgs.config.allowUnfree = true;
-  programs.firefox.enable = true;
 
   environment.systemPackages = with pkgs; [
-    maple-mono.NF
     bibata-cursors
     python313 python313Packages.pip
     bat
@@ -135,7 +134,6 @@
     wget
     gcc clang zig
     keyd
-    vim 
     openssl
     tree
     wget
@@ -145,8 +143,11 @@
     fd
     ripgrep
     gnome-tweaks
+
+    # for hypr
     wl-clipboard copyq brightnessctl waybar dunst ulauncher hyprpaper hypridle 
     hyprlock hyprsunset hyprpicker hyprshot rofi-wayland hyprcursor cliphist
+    networkmanagerapplet blueman
   ];
 
   environment.sessionVariables = {
@@ -162,6 +163,12 @@
   users.users.veer.shell = pkgs.zsh; 
   
   programs = {
+    firefox = {
+      enable = true;
+    };
+    steam = {
+      enable = true;
+    };
     zsh = {
       enable = true;
       shellAliases = { cat = "bat"; };
@@ -177,9 +184,10 @@
   };
 
   fonts.packages = with pkgs; [
-    nerd-fonts.fira-code
     nerd-fonts.jetbrains-mono
-    nerd-fonts.droid-sans-mono
+    maple-mono.NF
+    inter
+    pkgs.helvetica-neue-lt-std
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
