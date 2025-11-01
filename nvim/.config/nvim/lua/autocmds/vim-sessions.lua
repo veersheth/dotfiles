@@ -20,12 +20,13 @@ local function load_session()
   end
 end
 
-vim.keymap.set('n', '<leader>ss', save_session, { desc = 'Save project session', silent = true })
-vim.keymap.set('n', '<leader>sl', load_session, { desc = 'Load project session', silent = true })
+vim.keymap.set('n', '<leader>ps', save_session, { desc = 'Save project session', silent = true })
+vim.keymap.set('n', '<leader>P', load_session, { desc = 'Load project session', silent = true })
 
 -- auto-save session on file write
 vim.api.nvim_create_autocmd('BufWritePost', {
   callback = save_session,
   desc = 'Auto-save session on file save',
 })
+
 

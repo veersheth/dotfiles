@@ -63,14 +63,16 @@ vim.opt.modifiable = true              -- Allow buffer modifications
 vim.opt.encoding = "UTF-8"             -- Set encoding
 
 -- normal mode mappings
-vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>")
+vim.keymap.set("n", "<leader>w", ":w", { desc = "write buffer" }) -- note that this doesn't have an enter
+vim.keymap.set("n", "<leader>q", ":q<CR>", { desc = "quit buffer" })
+vim.keymap.set("n", "<leader>W", ":wa<CR>", { desc = "write all buffers" })
+vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>", { desc = "" })
 vim.keymap.set("v", "MN", ":norm ")     -- MN to quick-norm
 vim.keymap.set("v", "id", "<Esc>ggVG")  -- select document vid
 
 -- system clipboard
 vim.keymap.set("v", "<leader>y", '"+y') 
 vim.keymap.set("n", "<leader>y", 'mzggVG"+y`z')
-vim.keymap.set("n", "<leader>p", '"+p')
 
 -- center screen when jumping
 vim.keymap.set("n", "n", "nzzzv" )

@@ -1,5 +1,5 @@
 -- typst zathura preview
-vim.keymap.set("n", "<leader>tp", function()
+vim.keymap.set("n", "<leader>pr", function()
     local file = vim.fn.expand("%:p")
     local pdf  = vim.fn.expand("%:r") .. ".pdf"
     local cmd  = string.format("typst watch %s & zathura %s", file, pdf)
@@ -9,7 +9,7 @@ end, { desc = "Typst / Zathura preview" })
 -- writing mode
 local writing_mode = false
 
-vim.keymap.set("n", "<leader>w", function()
+vim.keymap.set("n", "<leader>tt", function()
     writing_mode = not writing_mode
 
     if writing_mode then

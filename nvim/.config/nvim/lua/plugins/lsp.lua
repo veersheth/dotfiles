@@ -47,10 +47,10 @@ return {
         pyright,
       })
 
-      vim.keymap.set("n", "<leader>lf", vim.lsp.buf.format)                                          -- format doc
-      vim.keymap.set("n", "<leader>lp", function() vim.diagnostic.jump({ count = -1, float = true }) end) -- prev diagnostic
-      vim.keymap.set("n", "<leader>ln", function() vim.diagnostic.jump({ count = 1, float = true }) end) -- next diagnostic
-      vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end)
+      vim.keymap.set("n", "<leader>lf", vim.lsp.buf.format, { desc = "format doc" })
+      vim.keymap.set("n", "<leader>lp", function() vim.diagnostic.jump({ count = -1, float = true }) end, { desc = "prev diagnostic" })
+      vim.keymap.set("n", "<leader>ln", function() vim.diagnostic.jump({ count = 1, float = true }) end, { desc = "next diagnostic" })
+      vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, { desc = "go to definition" })
 
       --   -- auto command for omnicomplete
       --   vim.api.nvim_create_autocmd('LspAttach', {
