@@ -2,14 +2,14 @@
 TERM = "screen-256color"
 
 [font]
-size = 16
+size = 17
 
 [font.normal]
 family = "JetBrainsMono Nerd Font"
 style = "Semibold"
 
 [window]
-opacity = 0.8
+opacity = 0.85
 decorations = "none"
 dynamic_padding = true
 
@@ -30,7 +30,7 @@ black =   '#000000'
 red =     '#ff5555'
 green =   '#50fa7b'
 yellow =  '#f1fa8c'
-blue =    '#bd93f9'
+blue =    '#8be9fd'
 magenta = '#ff79c6'
-cyan =    '#8be9fd'
+cyan =    '#19ffc9'
 white =   '#ffffff'

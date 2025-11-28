@@ -29,6 +29,6 @@ return {
     -- oil in current window 
     vim.keymap.set({ "n", "x" }, "<leader>/", function()
       oil.open()
-    end, { silent = true, desc = "Open Oil in current window" })
+    end, { silent = true, desc = "open oil" })
   end,
 }

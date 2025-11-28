@@ -2,6 +2,10 @@
 -- grr: vim.lsp.buf.references()
 -- gra: vim.lsp.buf.code_actions()
 -- gd: vim.lsp.buf.definition()
+-- ln: next diagonostic
+-- lp: prev diagonostic
+-- lf: format document
+-- lh: toggle inlay hints 
 
 return {
   {
@@ -47,10 +51,14 @@ return {
         pyright,
       })
 
-      vim.keymap.set("n", "<leader>lf", vim.lsp.buf.format, { desc = "format doc" })
-      vim.keymap.set("n", "<leader>lp", function() vim.diagnostic.jump({ count = -1, float = true }) end, { desc = "prev diagnostic" })
+      vim.keymap.set("n", "<leader>lf", vim.lsp.buf.format, { desc = "format" })
+      vim.keymap.set("n", "<leader>lp", function() vim.diagnostic.jump({ count = -1, float = true }) end, { desc = "prev diagonostic" })
       vim.keymap.set("n", "<leader>ln", function() vim.diagnostic.jump({ count = 1, float = true }) end, { desc = "next diagnostic" })
       vim.keymap.set("n", "gd", function() vim.lsp.buf.definition() end, { desc = "go to definition" })
+
+      vim.keymap.set("n", "<leader>lh", function()
+        vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+      end, { desc = "toggle inline hints" })
 
       --   -- auto command for omnicomplete
       --   vim.api.nvim_create_autocmd('LspAttach', {
@@ -70,22 +78,33 @@ return {
     dependencies = { 'rafamadriz/friendly-snippets' },
     version = '1.*',
     opts = {
-      keymap = { preset = 'default' },
+      keymap = {
+        preset = 'default',
+      },
+      appearance = { nerd_font_variant = 'mono' },
+      completion = { documentation = { auto_show = true } },
+      sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },
+      fuzzy = { implementation = "lua" },
+    },
+    opts_extend = { "sources.default" }
+  },
+
+  {
+    'saghen/blink.cmp',
+    dependencies = { 'rafamadriz/friendly-snippets' },
+    version = '1.*',
+    opts = {
+      keymap = {
+        ['<CR>'] = { 'accept', 'fallback' }
+      },
       appearance = { nerd_font_variant = 'mono' },
 
-      -- (Default) Only show the documentation popup when manually triggered
       completion = { documentation = { auto_show = true } },
       sources = {
         default = { 'lsp', 'path', 'snippets', 'buffer' },
       },
 
-      -- (Default) Rust fuzzy matcher for typo resistance and significantly better performance
-      -- You may use a lua implementation instead by using `implementation = "lua"` or fallback to the lua implementation,
-      -- when the Rust fuzzy matcher is not available, by using `implementation = "prefer_rust"`
-      --
-      -- See the fuzzy documentation for more information
-      -- fuzzy = { implementation = "prefer_rust" }
-      fuzzy = { implementation = "lua" }
+      fuzzy = { implementation = "prefer_rust" }
     },
     opts_extend = { "sources.default" }
   }

@@ -38,5 +38,15 @@
         "is_default_search": false,
         "run_without_argument": false,
         "added": 1746511326.6222863
+    },
+    "23631917-ec83-4e68-b4c3-6bfdec02a762": {
+        "id": "23631917-ec83-4e68-b4c3-6bfdec02a762",
+        "name": "Nix Packages",
+        "keyword": "nxp",
+        "cmd": "https://search.nixos.org/packages?channel=25.05&query=%s",
+        "icon": null,
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1763338680.0341241
     }
 }

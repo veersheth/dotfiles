@@ -93,27 +93,27 @@
     description = "Veer";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
+      # davinci-resolve
+      ulauncher
+      mixxx
+      figma-linux
       spotify
       gimp3-with-plugins
-      figma-linux
       brave
-      vscodium
+      vscode
       obs-studio
       lazygit
-      flatpak
       typst
       obsidian      	
       mpv
       pnpm_9 
       # nodejs_24 
       nodejs_20 
-      cargo rustup
       zathura
       gnome-extension-manager
-      alacritty
+      alacritty kitty
       sshfs
       sox
-      tofi
     ];
   };
 
@@ -125,7 +125,7 @@
     bat
     pkg-config
     libnotify
-    playerctl
+    playerctl 
     jq
     xclip
     unzip
@@ -143,11 +143,21 @@
     fd
     ripgrep
     gnome-tweaks
+    cargo rustup rustc
+
+    # for tauri 
+    cargo-tauri
+    at-spi2-atk atkmm cairo gdk-pixbuf glib
+    gtk3 gtk3.dev  # Add this
+    harfbuzz librsvg libsoup_3 pango
+    webkitgtk_4_1 openssl pkg-config
+    gobject-introspection xorg.libXtst
+
 
     # for hypr
     wl-clipboard copyq brightnessctl waybar dunst ulauncher hyprpaper hypridle 
     hyprlock hyprsunset hyprpicker hyprshot rofi-wayland hyprcursor cliphist
-    networkmanagerapplet blueman
+    networkmanagerapplet blueman ashell
   ];
 
   environment.sessionVariables = {
@@ -185,6 +195,7 @@
 
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
+    nerd-fonts.iosevka
     maple-mono.NF
     inter
     pkgs.helvetica-neue-lt-std
@@ -209,6 +220,7 @@
     fprintd.enable = true;
     fprintd.tod.enable = true;
     fprintd.tod.driver = pkgs.libfprint-2-tod1-goodix;
+    # flatpak.enable = true;
   };
 
   # Virtualization for COMP3431

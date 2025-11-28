@@ -1,8 +1,0 @@
-/* Remove close and new tab buttons */
-.tab-close-button,
-#tabs-newtab-button,
-#new-tab-button {
-  display: none !important;
-  visibility: collapse !important;
-}
-

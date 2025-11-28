@@ -1,15 +1,22 @@
 return {
-  {
+  { -- theme: rosepine
     "rose-pine/neovim",
     name = "rose-pine",
     config = function()
       require("rose-pine").setup({
-        disable_background = true,
-        disable_float_background = true
+        styles = {
+          transparency = true,
+        }
       })
-
       vim.cmd("colorscheme rose-pine")
-      vim.cmd("highlight CursorLine guibg=#202020")
-    end,
+    end
   },
+  { -- colorizer for coloring hex/rgb colors
+    "NvChad/nvim-colorizer.lua",
+    opts = {
+      user_default_options = {
+        names = false,
+      },
+    },
+  }
 }

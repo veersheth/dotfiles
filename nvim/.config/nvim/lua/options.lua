@@ -64,26 +64,29 @@ vim.opt.encoding = "UTF-8"             -- Set encoding
 
 -- normal mode mappings
 vim.keymap.set("n", "<leader>w", ":w", { desc = "write buffer" }) -- note that this doesn't have an enter
-vim.keymap.set("n", "<leader>q", ":q<CR>", { desc = "quit buffer" })
-vim.keymap.set("n", "<leader>W", ":wa<CR>", { desc = "write all buffers" })
+vim.keymap.set("n", "<leader>q", ":q", { desc = "quit buffer" })
+vim.keymap.set("n", "<leader>W", ":wa", { desc = "write all buffers" })
 vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>", { desc = "" })
-vim.keymap.set("v", "MN", ":norm ")     -- MN to quick-norm
-vim.keymap.set("v", "id", "<Esc>ggVG")  -- select document vid
+
+vim.keymap.set("v", "MN", ":norm ", { desc = "quick norm" })
+vim.keymap.set("v", "id", "<Esc>ggVG", { desc = "select entire doc" })
 
 -- system clipboard
-vim.keymap.set("v", "<leader>y", '"+y') 
-vim.keymap.set("n", "<leader>y", 'mzggVG"+y`z')
+vim.keymap.set("v", "<leader>y", '"+y', { desc = "copy to system clipboard" })
+vim.keymap.set("n", "<leader>y", 'mzggVG"+y`z', { desc = "copy to system clipboard" })
 
 -- center screen when jumping
-vim.keymap.set("n", "n", "nzzzv" )
-vim.keymap.set("n", "N", "Nzzzv")
-vim.keymap.set("n", "<C-d>", "<C-d>zz")
-vim.keymap.set("n", "<C-u>", "<C-u>zz")
+vim.keymap.set("n", "n", "nzzzv", { desc = "next and center" })
+vim.keymap.set("n", "N", "Nzzzv", { desc = "prev and center" })
+vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "page down and center" })
+vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "page up and center" })
 
 -- continuous indenting in visual mode
-vim.keymap.set("v", "<", "<gv")
-vim.keymap.set("v", ">", ">gv")
+vim.keymap.set("v", "<", "<gv", { desc = "indent back" })
+vim.keymap.set("v", ">", ">gv", { desc = "indent forw" })
 
 -- buffer keymaps
-vim.keymap.set("n", "<leader>bn", ":bnext<CR>")
-vim.keymap.set("n", "<leader>bp", ":bprevious<CR>")
+vim.keymap.set("n", "<leader>x", ":bdelete<CR>", { desc = "delete buffer" })
+vim.keymap.set("n", "<leader>X", ":bdelete!<CR>", { desc = "delete buffer force" })
+vim.keymap.set("n", "<leader>n", ":bnext<CR>", { desc = "next buffer" })
+vim.keymap.set("n", "<leader>p", ":bprevious<CR>", { desc = "prev buffer" })

@@ -2,8 +2,9 @@ autoload -U colors && colors
 setopt PROMPT_SUBST
 
 NEWLINE=$'\n'
+ZSHCOLOR="#d9bfff"
 # PROMPT="${NEWLINE} %{$fg[yellow]%}%~%{$fg[blue]%}%{$reset_color%}${NEWLINE} $ "
-PROMPT='${NEWLINE}%F{yellow}%n@%m%f %F{#b5b5b5}%~%f${NEWLINE}%F{yellow}$ %f'
+PROMPT='${NEWLINE}%F{${ZSHCOLOR}}%n@%m%f %F{#b5b5b5}%~%f${NEWLINE}%F{${ZSHCOLOR}}$ %f'
 
 HISTFILE=~/.zsh_history
 HISTSIZE=100
@@ -20,6 +21,8 @@ alias l="ls -la --color=auto"
 alias ls="ls --color=auto"
 alias open="xdg-open"
 alias lg="lazygit"
+alias ..="cd .."
+alias ...="cd ../.."
 
 jj() {
     if ! tmux attach; then

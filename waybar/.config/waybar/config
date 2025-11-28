@@ -1,6 +1,6 @@
 {
     "layer": "top",
-    "position": "top",
+    "position": "bottom",
     "height": 32,
     "spacing": 5,
     "modules-left": [
@@ -36,14 +36,13 @@
       "hyprland/workspaces": {
           "format": "{icon}",
           "format-icons": {
-            // "2": "B",
-            "3": "O",
+            // "2": "",
+            "3": "N",
             "11": "M",
           },
           "on-scroll-down": "hyprctl dispatch workspace e+1",
           "on-scroll-up": "hyprctl dispatch workspace e-1",
       },
-
 
     "hyprland/window": {
         "format": "{class}",

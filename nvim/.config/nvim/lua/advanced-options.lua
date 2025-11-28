@@ -1,15 +1,15 @@
 -- typst zathura preview
-vim.keymap.set("n", "<leader>pr", function()
+vim.keymap.set("n", "<leader>tp", function()
     local file = vim.fn.expand("%:p")
     local pdf  = vim.fn.expand("%:r") .. ".pdf"
     local cmd  = string.format("typst watch %s & zathura %s", file, pdf)
     vim.fn.jobstart({ "bash", "-c", cmd }, { detach = true })
-end, { desc = "Typst / Zathura preview" })
+end, { desc = "typst preview" })
 
 -- writing mode
 local writing_mode = false
 
-vim.keymap.set("n", "<leader>tt", function()
+vim.keymap.set("n", "<leader>tw", function()
     writing_mode = not writing_mode
 
     if writing_mode then
@@ -33,7 +33,7 @@ vim.keymap.set("n", "<leader>tt", function()
         vim.opt_local.signcolumn = "yes"
         vim.notify("Writing mode disabled", vim.log.levels.INFO)
     end
-end, { desc = "Toggle writing mode" })
+end, { desc = "toggle writing mode" })
 
 -- explorer for when plugins arent installed
-vim.keymap.set("n", "<leader>/", vim.cmd.Ex, { desc = "Indent right and reselect" })
+vim.keymap.set("n", "<leader>/", vim.cmd.Ex, { desc = "netrw" })

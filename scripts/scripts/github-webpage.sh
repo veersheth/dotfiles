@@ -38,4 +38,4 @@ fi
 # fi
 
 notify-send "URL copied to clipboard" "$url"
-echo "$url"
+xdg-open "$url" || echo "$url"

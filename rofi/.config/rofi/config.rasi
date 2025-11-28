@@ -11,7 +11,7 @@ configuration {
 * {
   background-color: transparent;
   text-color: rgba(255, 255, 255, 1);
-  font: "JetBrainsMono Nerd Font 16";
+  font: "Inter 16";
 }
 
 inputbar {
