@@ -12,7 +12,6 @@ return {
       current_line_blame_formatter = ' --> <author>, <author_time:%R> - <summary>',
     }
 
-    -- Toggle on/off as needed
     vim.keymap.set('n', '<leader>gb', function()
       gitsigns.toggle_current_line_blame()
     end, { desc = 'Toggle Git line blame' })

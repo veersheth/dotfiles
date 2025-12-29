@@ -16,7 +16,7 @@ return {
         watch_for_changes = true,
       },
       columns = {
-        -- "permissions",
+        "permissions",
         "icon",
       },
       float = {

@@ -11,6 +11,7 @@ return {
           sorting_strategy = "ascending",
           path_displays = { "smart" },
           layout_config = {
+            height = 600,
             width = 600,
             prompt_position = "top",
             preview_cutoff = 40,
