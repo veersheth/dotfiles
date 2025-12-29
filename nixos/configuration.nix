@@ -1,6 +1,6 @@
 # Edit this configuration file to define what should be installed on
 # your system.  Help is available in the configuration.nix(5) man page
-# and in the NixOS manual (accessible by running ‘nixos-help’).
+# and in the NixOS manual (accessible by running 'nixos-help').
 
 { config, pkgs, ... }:
 
@@ -16,7 +16,15 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 6; # keeps 6 generations 
 
-  boot.kernelParams = [ "kvm.enable_virt_at_load=0" ]; # virtualization(for COMP3431)
+  # Kernel parameters for better suspend and power management
+  boot.kernelParams = [ 
+    "kvm.enable_virt_at_load=0"   # virtualization(for COMP3431)
+    "amd_pstate=active"            # Better AMD CPU power management
+    "rtc_cmos.use_acpi_alarm=1"    # Better RTC handling for wakeup
+  ];
+
+  # AMD specific power management
+  boot.kernelModules = [ "amd_pstate" ];
 
   networking.hostName = "framework-nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -29,7 +37,9 @@
   networking.networkmanager.enable = true;
 
   # Set your time zone.
-  time.timeZone = "Australia/Sydney";
+  # time.timeZone = "Australia/Sydney";
+  time.timeZone = "Asia/Kolkata";
+  # services.automatic-timezoned.enable = true;
 
   # Select internationalisation properties.
   i18n.defaultLocale = "en_AU.UTF-8";
@@ -54,10 +64,64 @@
   services.xserver.displayManager.gdm.wayland = true;
   services.xserver.desktopManager.gnome.enable = true;
 
-  # Suspend on power button press
-  services.logind.extraConfig = ''
-    HandlePowerKey=suspend
+  # Power management configuration
+  services.logind = {
+    lidSwitch = "suspend";           # Suspend when lid closes
+    lidSwitchExternalPower = "suspend"; # Also suspend on AC power
+    lidSwitchDocked = "ignore";      # Don't suspend when docked
+    powerKey = "suspend";            # Suspend on power button
+    powerKeyLongPress = "poweroff";  # Long press to power off
+    extraConfig = ''
+      HandleSuspendKey=suspend
+      HandleHibernateKey=hibernate
+      IdleAction=suspend
+      IdleActionSec=15min
+    '';
+  };
+
+  # Power profiles for better battery life
+  services.power-profiles-daemon.enable = true;
+  
+  # UPower configuration for battery management
+  services.upower = {
+    enable = true;
+    percentageLow = 15;
+    percentageCritical = 5;
+    percentageAction = 3;
+    criticalPowerAction = "Hibernate";  # Hibernate when critically low
+  };
+
+  # System sleep configuration - FIXED: removed conflicting SuspendState
+  systemd.sleep.extraConfig = ''
+    HibernateDelaySec=2h
   '';
+
+  # ACPI settings for better s2idle behavior
+  powerManagement = {
+    enable = true;
+    powertop.enable = true;
+    cpuFreqGovernor = "powersave";
+  };
+
+  # Prevent USB devices from waking the system instantly
+  services.udev.extraRules = ''
+    # Disable USB wakeup to prevent instant wake from suspend
+    ACTION=="add", SUBSYSTEM=="usb", DRIVER=="usb", ATTR{power/wakeup}="disabled"
+    
+    # Keep internal keyboard wake enabled (Framework specific - vendor ID 32ac)
+    ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="32ac", ATTR{power/wakeup}="enabled"
+  '';
+
+  # Disable ACPI wakeup sources that cause instant wake
+  systemd.services.disable-wake-sources = {
+    description = "Disable problematic ACPI wake sources";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.bash}/bin/bash -c 'echo GPP6 > /proc/acpi/wakeup; echo GP11 > /proc/acpi/wakeup; echo GP12 > /proc/acpi/wakeup; echo NHI0 > /proc/acpi/wakeup; echo NHI1 > /proc/acpi/wakeup'";
+    };
+  };
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -87,12 +151,14 @@
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
+  # Define a user account. Don't forget to set a password with 'passwd'.
   users.users.veer = {
     isNormalUser = true;
     description = "Veer";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
+      rquickshare
+      tor-browser
       # davinci-resolve
       ulauncher
       mixxx
@@ -109,7 +175,7 @@
       pnpm_9 
       # nodejs_24 
       nodejs_20 
-      zathura
+      zathura 
       gnome-extension-manager
       alacritty kitty
       sshfs
@@ -144,15 +210,6 @@
     ripgrep
     gnome-tweaks
     cargo rustup rustc
-
-    # for tauri 
-    cargo-tauri
-    at-spi2-atk atkmm cairo gdk-pixbuf glib
-    gtk3 gtk3.dev  # Add this
-    harfbuzz librsvg libsoup_3 pango
-    webkitgtk_4_1 openssl pkg-config
-    gobject-introspection xorg.libXtst
-
 
     # for hypr
     wl-clipboard copyq brightnessctl waybar dunst ulauncher hyprpaper hypridle 
@@ -193,13 +250,32 @@
     };
   };
 
-  fonts.packages = with pkgs; [
-    nerd-fonts.jetbrains-mono
-    nerd-fonts.iosevka
-    maple-mono.NF
-    inter
-    pkgs.helvetica-neue-lt-std
-  ];
+  fonts = {
+    enableDefaultPackages = true;
+
+    packages = with pkgs; [
+      inter
+      helvetica-neue-lt-std
+      junicode
+
+      nerd-fonts.jetbrains-mono
+      nerd-fonts.fira-code
+      nerd-fonts.iosevka
+      agave
+      maple-mono.NF
+    ];
+
+    fontconfig = {
+      enable = true;
+
+      defaultFonts = {
+        sansSerif = [ "Inter" "Helvetica Neue" ];
+        serif = [ "Junicode" ];
+        monospace = [ "JetBrainsMono Nerd Font" ];
+        emoji = [ "Noto Color Emoji" ];
+      };
+    };
+  };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -216,10 +292,10 @@
 
   # List services that you want to enable:
   services = {
+    timesyncd.enable = true;
+    fwupd.enable = true;
     keyd.enable = true;
     fprintd.enable = true;
-    fprintd.tod.enable = true;
-    fprintd.tod.driver = pkgs.libfprint-2-tod1-goodix;
     # flatpak.enable = true;
   };
 
@@ -239,10 +315,9 @@
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # on your system were taken. It's perfectly fine and recommended to leave
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.05"; # Did you read the comment?
 }
-
