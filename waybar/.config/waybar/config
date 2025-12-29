@@ -1,27 +1,20 @@
 {
-    "layer": "top",
-    "position": "bottom",
+    "position": "top",
+    "layer": "bottom",
+    "margin": 0,
     "height": 32,
     "spacing": 5,
     "modules-left": [
-        // "custom/notification",
-        "custom/powermenu",
-        "clock",
         "hyprland/workspaces",
         "hyprland/window",
     ],
-     //"modules-center": [
-         //// "hyprland/window",
-     // ],
     "modules-right": [
         "custom/media",
         "custom/hypridle",
         "tray",
-        // "bluetooth",
-        // "backlight",
-        // "network",
         "pulseaudio",
         "battery",
+        "clock",
         "power-profiles-daemon",
         "tuned",
     ],
@@ -52,11 +45,9 @@
 
     "clock": {
         "format": "{:%I:%M %a %d}",
-        "timezones": ["", "Asia/Kolkata"],
         "tooltip": true,
         "tooltip-format": "{calendar}",
         "actions": { "on-click": "tz_up" },
-        "exec": "echo '{}' && echo '{}' > /tmp/waybar-calendar"
     },
 
 
@@ -167,7 +158,7 @@
     }, 
 
     "custom/media": {
-      "format": "  {}",
+      "format": "{}",
       "exec": "/home/veer/scripts/get-media-info.sh",
       "interval": 2,
       "max-length": 58,

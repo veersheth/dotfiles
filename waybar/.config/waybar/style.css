@@ -12,19 +12,21 @@
 
 * {
     font-family: "JetBrainsMono Nerd Font", monospace;
-    /* font-family: "Adwaita Sans", monospace; */
-    font-weight: 500; 
+    /* font-family: "SegoeUI", "Inter" ,"Adwaita Sans", monospace; */
+    font-weight: 600; 
     font-size: 18px;
-    border-radius: 14px;
+    border-radius: 0;
     /* background: transparent; */
     color: @fg-main;
     margin: 1px 0;
     padding: 0;
+    opacity: 0.90;
 }
 
 #waybar {
-    border-radius: 0;
+    border-radius: 0px;
     background: rgba(0, 0, 0, .8);
+    /* border-top: 1px solid #505050; */
     /* background: linear-gradient(to bottom,
         rgba(0,0,0,0.6) 0%,
         rgba(0,0,0,0.2) 70%,
@@ -38,7 +40,7 @@ window#waybar .modules-center ,
 window#waybar .modules-right { 
     /* border: 1px solid rgba(255,255,255,.25); */
     margin: 0px 8px;
-    padding: 2px 12px;
+    padding: 0px 12px;
     /* background: rgba(0,0,0,.4); */
 }
 
@@ -59,7 +61,9 @@ window#waybar .modules-center {
 }
 
 #clock {
-    padding: 0 10px;
+    padding: 0 20px;
+  background-color: rgba(255,255,255,0.1);
+  /* margin: 0 20px; */
 }
 
 #window * {
@@ -147,7 +151,7 @@ tooltip {
 
 #tray * {
     /* opacity: 0.8; */
-  padding: 4px;
+  padding: 0px 4px;
 }
 
 #tray>.needs-attention {
@@ -157,8 +161,10 @@ tooltip {
 
 #custom-media {
     color: @accent-blue;
+    background-color: black;
     opacity: 0.7;
     margin-right: 10px;
+    padding: 0 20px;
 }
 
 #custom-powermenu {
