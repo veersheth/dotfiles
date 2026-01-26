@@ -191,7 +191,7 @@
     libnotify
     playerctl 
     jq
-    xclip
+    xclip wl-clipboard
     unzip
     git
     vim neovim
