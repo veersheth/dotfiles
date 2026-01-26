@@ -57,3 +57,5 @@ alias cse="ssh -t z5494316@cse.unsw.edu.au 'cd ~/cse; exec zsh -l'"
 # YO PATH 
 export PATH="$HOME/scripts:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
+
+alias nxp="sudo nvim /etc/nixos/configuration.nix; sudo nixos-rebuild switch"
