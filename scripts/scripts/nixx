@@ -1,46 +1,64 @@
 #!/usr/bin/env bash
-
-# nixOS rebuild script that commits on a successful build (optionally)
-# configuration.nix MUST BE STORED IN /home/veer/dotfiles/nixos
 set -e
 
-VERBOSE=false
+CONFIG_DIR="/home/veer/dotfiles/nixos"
+CONFIG_FILE="$CONFIG_DIR/configuration.nix"
 
-# Check if user passed --verbose
-if [[ "$1" == "-v" ]]; then
-    VERBOSE=true
-fi
+TMP_BEFORE="$(mktemp)"
 
-# Edit your config
-nvim /home/veer/dotfiles/nixos/configuration.nix
+# Snapshot before editing
+cp "$CONFIG_FILE" "$TMP_BEFORE"
 
-# cd to your config dir
-pushd /home/veer/dotfiles/nixos > /dev/null
+# Edit
+nvim "$CONFIG_FILE"
 
-# Early return if no changes were detected
-if git diff --quiet '*.nix'; then
-    echo "No changes detected, exiting."
-    popd > /dev/null
-    exit 0
-fi
+# # If nothing changed compared to before editing
+# if diff -q "$TMP_BEFORE" "$CONFIG_FILE" >/dev/null; then
+#     echo "No changes detected. Exiting."
+#     rm "$TMP_BEFORE"
+#     exit 0
+# fi
 
-# show your changes
-git diff -U0 '*.nix'
+# Show what changed (human-readable, not git-style)
+echo "Changes detected:"
+echo "-----------------"
+diff -u "$TMP_BEFORE" "$CONFIG_FILE" || true
+echo
 
-echo "NixOS Rebuilding..."
+# Prompt
+while true; do
+    read -rp "Build NixOS? [y/n/v] (v = verbose): " choice
+    case "$choice" in
+        y|Y)
+            VERBOSE=false
+            break
+            ;;
+        v|V)
+            VERBOSE=true
+            break
+            ;;
+        n|N)
+            echo "Aborting."
+            rm "$TMP_BEFORE"
+            exit 0
+            ;;
+        *)
+            echo "Invalid input."
+            ;;
+    esac
+done
 
-# Rebuild logic
+sudo echo "Rebuilding NixOS..."
+
 if $VERBOSE; then
-    sudo nixos-rebuild switch -I nixos-config=/home/veer/dotfiles/nixos/configuration.nix
+    sudo nixos-rebuild switch -I nixos-config="$CONFIG_FILE"
 else
-    sudo nixos-rebuild switch -I nixos-config=/home/veer/dotfiles/nixos/configuration.nix &>nixos-switch.log \
-        || (grep --color error nixos-switch.log && exit 1)
+    sudo nixos-rebuild switch -I nixos-config="$CONFIG_FILE" &> nixos-switch.log \
+        || (grep --color=auto error nixos-switch.log && exit 1)
 fi
 
-# Get current generation metadata
-current=$(nixos-rebuild list-generations | grep current)
 
-popd > /dev/null
+rm "$TMP_BEFORE"
 
 notify-send -e "NixOS Rebuilt OK!" --icon=software-update-available
 
