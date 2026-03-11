@@ -26,13 +26,13 @@ return {
         },
       },
       window = {
-        position = "right",         -- always on the left
-        width = 35,
+        position = "right",  
+        width = 25,
       },
     })
 
     vim.keymap.set("n", "<leader>-", function()
-      vim.cmd("Neotree toggle right")
+      vim.cmd("Neotree toggle")
     end, { desc = "Toggle file tree" })
   end,
 }

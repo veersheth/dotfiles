@@ -2,6 +2,7 @@ require("options")
 require("advanced-options")
 require("autocmds.low-level-autocmds")
 require("autocmds.vim-sessions")
+require("autocmds.autosave")
 
 local function find_start_dir()
   -- iterate over command-line args

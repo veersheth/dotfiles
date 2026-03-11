@@ -6,6 +6,19 @@ vim.keymap.set("n", "<leader>tp", function()
     vim.fn.jobstart({ "bash", "-c", cmd }, { detach = true })
 end, { desc = "typst preview" })
 
+-- LaTeX zathura preview 
+vim.keymap.set("n", "<leader>tl", function()
+    local file = vim.fn.expand("%:p")
+    local pdf  = vim.fn.expand("%:r") .. ".pdf"
+    
+    -- -pdf: Generate PDF
+    -- -pvc: Preview Continuous (watches for changes)
+    -- -interaction=nonstopmode: Don't stop on errors
+    local cmd = string.format("latexmk -pdf -pvc -interaction=nonstopmode %s & zathura %s", file, pdf)
+    
+    vim.fn.jobstart({ "bash", "-c", cmd }, { detach = true })
+end, { desc = "latex preview (auto-compile)" })
+
 -- writing mode
 local writing_mode = false
 
@@ -34,6 +47,11 @@ vim.keymap.set("n", "<leader>tw", function()
         vim.notify("Writing mode disabled", vim.log.levels.INFO)
     end
 end, { desc = "toggle writing mode" })
+
+-- vim.keymap.set("n", "<leader><leader>", "mbggVGgw`b:w<CR>")
+vim.keymap.set("n", "<leader><leader>", "mnvipgw`n", { desc = "wrap paragraph" } )
+
+
 
 -- explorer for when plugins arent installed
 vim.keymap.set("n", "<leader>/", vim.cmd.Ex, { desc = "netrw" })
