@@ -25,11 +25,10 @@ echo "-----------------"
 diff -u "$TMP_BEFORE" "$CONFIG_FILE" || true
 echo
 
-# Prompt
 while true; do
-    read -rp "Build NixOS? [y/n/v] (v = verbose): " choice
+    read -rp "Build NixOS? [Y/n/v] (v = verbose): " choice
     case "$choice" in
-        y|Y)
+        y|Y|"")
             VERBOSE=false
             break
             ;;
