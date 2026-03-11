@@ -30,7 +30,8 @@
   networking.networkmanager.enable = true;
 
   # Set your time zone.
-  time.timeZone = "Asia/Kolkata";
+  time.timeZone = "Australia/Sydney";
+  # time.timeZone = "Asia/Kolkata";
 
   # Select internationalisation properties.
   i18n.defaultLocale = "en_AU.UTF-8";
@@ -89,31 +90,41 @@
     isNormalUser = true;
     description = "Veer";
     # extraGroups = [ "networkmanager" "wheel" ];
-    extraGroups = [ "networkmanager" "wheel" "video" ]; 
+    extraGroups = [ "networkmanager" "wheel" "video" "docker" ]; 
     packages = with pkgs; [
       # Apps
+      discord
+      docker
       rquickshare
+      zathura sioyek
       brave
       gimp3
       spotify
       tor-browser
       obsidian
       alacritty
-      zathura
       lazygit
       mpv
       ghostty
       davinci-resolve
+      kdePackages.kdenlive
       vscode
       livecaptions
       obs-studio
       gnome-extension-manager
       shotcut
+      figma-linux
+      syncthing
+      zoom-us
+      libreoffice
+      p3x-onenote
 
       # CLI
       sshfs
-      typst
+      typst texlive.combined.scheme-full
       pnpm_9 nodejs_20
+      docker_25
+      tree-sitter
 
       # GNOME Extensions
       gnomeExtensions.bluetooth-battery-meter 
@@ -123,8 +134,26 @@
       gnomeExtensions.just-perfection 
       gnomeExtensions.caffeine
       gnomeExtensions.appindicator
+
+      # Hyprland
+      hyprpanel
+      hypridle 
+      hyprlock
+      hyprsunset
+      hyprpaper
+      hyprshot
+      hyprpicker
+
     ];
   };
+
+  virtualisation.docker.enable = true;
+  virtualisation.docker.enableOnBoot = true;
+
+  environment.gnome.excludePackages = (with pkgs; [
+    gnome-tour
+    snapshot
+  ]);
 
   users.defaultUserShell=pkgs.zsh; 
   users.users.veer.shell = pkgs.zsh;
@@ -140,20 +169,22 @@
       nerd-fonts.iosevka
       agave
       maple-mono.NF
+      cascadia-code
       
+      whatsapp-emoji-font
       noto-fonts-emoji
       noto-fonts-color-emoji
-      twitter-color-emoji
     ];
     
     fontconfig = {
       defaultFonts = {
-        emoji = [ "Noto Color Emoji" "Twitter Color Emoji" ];
+        emoji = [ "Noto Color Emoji" ];
       };
     };
   };
 
   programs = {
+    nix-ld.enable = true;
     firefox = {
       enable = true;
     };
@@ -164,12 +195,11 @@
       enable = true;
       shellAliases = { cat = "bat"; };
     };
-    # hyprland = {
-    #   enable = true;
-    #   xwayland.enable = true;
-    # };
-    neovim = {
+    hyprland = {
       enable = true;
+      xwayland.enable = true;
+    };
+    neovim = {
       defaultEditor = true;
     };
     kdeconnect = {
@@ -208,7 +238,13 @@
     ripgrep
     gnome-tweaks
     cargo rustc
+    bibata-cursors
   ];
+
+  environment.variables = {
+    XCURSOR_THEME = "Bibata-Modern-Ice";
+    XCURSOR_SIZE = "24";
+  };
 
   environment.etc."keyd/default.conf" = {
     source = files/keyd/default.conf;
@@ -236,6 +272,10 @@
       percentageLow = 10;
       percentageCritical = 5;
       percentageAction = 2;
+    };
+     syncthing = {
+      enable = true;
+      openDefaultPorts = true; # Open ports in the firewall for Syncthing. (NOTE: this will not open syncthing gui port)
     };
   };
 

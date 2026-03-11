@@ -24,6 +24,10 @@ alias lg="lazygit"
 alias ..="cd .."
 alias ...="cd ../.."
 
+pls() {
+  sudo $(fc -ln -1)
+}
+
 jj() {
     if ! tmux attach; then
         mkdir -p /tmp/temptmux

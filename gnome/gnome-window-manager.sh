@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+xdg-settings set default-web-browser app.zen_browser.zen.desktop
+
 # -------------------------------------------------
 # workspaces
 # -------------------------------------------------
@@ -60,7 +62,7 @@ gsettings set org.gnome.shell.window-switcher current-workspace-only false
 gsettings set org.gnome.shell.app-switcher current-workspace-only false
 
 # animations
-gsettings set org.gnome.desktop.interface enable-animations false
+gsettings set org.gnome.desktop.interface enable-animations true
 
 # -------------------------------------------------
 # custom 
@@ -70,6 +72,7 @@ gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings \
 "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', \
   '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', \
   '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', \
+  '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', \
   '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/']"
 
 # browser super b
@@ -91,4 +94,9 @@ gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/or
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ name 'Launch Alacritty'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ command 'alacritty'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ binding '<Super>Return'
+
+# super p quick note
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ name 'Quick Note'
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ command '/home/veer/scripts/quick-gnome-note.sh'
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ binding '<Super>p'
 
