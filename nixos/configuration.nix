@@ -96,7 +96,7 @@
       discord
       docker
       rquickshare
-      zathura sioyek
+      sioyek
       brave
       gimp3
       spotify
@@ -214,6 +214,7 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    rnnoise-plugin easyeffects lsp-plugins # for background noise suppression
     brightnessctl
     python313 python313Packages.pip
     bat
