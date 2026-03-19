@@ -18,6 +18,7 @@
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernelModules = [ "hid_sensor_hub" ];
+  boot.kernelParams = [ "mem_sleep_default=deep" ];
 
   networking.hostName = "framework-nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -96,16 +97,14 @@
       discord
       docker
       rquickshare
-      sioyek
-      brave
+      sioyek zathura zathuraPkgs.zathura_pdf_mupdf
       gimp3
       spotify
       tor-browser
       obsidian
-      alacritty
       lazygit
       mpv
-      ghostty
+      ghostty wezterm alacritty
       davinci-resolve
       kdePackages.kdenlive
       vscode
@@ -118,13 +117,14 @@
       zoom-us
       libreoffice
       p3x-onenote
+notes
+
 
       # CLI
       sshfs
       typst texlive.combined.scheme-full
       pnpm_9 nodejs_20
       docker_25
-      tree-sitter
 
       # GNOME Extensions
       gnomeExtensions.bluetooth-battery-meter 
@@ -164,6 +164,7 @@
       inter
       helvetica-neue-lt-std
       junicode
+      nerd-fonts._0xproto
       nerd-fonts.jetbrains-mono
       nerd-fonts.fira-code
       nerd-fonts.iosevka
@@ -185,23 +186,39 @@
 
   programs = {
     nix-ld.enable = true;
+    nix-ld.libraries = with pkgs; [
+      stdenv.cc.cc
+      zlib
+      fuse3
+      icu
+      nss
+      openssl
+      curl
+      expat
+    ];
+
     firefox = {
       enable = true;
     };
+
     # steam = {
     #   enable = true;
     # };
+
     zsh = {
       enable = true;
       shellAliases = { cat = "bat"; };
     };
+
     hyprland = {
       enable = true;
       xwayland.enable = true;
     };
+
     neovim = {
       defaultEditor = true;
     };
+
     kdeconnect = {
       enable = true;
       package = pkgs.gnomeExtensions.gsconnect;
@@ -231,6 +248,7 @@
     keyd
     openssl
     tree
+    tree-sitter rPackages.treesitter
     wget
     tmux
     stow
@@ -270,9 +288,9 @@
     upower = {
       enable = true;
       criticalPowerAction = "Hibernate";
-      percentageLow = 10;
-      percentageCritical = 5;
-      percentageAction = 2;
+      percentageLow = 15;
+      percentageCritical = 7;
+      percentageAction = 4;
     };
      syncthing = {
       enable = true;

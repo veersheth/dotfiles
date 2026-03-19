@@ -107,7 +107,7 @@
   "theme.bar.menus.menu.clock.background.color": "#11111b",
   "theme.bar.buttons.clock.background": "#c061cb",
   "theme.bar.buttons.clock.enableBorder": true,
-  "theme.bar.buttons.borderColor": "#626262",
+  "theme.bar.buttons.borderColor": "#3d3846",
   "theme.bar.menus.menu.notifications.clear": "#f38ba8",
   "theme.bar.menus.menu.notifications.background": "#1d1d1d",
   "theme.notification.shadowMargins": "14px 14px",
