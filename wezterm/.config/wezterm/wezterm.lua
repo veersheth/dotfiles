@@ -9,15 +9,15 @@ config.window_background_opacity = 0.8
 config.window_decorations = "NONE"
 
 config.window_padding = {
-	left = 20,
-	right = 20,
-	top = 20,
-	bottom = 20,
+	left = 4,
+	right = 4,
+	top = 12,
+	bottom = 2,
 }
 
 config.colors = {
 	foreground = "#dedede",
-	background = "#000000", 
+	background = "#010101", 
 
 	cursor_bg = "#bb9af7", 
 	cursor_fg = "#000000",

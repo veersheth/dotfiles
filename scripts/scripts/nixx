@@ -52,7 +52,7 @@ sudo echo "Rebuilding NixOS..."
 if $VERBOSE; then
     sudo nixos-rebuild switch -I nixos-config="$CONFIG_FILE"
 else
-    sudo nixos-rebuild switch -I nixos-config="$CONFIG_FILE" &> nixos-switch.log \
+    sudo nixos-rebuild switch -I nixos-config="$CONFIG_FILE" &> ~/nixos-switch.log \
         || (grep --color=auto error nixos-switch.log && exit 1)
 fi
 

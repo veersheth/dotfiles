@@ -18,7 +18,7 @@
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernelModules = [ "hid_sensor_hub" ];
-  boot.kernelParams = [ "mem_sleep_default=deep" ];
+  boot.kernelParams = [ "mem_sleep_default=deep" "nvme.noacpi=1" ];
 
   networking.hostName = "framework-nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -117,10 +117,11 @@
       zoom-us
       libreoffice
       p3x-onenote
-notes
+      teams-for-linux
 
 
       # CLI
+      figlet
       sshfs
       typst texlive.combined.scheme-full
       pnpm_9 nodejs_20
@@ -143,6 +144,7 @@ notes
       hyprpaper
       hyprshot
       hyprpicker
+      sox
 
     ];
   };
@@ -216,7 +218,11 @@ notes
     };
 
     neovim = {
+      enable = true;
       defaultEditor = true;
+      configure = {
+        packages.myVimPackage = with pkgs.vimPlugins; { start = [ nvim-treesitter.withAllGrammars ]; };
+      };
     };
 
     kdeconnect = {
@@ -231,7 +237,8 @@ notes
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-    rnnoise-plugin easyeffects lsp-plugins # for background noise suppression
+    tree-sitter
+    ffmpeg
     brightnessctl
     python313 python313Packages.pip
     bat
@@ -248,7 +255,7 @@ notes
     keyd
     openssl
     tree
-    tree-sitter rPackages.treesitter
+    yazi
     wget
     tmux
     stow

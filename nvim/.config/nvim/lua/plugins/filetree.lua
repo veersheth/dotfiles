@@ -1,38 +1,38 @@
 return {
-	"nvim-neo-tree/neo-tree.nvim",
-	branch = "v3.x",
-	dependencies = {
-		"nvim-lua/plenary.nvim",
-		"MunifTanjim/nui.nvim",
-		"nvim-tree/nvim-web-devicons",
-	},
-	lazy = false,
-	config = function()
-		require("neo-tree").setup({
-			close_if_last_window = true,
-			popup_border_style = "rounded",
-			enable_git_status = true,
-			enable_diagnostics = false,
-			default_component_configs = {
-				indent = { padding = 1 },
-				icon = { folder_closed = "", folder_open = "", folder_empty = "ﰊ" },
-			},
-			filesystem = {
-				bind_to_cwd = true,
-				hijack_netrw_behavior = "disabled",
-				follow_current_file = {
-					enabled = true,
-					leave_dirs_open = false,
-				},
-			},
-			window = {
-				position = "right",
-				width = 25,
-			},
-		})
-
-		vim.keymap.set("n", "<leader>-", function()
-			vim.cmd("Neotree toggle")
-		end, { desc = "Toggle file tree" })
-	end,
+  "nvim-neo-tree/neo-tree.nvim",
+  branch = "v3.x",
+  dependencies = {
+    "nvim-lua/plenary.nvim",
+    "nvim-tree/nvim-web-devicons",
+    "MunifTanjim/nui.nvim",
+  },
+  keys = {
+    { "<leader>-", "<cmd>Neotree toggle<cr>", desc = "Neo-tree" },
+  },
+  opts = {
+    close_if_last_window = true,
+    filesystem = {
+      filtered_items = {
+        hide_dotfiles = false,
+        hide_gitignored = false,
+      },
+      follow_current_file = {
+        enabled = true,
+      },
+      use_libuv_file_watcher = true,
+    },
+    window = {
+      width = 30,
+      mappings = {
+        ["<space>"] = "none", -- Disable space to avoid conflict with leader
+      },
+    },
+    default_component_configs = {
+      indent = {
+        with_expanders = true, -- Adds triangles to folders
+        expander_collapsed = "",
+        expander_expanded = "",
+      },
+    },
+  },
 }
