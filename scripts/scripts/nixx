@@ -3,32 +3,40 @@ set -e
 
 CONFIG_DIR="/home/veer/dotfiles/nixos"
 CONFIG_FILE="$CONFIG_DIR/configuration.nix"
+UPDATE_CHANNELS=false
+
+# Check for update flag
+if [[ "$1" == "-u" || "$1" == "--update" ]]; then
+    UPDATE_CHANNELS=true
+fi
 
 TMP_BEFORE="$(mktemp)"
-
-# Snapshot before editing
 cp "$CONFIG_FILE" "$TMP_BEFORE"
 
 # Edit
 nvim "$CONFIG_FILE"
 
-# # If nothing changed compared to before editing
-# if diff -q "$TMP_BEFORE" "$CONFIG_FILE" >/dev/null; then
-#     echo "No changes detected. Exiting."
-#     rm "$TMP_BEFORE"
-#     exit 0
-# fi
+# Show what changed
+if ! diff -q "$TMP_BEFORE" "$CONFIG_FILE" >/dev/null; then
+    echo "Changes detected:"
+    echo "-----------------"
+    diff -u "$TMP_BEFORE" "$CONFIG_FILE" || true
+    echo
+else
+    echo "No changes to configuration.nix."
+fi
 
-# Show what changed (human-readable, not git-style)
-echo "Changes detected:"
-echo "-----------------"
-diff -u "$TMP_BEFORE" "$CONFIG_FILE" || true
-echo
-
+# Multi-choice prompt
 while true; do
-    read -rp "Build NixOS? [Y/n/v] (v = verbose): " choice
+    echo "Options: [y] Build | [u] Update & Build | [v] Verbose Build | [n] Abort"
+    read -rp "Selection? [Y/u/v/n]: " choice
     case "$choice" in
         y|Y|"")
+            VERBOSE=false
+            break
+            ;;
+        u|U)
+            UPDATE_CHANNELS=true
             VERBOSE=false
             break
             ;;
@@ -47,17 +55,22 @@ while true; do
     esac
 done
 
+# Perform Channel Update if requested
+if [ "$UPDATE_CHANNELS" = true ]; then
+    echo "Updating Nix channels..."
+    sudo nix-channel --update
+fi
+
 sudo echo "Rebuilding NixOS..."
 
 if $VERBOSE; then
     sudo nixos-rebuild switch -I nixos-config="$CONFIG_FILE"
 else
+    # Improved logging: print log path so user knows where to look if it hangs
+    echo "Building in background... (tail -f ~/nixos-switch.log for progress)"
     sudo nixos-rebuild switch -I nixos-config="$CONFIG_FILE" &> ~/nixos-switch.log \
-        || (grep --color=auto error nixos-switch.log && exit 1)
+        || (grep --color=auto -A 5 "error:" ~/nixos-switch.log && exit 1)
 fi
 
-
 rm "$TMP_BEFORE"
-
 notify-send -e "NixOS Rebuilt OK!" --icon=software-update-available
-

@@ -3,8 +3,10 @@ local config = wezterm.config_builder()
 
 config.font = wezterm.font("JetBrainsMono Nerd Font")
 config.font_size = 16
+-- config.line_height = 1.2
 
-config.window_background_opacity = 0.8
+-- config.window_background_opacity = 0.9
+config.window_background_opacity = 1
 
 config.window_decorations = "NONE"
 
@@ -17,9 +19,9 @@ config.window_padding = {
 
 config.colors = {
 	foreground = "#dedede",
-	background = "#010101", 
+	background = "#010101",
 
-	cursor_bg = "#bb9af7", 
+	cursor_bg = "#bb9af7",
 	cursor_fg = "#000000",
 	cursor_border = "#bb9af7",
 
@@ -79,6 +81,6 @@ config.hide_tab_bar_if_only_one_tab = true
 
 config.window_close_confirmation = "NeverPrompt"
 
-config.harfbuzz_features = { 'calt=0', 'clig=0', 'liga=0' }
+config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 return config

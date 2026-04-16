@@ -7,6 +7,7 @@
 {
   imports =
     [ # Include the results of the hardware scan.
+      <nixos-hardware/framework/13-inch/7040-amd>
       ./hardware-configuration.nix
     ];
 
@@ -17,8 +18,10 @@
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelModules = [ "hid_sensor_hub" ];
-  boot.kernelParams = [ "mem_sleep_default=deep" "nvme.noacpi=1" ];
+  boot.kernelModules = [ 
+    "hid_sensor_hub" # for autobrightness
+  ];
+  boot.kernelParams = [ "mem_sleep_default=deep" ];
 
   networking.hostName = "framework-nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -104,7 +107,9 @@
       obsidian
       lazygit
       mpv
-      ghostty wezterm alacritty
+      ghostty 
+      wezterm 
+      alacritty
       davinci-resolve
       kdePackages.kdenlive
       vscode
@@ -118,7 +123,8 @@
       libreoffice
       p3x-onenote
       teams-for-linux
-
+      claude-code 
+      ollama
 
       # CLI
       figlet
@@ -126,6 +132,7 @@
       typst texlive.combined.scheme-full
       pnpm_9 nodejs_20
       docker_25
+      btop
 
       # GNOME Extensions
       gnomeExtensions.bluetooth-battery-meter 
@@ -170,6 +177,7 @@
       nerd-fonts.jetbrains-mono
       nerd-fonts.fira-code
       nerd-fonts.iosevka
+      nerd-fonts.terminess-ttf
       agave
       maple-mono.NF
       cascadia-code
@@ -220,15 +228,14 @@
     neovim = {
       enable = true;
       defaultEditor = true;
-      configure = {
-        packages.myVimPackage = with pkgs.vimPlugins; { start = [ nvim-treesitter.withAllGrammars ]; };
-      };
     };
 
     kdeconnect = {
       enable = true;
       package = pkgs.gnomeExtensions.gsconnect;
     };
+
+    java.enable = true;
   };
 
   # Allow unfree packages
@@ -292,16 +299,19 @@
     keyd.enable = true;
     fprintd.enable = true;
     flatpak.enable = true;
-    upower = {
-      enable = true;
-      criticalPowerAction = "Hibernate";
-      percentageLow = 15;
-      percentageCritical = 7;
-      percentageAction = 4;
-    };
-     syncthing = {
+    syncthing = {
       enable = true;
       openDefaultPorts = true; # Open ports in the firewall for Syncthing. (NOTE: this will not open syncthing gui port)
+    };
+    power-profiles-daemon.enable = true;
+    logind = {
+      lidSwitch = "suspend";
+      extraConfig = ''
+        HandlePowerKey=suspend
+        HandlePowerKeyLongPress=poweroff
+        IdleAction=suspend
+        IdleActionSec=15min
+      '';
     };
   };
 

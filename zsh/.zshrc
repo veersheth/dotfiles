@@ -63,3 +63,5 @@ export PATH="$HOME/scripts:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 
 alias nxp="sudo nvim /etc/nixos/configuration.nix; sudo nixos-rebuild switch"
+
+alias claude="/home/veer/.claude/local/claude"

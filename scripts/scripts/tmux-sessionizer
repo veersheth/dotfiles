@@ -5,7 +5,8 @@ if [[ $# -eq 1 ]]; then
 else
     selected=$(find -L ~/ ~/obsidian-vault-03/ ~/notes ~/code ~/code/personal ~/code/unsw/ -mindepth 1 -maxdepth 1 -type d | \
         sed "s|^$HOME/||" | \
-        fzf --layout reverse --margin 15%
+        # fzf --layout reverse --margin 15%
+        fzf --layout reverse  
     )
 
     if [[ -n "$selected" ]]; then
