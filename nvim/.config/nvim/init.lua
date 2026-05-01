@@ -1,13 +1,10 @@
-require("options")
-require("advanced-options")
-require("autocmds.low-level-autocmds")
-require("autocmds.vim-sessions")
-require("autocmds.autosave")
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
 
+-- cd to a directory, if passed 
 local function find_start_dir()
-  -- iterate over command-line args
   for _, arg in ipairs(vim.v.argv) do
-    -- skip flags like -n, -u, etc.
     if not arg:match("^%-") and vim.fn.isdirectory(arg) == 1 then
       print("cd-ed to directory: " .. arg)
       return arg
@@ -28,4 +25,28 @@ if foldertogo then
   })
 end
 
-require("lazy-config")
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+
+require("options")
+require("advanced-options")
+
+require("autocmds.basic")
+require("autocmds.autosave")
+
+require("plugins.oil")
+require("plugins.telescope")
+require("plugins.tmux-navigator")
+require("plugins.lsp")
+require("plugins.treesitter")
+require("plugins.ccc")
+require("plugins.luasnip")
+require("plugins.git-signs")
+
+
+require("theme")
+
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------

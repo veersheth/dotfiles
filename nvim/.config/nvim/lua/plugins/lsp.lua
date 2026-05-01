@@ -1,120 +1,63 @@
-return {
-	{
-		"neovim/nvim-lspconfig",
-		dependencies = {
-			{ "mason-org/mason.nvim", opts = {} },
-			"mason-org/mason-lspconfig.nvim",
-			"WhoIsSethDaniel/mason-tool-installer.nvim",
-			{ "j-hui/fidget.nvim", opts = {} },
-			"saghen/blink.cmp",
-		},
-		config = function()
-			local capabilities = require("blink.cmp").get_lsp_capabilities()
+vim.pack.add({ "https://github.com/neovim/nvim-lspconfig" })
+vim.pack.add({ "https://github.com/mason-org/mason.nvim" })
+vim.pack.add({ "https://github.com/aznhe21/actions-preview.nvim" })
 
-			vim.api.nvim_create_autocmd("LspAttach", {
-				callback = function(event)
-					local map = function(keys, func, desc)
-						vim.keymap.set("n", keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
-					end
+require("mason").setup()
 
-					local builtin = require("telescope.builtin")
+require("actions-preview").setup({
+  backend = { "telescope" },
+  extensions = { "env" },
+  telescope = vim.tbl_extend("force", require("telescope.themes").get_dropdown(), {}),
+})
 
-					map("grr", builtin.lsp_references, "references")
-					map("gd", builtin.lsp_definitions, "definitions")
-					map("gi", builtin.lsp_implementations, "implementations")
-					map("<leader>ds", builtin.lsp_document_symbols, "doc symbols")
+local orig_open_floating_preview   = vim.lsp.util.open_floating_preview
+vim.lsp.util.open_floating_preview = function(contents, syntax, opts, ...)
+  opts = opts or {}
+  opts.border = opts.border or "rounded"
+  return orig_open_floating_preview(contents, syntax, opts, ...)
+end
 
-					map("grn", vim.lsp.buf.rename, "smart rename")
-					map("gra", vim.lsp.buf.code_action, "code actions")
+vim.o.pumborder                    = "rounded"
+vim.opt.completeopt                = { "menuone", "noselect", "popup" }
 
-					map("<leader>lf", function()
-						vim.lsp.buf.format({ async = true })
-					end, "format document")
+vim.lsp.enable({
+  "lua_ls", "ts_ls", "cssls", "tailwindcss",
+  "svelte", "emmet_language_server", "emmet_ls",
+  "rust_analyzer", "clangd", "zls",
+  "ruff", "pyright",
+  "haskell-language-server", "hlint",
+  "intelephense", "solargraph",
+  "tinymist", "glsl_analyzer",
+})
 
-					map("<leader>ln", function()
-						vim.diagnostic.goto_next()
-					end, "next diagnostic")
+vim.api.nvim_create_autocmd("LspAttach", {
+  group = vim.api.nvim_create_augroup("my.lsp", {}),
+  callback = function(args)
+    local client = assert(vim.lsp.get_client_by_id(args.data.client_id))
+    local bufnr  = args.buf
+    local map    = function(mode, lhs, rhs, desc)
+      vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true, desc = desc })
+    end
 
-					map("<leader>lp", function()
-						vim.diagnostic.goto_prev()
-					end, "prev diagnostic")
+    -- Native insert-mode auto-completion
+    if client:supports_method("textDocument/completion") then
+      -- Trigger completion on every printable character
+      local chars = {}
+      for i = 32, 126 do table.insert(chars, string.char(i)) end
+      client.server_capabilities.completionProvider.triggerCharacters = chars
+      vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
+    end
 
-					map("<leader>lk", function()
-						local current = vim.diagnostic.config().virtual_text
-						vim.diagnostic.config({ virtual_text = not current })
-					end, "toggle hover diagnostics")
+    map("n", "<leader>lk", function()
+      vim.diagnostic.config({ virtual_text = not vim.diagnostic.config().virtual_text })
+    end, "toggle inline diagnostics")
 
-					if client and client:supports_method("textDocument/documentSymbol") then
-						require("nvim-navic").attach(client, event.buf)
-					end
-				end,
-			})
+    map("n", "<leader>ln", vim.diagnostic.goto_next, "next diagnostic")
+    map("n", "<leader>lp", vim.diagnostic.goto_prev, "prev diagnostic")
 
-			local servers = {
-				lua_ls = {
-					settings = {
-						Lua = {
-							completion = { callSnippet = "Replace" },
-							diagnostics = { globals = { "vim" } },
-						},
-					},
-				},
-				-- rust_analyzer = {},
-			}
-
-			require("mason-lspconfig").setup({
-				ensure_installed = { "lua_ls", "rust_analyzer", "ts_ls", "pyright", "svelte" },
-				handlers = {
-					function(server_name)
-						local server_opts = servers[server_name] or {}
-						server_opts.capabilities =
-							vim.tbl_deep_extend("force", capabilities, server_opts.capabilities or {})
-
-						vim.lsp.config(server_name, server_opts)
-						vim.lsp.enable(server_name)
-					end,
-				},
-			})
-		end,
-	},
-	{
-		"saghen/blink.cmp",
-		opts = {
-			keymap = { preset = "default" },
-
-			appearance = {
-				use_nvim_cmp_as_default = true,
-				nerd_font_variant = "mono",
-			},
-
-			sources = {
-				default = { "lsp", "path", "snippets", "buffer" },
-			},
-
-			signature = { enabled = true },
-		},
-		opts_extend = { "sources.default" },
-	},
-	{
-		"folke/lazydev.nvim",
-		ft = "lua", -- only load on lua files
-		opts = {
-			library = {
-				{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
-			},
-		},
-	},
-	{
-		"stevearc/conform.nvim",
-		event = { "BufWritePre" },
-		cmd = { "ConformInfo" },
-		opts = {
-			formatters_by_ft = {
-				lua = { "stylua" },
-				python = { "isort", "black" },
-				rust = { "rustfmt" },
-				javascript = { "prettierd", "prettier", stop_after_first = true },
-			},
-		},
-	},
-}
+    map("n", "<leader>lf", function() vim.lsp.buf.format({ async = true }) end, "format buffer")
+    map({ "n", "v" }, "ca", require("actions-preview").code_actions, "code actions (preview)")
+    map("n", "<leader>rn", vim.lsp.buf.rename, "rename symbol")
+    map("n", "K", vim.lsp.buf.hover, "hover docs")
+  end,
+})
