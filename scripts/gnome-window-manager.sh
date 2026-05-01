@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-xdg-settings set default-web-browser app.zen_browser.zen.desktop
+# xdg-settings set default-web-browser app.zen_browser.zen.desktop
 
 # -------------------------------------------------
 # workspaces
@@ -42,6 +42,9 @@ gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-10 "['<Super><S
 # move GNOME Shell message tray + overview off Super+m → Super+n
 gsettings set org.gnome.shell.keybindings toggle-message-tray "['<Super>n']"
 
+gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-5  "['<Super><Shift>e']"
+gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-5  "['<Super>e']"
+
 gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-6  "['<Super><Shift>m']"
 gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-6  "['<Super>m']"
 
@@ -80,19 +83,14 @@ gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/or
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ command 'firefox'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ binding '<Super>b'
 
-# super e file manager
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ name 'Lauch Files'
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ command 'nautilus'
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/ binding '<Super>e'
-
 # quarry alt space
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/ name 'Toggle Quarry'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/ command '/home/veer/code/personal/quarry/src-tauri/target/debug/quarry-toggle'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/ binding '<Alt>space'
 
 # super enter term
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ name 'Launch Wezterm'
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ command 'wezterm'
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ name 'Launch ghostty'
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ command 'ghostty'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ binding '<Super>Return'
 
 # super p quick note

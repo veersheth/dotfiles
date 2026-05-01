@@ -11,6 +11,11 @@
       ./hardware-configuration.nix
     ];
 
+  nix.settings = {
+    substituters = [ "https://cosmic.cachix.org/" ];
+    trusted-public-keys = [ "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE=" ];
+  };
+
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
@@ -21,7 +26,11 @@
   boot.kernelModules = [ 
     "hid_sensor_hub" # for autobrightness
   ];
-  boot.kernelParams = [ "mem_sleep_default=deep" ];
+  boot.kernelParams = [ 
+    "mem_sleep_default=deep"
+  ];
+
+  # boot.resumeDevice = "/dev/nvme0n1p3";
 
   networking.hostName = "framework-nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -55,9 +64,16 @@
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
+  # for cosmic desktop 
+  services.system76-scheduler.enable = true;
+  environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
+
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
+
+  # Enable the Cosmic DE
+  services.desktopManager.cosmic.enable = true;
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -88,6 +104,12 @@
   # services.xserver.libinput.enable = true;
 
   hardware.sensor.iio.enable = true; # for autobrightness
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      rocmPackages.clr.icd # This provides the OpenCL runtime Resolve needs
+    ];
+  };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.veer = {
@@ -97,6 +119,8 @@
     extraGroups = [ "networkmanager" "wheel" "video" "docker" ]; 
     packages = with pkgs; [
       # Apps
+      mixxx
+      brave
       discord
       docker
       rquickshare
@@ -108,7 +132,6 @@
       lazygit
       mpv
       ghostty 
-      wezterm 
       alacritty
       davinci-resolve
       kdePackages.kdenlive
@@ -133,6 +156,7 @@
       pnpm_9 nodejs_20
       docker_25
       btop
+      bun
 
       # GNOME Extensions
       gnomeExtensions.bluetooth-battery-meter 
@@ -143,15 +167,15 @@
       gnomeExtensions.caffeine
       gnomeExtensions.appindicator
 
-      # Hyprland
-      hyprpanel
-      hypridle 
-      hyprlock
-      hyprsunset
-      hyprpaper
-      hyprshot
-      hyprpicker
-      sox
+      # # Hyprland
+      # hyprpanel
+      # hypridle 
+      # hyprlock
+      # hyprsunset
+      # hyprpaper
+      # hyprshot
+      # hyprpicker
+      # sox
 
     ];
   };
@@ -172,29 +196,29 @@
     packages = with pkgs; [
       inter
       helvetica-neue-lt-std
-      junicode
-      nerd-fonts._0xproto
+      azeret-mono
       nerd-fonts.jetbrains-mono
-      nerd-fonts.fira-code
-      nerd-fonts.iosevka
       nerd-fonts.terminess-ttf
-      agave
-      maple-mono.NF
-      cascadia-code
+      nerd-fonts.gohufont
       
       whatsapp-emoji-font
-      noto-fonts-emoji
       noto-fonts-color-emoji
     ];
-    
-    fontconfig = {
-      defaultFonts = {
-        emoji = [ "Noto Color Emoji" ];
-      };
-    };
+  };
+
+  xdg.terminal-exec = {
+    enable = true;
+    settings.default = ["ghostty.desktop"];
   };
 
   programs = {
+    appimage = {
+      enable = true;
+      binfmt = true; 
+      package = pkgs.appimage-run.override {
+        extraPkgs = pkgs: [ pkgs.libthai ]; 
+      };
+    };
     nix-ld.enable = true;
     nix-ld.libraries = with pkgs; [
       stdenv.cc.cc
@@ -207,23 +231,19 @@
       expat
     ];
 
-    firefox = {
-      enable = true;
-    };
+    firefox = { enable = true; };
 
-    # steam = {
-    #   enable = true;
-    # };
+    steam = { enable = true; };
 
     zsh = {
       enable = true;
       shellAliases = { cat = "bat"; };
     };
 
-    hyprland = {
-      enable = true;
-      xwayland.enable = true;
-    };
+    # hyprland = {
+    #   enable = true;
+    #   xwayland.enable = true;
+    # };
 
     neovim = {
       enable = true;
@@ -272,11 +292,16 @@
     gnome-tweaks
     cargo rustc
     bibata-cursors
+    framework-tool
   ];
 
   environment.variables = {
     XCURSOR_THEME = "Bibata-Modern-Ice";
     XCURSOR_SIZE = "24";
+  };
+
+  environment.etc."environment.d/clipboard.conf" = {
+    source = files/environment.d/clipboard.conf;
   };
 
   environment.etc."keyd/default.conf" = {
@@ -298,7 +323,7 @@
     fwupd.enable = true;
     keyd.enable = true;
     fprintd.enable = true;
-    flatpak.enable = true;
+    # flatpak.enable = true;
     syncthing = {
       enable = true;
       openDefaultPorts = true; # Open ports in the firewall for Syncthing. (NOTE: this will not open syncthing gui port)
@@ -306,12 +331,7 @@
     power-profiles-daemon.enable = true;
     logind = {
       lidSwitch = "suspend";
-      extraConfig = ''
-        HandlePowerKey=suspend
-        HandlePowerKeyLongPress=poweroff
-        IdleAction=suspend
-        IdleActionSec=15min
-      '';
+      lidSwitchExternalPower = "suspend"; 
     };
   };
 
@@ -332,6 +352,5 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "25.05"; # Did you read the comment?
-
 }
 

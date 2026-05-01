@@ -67,7 +67,7 @@ if $VERBOSE; then
     sudo nixos-rebuild switch -I nixos-config="$CONFIG_FILE"
 else
     # Improved logging: print log path so user knows where to look if it hangs
-    echo "Building in background... (tail -f ~/nixos-switch.log for progress)"
+    echo "Building in background...       tail -f ~/nixos-switch.log"
     sudo nixos-rebuild switch -I nixos-config="$CONFIG_FILE" &> ~/nixos-switch.log \
         || (grep --color=auto -A 5 "error:" ~/nixos-switch.log && exit 1)
 fi

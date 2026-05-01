@@ -3,12 +3,11 @@ setopt PROMPT_SUBST
 
 NEWLINE=$'\n'
 ZSHCOLOR="#d9bfff"
-# PROMPT="${NEWLINE} %{$fg[yellow]%}%~%{$fg[blue]%}%{$reset_color%}${NEWLINE} $ "
 PROMPT='${NEWLINE}%F{${ZSHCOLOR}}%n@%m%f %F{#b5b5b5}%~%f${NEWLINE}%F{${ZSHCOLOR}}$ %f'
 
 HISTFILE=~/.zsh_history
-HISTSIZE=100
-SAVEHIST=100
+HISTSIZE=1500
+SAVEHIST=1500
 setopt INC_APPEND_HISTORY       # Add commands as they are typed
 setopt SHARE_HISTORY            # Share history across terminals
 setopt HIST_IGNORE_DUPS         # Ignore duplicate commands
@@ -24,8 +23,13 @@ alias lg="lazygit"
 alias ..="cd .."
 alias ...="cd ../.."
 
-pls() {
-  sudo $(fc -ln -1)
+cdc() {
+  local dir
+  dir=$(find . -type d 2>/dev/null \
+        | sed 's|^\./||' \
+        | fzf --height=40% --reverse --prompt="cd > ") || return
+
+  [ -n "$dir" ] && cd "$dir"
 }
 
 jj() {
@@ -37,14 +41,11 @@ jj() {
     fi
 }
 
-bindkey "^H" backward-kill-word
-bindkey "^N" history-search-forward
-bindkey "^P" history-search-backward
-bindkey '^R' fzf-history-widget
-
 opengui() { xdg-open . & }
 zle -N opengui
 bindkey '^e' opengui
+bindkey '^p' history-beginning-search-backward
+bindkey '^n' history-beginning-search-forward
 
 autoload -U compinit && compinit
 zstyle ':completion:*' menu select
