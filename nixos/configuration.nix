@@ -11,9 +11,10 @@
       ./hardware-configuration.nix
     ];
 
-  nix.settings = {
-    substituters = [ "https://cosmic.cachix.org/" ];
-    trusted-public-keys = [ "cosmic.cachix.org-1:Dya9IyXD4xdBehWjrkPv6rtxpmMdRel02smYzA85dPE=" ];
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 7d";
   };
 
   # Bootloader.
@@ -64,16 +65,9 @@
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
-  # for cosmic desktop 
-  services.system76-scheduler.enable = true;
-  environment.sessionVariables.COSMIC_DATA_CONTROL_ENABLED = 1;
-
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
-
-  # Enable the Cosmic DE
-  services.desktopManager.cosmic.enable = true;
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -290,7 +284,7 @@
     fd
     ripgrep
     gnome-tweaks
-    cargo rustc
+    cargo rustc clippy
     bibata-cursors
     framework-tool
   ];
