@@ -25,6 +25,15 @@ if foldertogo then
   })
 end
 
+vim.api.nvim_create_autocmd("VimEnter", {
+  callback = function()
+    -- Only open if no file arguments were passed
+    if vim.fn.argc() == 0 then
+      require("telescope.builtin").oldfiles()
+    end
+  end,
+})
+
 --------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------
@@ -43,7 +52,7 @@ require("plugins.treesitter")
 require("plugins.ccc")
 require("plugins.luasnip")
 require("plugins.git")
-require("plugins.alpha")
+-- require("plugins.alpha")
 
 
 require("theme")
