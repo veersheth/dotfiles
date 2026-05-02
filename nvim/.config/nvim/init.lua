@@ -42,7 +42,8 @@ require("plugins.lsp")
 require("plugins.treesitter")
 require("plugins.ccc")
 require("plugins.luasnip")
-require("plugins.git-signs")
+require("plugins.git")
+require("plugins.alpha")
 
 
 require("theme")

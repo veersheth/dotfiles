@@ -43,7 +43,7 @@ vim.opt.autoread = true
 -- normal mode mappings
 vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>", { desc = "" })
 vim.keymap.set("v", "id", "<Esc>ggVG", { desc = "select entire doc" })
-vim.keymap.set("n", "<leader>R", vim.cmd.restart, { desc = "Restart Nvim" })
+vim.keymap.set("n", "<leader>R", vim.cmd.restart, { desc = "restart nvim" })
 
 -- system clipboard
 vim.keymap.set("v", "<leader>y", '"+y', { desc = "copy to system clipboard" })

@@ -15,3 +15,6 @@ vim.keymap.set("n", "<leader>gb", function()
   gitsigns.toggle_current_line_blame()
 end, { desc = "toggle git line blame" })
 
+
+
+vim.keymap.set("n", "<leader>gs", "<cmd>Telescope git_b_commits<cr>", { desc = "commits affecting this buffer" })

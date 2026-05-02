@@ -1,7 +1,10 @@
-vim.pack.add({ "https://github.com/rose-pine/neovim" })
+vim.pack.add({ 'https://github.com/vague-theme/vague.nvim' })
 
-require "rose-pine".setup({
-  styles = { transparency = true },
+require('vague').setup({
+  transparent = true,
+  colors = {
+    line = '#0f0f0f',
+  },
 })
 
-vim.cmd("colorscheme rose-pine")
+vim.cmd.colorscheme('vague')
