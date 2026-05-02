@@ -18,7 +18,7 @@ vim.lsp.util.open_floating_preview = function(contents, syntax, opts, ...)
 end
 
 vim.o.pumborder                    = "rounded"
-vim.opt.completeopt                = { "menuone", "noselect", "popup" }
+vim.opt.completeopt                = { "menuone", "noinsert", "popup" }
 
 vim.lsp.enable({
   "lua_ls", "ts_ls", "cssls", "tailwindcss",

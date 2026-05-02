@@ -15,6 +15,9 @@ require "oil" .setup({
 	},
 	columns = {
 		"icon",
+    -- "permissions",
+    -- "size",
+    -- "mtime",
 	},
 	float = {
 		max_width = 0.3,

@@ -1,8 +1,5 @@
---------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------
-
--- cd to a directory, if passed 
+--
+-- cd to a directory, if passed
 local function find_start_dir()
   for _, arg in ipairs(vim.v.argv) do
     if not arg:match("^%-") and vim.fn.isdirectory(arg) == 1 then
@@ -14,20 +11,12 @@ local function find_start_dir()
 end
 
 local foldertogo = find_start_dir()
-if foldertogo then
-  local group = vim.api.nvim_create_augroup("FolderToGo", { clear = true })
-
-  vim.api.nvim_create_autocmd("VimEnter", {
-    group = group,
-    callback = function()
-      vim.cmd.cd(foldertogo)
-    end,
-  })
-end
 
 vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
-    -- Only open if no file arguments were passed
+    if foldertogo then
+      vim.cmd.cd(foldertogo)
+    end
     if vim.fn.argc() == 0 then
       require("telescope.builtin").oldfiles()
     end
@@ -52,11 +41,9 @@ require("plugins.treesitter")
 require("plugins.ccc")
 require("plugins.luasnip")
 require("plugins.git")
+require("plugins.markdown")
+require("plugins.obsidian")
 -- require("plugins.alpha")
-
 
 require("theme")
 
---------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------
---------------------------------------------------------------------------------------------------
