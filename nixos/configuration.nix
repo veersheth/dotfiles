@@ -22,10 +22,13 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 6; # keeps 6 generations 
 
+  zramSwap.enable = true;
+
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.kernelModules = [ 
     "hid_sensor_hub" # for autobrightness
+    "kvm-amd"
   ];
   boot.kernelParams = [ 
     "mem_sleep_default=deep"
@@ -33,7 +36,7 @@
 
   # boot.resumeDevice = "/dev/nvme0n1p3";
 
-  networking.hostName = "framework-nixos"; # Define your hostname.
+  networking.hostName = "fw-nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -110,17 +113,18 @@
     isNormalUser = true;
     description = "Veer";
     # extraGroups = [ "networkmanager" "wheel" ];
-    extraGroups = [ "networkmanager" "wheel" "video" "docker" ]; 
+    extraGroups = [ "kvm" "libvirtd" "networkmanager" "wheel" "video" "docker" ]; 
     packages = with pkgs; [
-      # Apps
+      # GUI Apps
+      gnome-boxes
       mixxx
       brave
       discord
       docker
-      rquickshare
-      sioyek zathura zathuraPkgs.zathura_pdf_mupdf
+      # rquickshare
       gimp3
       spotify
+      sioyek mupdf
       tor-browser
       obsidian
       lazygit
@@ -134,17 +138,17 @@
       obs-studio
       gnome-extension-manager
       shotcut
-      figma-linux
       syncthing
       zoom-us
       libreoffice
-      p3x-onenote
       teams-for-linux
       claude-code 
       ollama
 
       # CLI
       figlet
+      imagemagick
+      luajitPackages.magick
       sshfs
       typst texlive.combined.scheme-full
       pnpm_9 nodejs_20
@@ -174,6 +178,7 @@
     ];
   };
 
+  virtualisation.libvirtd.enable = true;
   virtualisation.docker.enable = true;
   virtualisation.docker.enableOnBoot = true;
 
@@ -190,10 +195,8 @@
     packages = with pkgs; [
       inter
       helvetica-neue-lt-std
-      azeret-mono
       nerd-fonts.jetbrains-mono
-      nerd-fonts.terminess-ttf
-      nerd-fonts.gohufont
+      nerd-fonts.iosevka
       
       whatsapp-emoji-font
       noto-fonts-color-emoji
@@ -284,7 +287,7 @@
     fd
     ripgrep
     gnome-tweaks
-    cargo rustc clippy
+    rustup cargo rustc clippy
     bibata-cursors
     framework-tool
   ];
@@ -317,7 +320,7 @@
     fwupd.enable = true;
     keyd.enable = true;
     fprintd.enable = true;
-    # flatpak.enable = true;
+    flatpak.enable = true;
     syncthing = {
       enable = true;
       openDefaultPorts = true; # Open ports in the firewall for Syncthing. (NOTE: this will not open syncthing gui port)

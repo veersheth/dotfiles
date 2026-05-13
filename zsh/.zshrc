@@ -3,7 +3,7 @@ setopt PROMPT_SUBST
 
 NEWLINE=$'\n'
 ZSHCOLOR="#d9bfff"
-PROMPT='${NEWLINE}%F{${ZSHCOLOR}}%n@%m%f %F{#b5b5b5}%~%f${NEWLINE}%F{${ZSHCOLOR}}$ %f'
+PS1="${NEWLINE} %{$fg[blue]%}%~%{$fg[red]%} %{$reset_color%}$%b "
 
 HISTFILE=~/.zsh_history
 HISTSIZE=1500
@@ -32,14 +32,7 @@ cdc() {
   [ -n "$dir" ] && cd "$dir"
 }
 
-jj() {
-    if ! tmux attach; then
-        mkdir -p /tmp/temptmux
-        tmux new-session -d -s TEMP -c /tmp/temptmux
-        tmux new-session -d -s HOME -c ~
-        tmux attach -t HOME
-    fi
-}
+alias jj="~/scripts/tmux-sessionizer --init"
 
 opengui() { xdg-open . & }
 zle -N opengui
@@ -62,6 +55,7 @@ alias cse="ssh -t z5494316@cse.unsw.edu.au 'cd ~/cse; exec zsh -l'"
 # YO PATH 
 export PATH="$HOME/scripts:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
+export PATH="/home/veer/.bun/bin:$PATH"
 
 alias nxp="sudo nvim /etc/nixos/configuration.nix; sudo nixos-rebuild switch"
 

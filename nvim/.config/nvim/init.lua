@@ -17,9 +17,6 @@ vim.api.nvim_create_autocmd("VimEnter", {
     if foldertogo then
       vim.cmd.cd(foldertogo)
     end
-    if vim.fn.argc() == 0 then
-      require("telescope.builtin").oldfiles()
-    end
   end,
 })
 
@@ -33,7 +30,7 @@ require("advanced-options")
 require("autocmds.basic")
 require("autocmds.autosave")
 
-require("plugins.oil")
+require("plugins.files")
 require("plugins.telescope")
 require("plugins.tmux-navigator")
 require("plugins.lsp")
@@ -41,9 +38,9 @@ require("plugins.treesitter")
 require("plugins.ccc")
 require("plugins.luasnip")
 require("plugins.git")
-require("plugins.markdown")
+-- require("plugins.markdown")
 require("plugins.obsidian")
--- require("plugins.alpha")
+require("plugins.image")
 
 require("theme")
 
