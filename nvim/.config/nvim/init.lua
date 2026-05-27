@@ -41,6 +41,7 @@ require("plugins.git")
 -- require("plugins.markdown")
 require("plugins.obsidian")
 require("plugins.image")
+require("plugins.bufferline")
 
 require("theme")
 

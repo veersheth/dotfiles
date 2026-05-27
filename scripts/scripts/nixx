@@ -73,4 +73,4 @@ else
 fi
 
 rm "$TMP_BEFORE"
-notify-send -e "NixOS Rebuilt OK!" --icon=software-update-available
+notify-send -e "NixOS Rebuilt OK!" --icon=software-update-available -t 1000

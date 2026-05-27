@@ -1,11 +1,9 @@
 local vim = vim
-
 vim.pack.add({ "https://github.com/neovim/nvim-lspconfig" })
 vim.pack.add({ "https://github.com/mason-org/mason.nvim" })
 vim.pack.add({ "https://github.com/aznhe21/actions-preview.nvim" })
 
 require("mason").setup()
-
 require("actions-preview").setup({
   backend = { "telescope" },
   extensions = { "env" },
@@ -20,7 +18,7 @@ vim.lsp.util.open_floating_preview = function(contents, syntax, opts, ...)
 end
 
 vim.o.pumborder = "rounded"
-vim.opt.completeopt = { "menuone", "noselect", "popup" }
+vim.opt.completeopt = { "menuone", "noinsert", "popup" }
 
 vim.lsp.enable({
   "lua_ls", "ts_ls", "cssls", "tailwindcss",
@@ -41,9 +39,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
       vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true, desc = desc })
     end
 
-    -- Native insert-mode auto-completion
     if client:supports_method("textDocument/completion") then
-      -- Trigger completion on every printable character
       local chars = {}
       for i = 32, 126 do table.insert(chars, string.char(i)) end
       client.server_capabilities.completionProvider.triggerCharacters = chars
@@ -53,10 +49,8 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "<leader>lk", function()
       vim.diagnostic.config({ virtual_text = not vim.diagnostic.config().virtual_text })
     end, "toggle inline diagnostics")
-
     map("n", "<leader>ln", vim.diagnostic.goto_next, "next diagnostic")
     map("n", "<leader>lp", vim.diagnostic.goto_prev, "prev diagnostic")
-
     map("n", "<leader>lf", function() vim.lsp.buf.format({ async = true }) end, "format buffer")
     map({ "n", "v" }, "ca", require("actions-preview").code_actions, "code actions (preview)")
     map("n", "<leader>rn", vim.lsp.buf.rename, "rename symbol")

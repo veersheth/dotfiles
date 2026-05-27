@@ -2,16 +2,11 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
--- theme & transparency
-vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
-vim.api.nvim_set_hl(0, "NormalNC", { bg = "none" })
-vim.api.nvim_set_hl(0, "EndOfBuffer", { bg = "none" })
-
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.cursorline = true -- highlight current line
 vim.opt.wrap = false
-vim.opt.scrolloff = 1010
+vim.opt.scrolloff = 18
 vim.o.winborder = "rounded"
 
 -- indentation
@@ -50,10 +45,10 @@ vim.keymap.set("v", "<leader>y", '"+y', { desc = "copy to system clipboard" })
 vim.keymap.set("n", "<leader>y", 'mzggVG"+y`z', { desc = "copy to system clipboard" })
 
 -- center screen when jumping
-vim.keymap.set("n", "n", "nzzzv", { desc = "next and center" })
-vim.keymap.set("n", "N", "Nzzzv", { desc = "prev and center" })
-vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "page down and center" })
-vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "page up and center" })
+vim.keymap.set("n", "n", "nzzzv", { desc = "next" })
+vim.keymap.set("n", "N", "Nzzzv", { desc = "prev" })
+vim.keymap.set("n", "<C-d>", "<C-d>zz", { desc = "page down" })
+vim.keymap.set("n", "<C-u>", "<C-u>zz", { desc = "page up" })
 
 -- continuous indenting in visual mode
 vim.keymap.set("v", "<", "<gv", { desc = "indent back" })

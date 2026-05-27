@@ -14,11 +14,9 @@ telescope.setup({
     sorting_strategy = "ascending",
     path_displays = { "smart" },
     layout_config = {
-      -- height = 600,
-      -- width = 600,
       prompt_position = "top",
-      -- preview_cutoff = 40,
     },
+    file_ignore_patterns = { "node_modules", "%.git/" },
   },
 })
 

@@ -11,11 +11,7 @@
       ./hardware-configuration.nix
     ];
 
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 7d";
-  };
+  nix.gc = { automatic = true; dates = "weekly"; options = "--delete-older-than 7d"; };
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -36,7 +32,7 @@
 
   # boot.resumeDevice = "/dev/nvme0n1p3";
 
-  networking.hostName = "fw-nixos"; # Define your hostname.
+  networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
   # Configure network proxy if necessary
@@ -68,9 +64,14 @@
   # Enable the X11 windowing system.
   services.xserver.enable = true;
 
-  # Enable the GNOME Desktop Environment.
+# gnome
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
+    
+# ## kde
+#   services.displayManager.sddm.enable = true;
+#   services.displayManager.sddm.wayland.enable = true;
+#   services.desktopManager.plasma6.enable = true;
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -103,6 +104,7 @@
   hardware.sensor.iio.enable = true; # for autobrightness
   hardware.graphics = {
     enable = true;
+    enable32Bit = true;
     extraPackages = with pkgs; [
       rocmPackages.clr.icd # This provides the OpenCL runtime Resolve needs
     ];
@@ -116,6 +118,8 @@
     extraGroups = [ "kvm" "libvirtd" "networkmanager" "wheel" "video" "docker" ]; 
     packages = with pkgs; [
       # GUI Apps
+      geary thunderbird # email
+      librewolf
       gnome-boxes
       mixxx
       brave
@@ -132,7 +136,7 @@
       ghostty 
       alacritty
       davinci-resolve
-      kdePackages.kdenlive
+      # kdePackages.kdenlive
       vscode
       livecaptions
       obs-studio
@@ -164,16 +168,6 @@
       gnomeExtensions.just-perfection 
       gnomeExtensions.caffeine
       gnomeExtensions.appindicator
-
-      # # Hyprland
-      # hyprpanel
-      # hypridle 
-      # hyprlock
-      # hyprsunset
-      # hyprpaper
-      # hyprshot
-      # hyprpicker
-      # sox
 
     ];
   };
@@ -209,14 +203,11 @@
   };
 
   programs = {
-    appimage = {
-      enable = true;
-      binfmt = true; 
-      package = pkgs.appimage-run.override {
-        extraPkgs = pkgs: [ pkgs.libthai ]; 
-      };
-    };
-    nix-ld.enable = true;
+    niri = { enable = true; };
+    appimage = { enable = true; binfmt = true; package = pkgs.appimage-run.override { extraPkgs = pkgs: [ pkgs.libthai ]; }; };
+
+    nix-ld = { enable = true; };
+
     nix-ld.libraries = with pkgs; [
       stdenv.cc.cc
       zlib
@@ -232,27 +223,13 @@
 
     steam = { enable = true; };
 
-    zsh = {
-      enable = true;
-      shellAliases = { cat = "bat"; };
-    };
+    zsh = { enable = true; shellAliases = { cat = "bat"; }; };
 
-    # hyprland = {
-    #   enable = true;
-    #   xwayland.enable = true;
-    # };
+    hyprland = { enable = true; xwayland.enable = true; };
 
-    neovim = {
-      enable = true;
-      defaultEditor = true;
-    };
+    neovim = { enable = true; defaultEditor = true; };
 
-    kdeconnect = {
-      enable = true;
-      package = pkgs.gnomeExtensions.gsconnect;
-    };
-
-    java.enable = true;
+    java = { enable = true; };
   };
 
   # Allow unfree packages
@@ -332,6 +309,7 @@
     };
   };
 
+  # Enable the GNOME Desktop Environment.
 
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;

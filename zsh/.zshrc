@@ -3,7 +3,7 @@ setopt PROMPT_SUBST
 
 NEWLINE=$'\n'
 ZSHCOLOR="#d9bfff"
-PS1="${NEWLINE} %{$fg[blue]%}%~%{$fg[red]%} %{$reset_color%}$%b "
+PS1="${NEWLINE} %{$fg[magenta]%}%~%{$fg[red]%} %{$reset_color%}$%b "
 
 HISTFILE=~/.zsh_history
 HISTSIZE=1500
@@ -58,5 +58,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 export PATH="/home/veer/.bun/bin:$PATH"
 
 alias nxp="sudo nvim /etc/nixos/configuration.nix; sudo nixos-rebuild switch"
+alias quarry="/home/veer/code/personal/quarry/src-tauri/target/release/quarry"
 
-alias claude="/home/veer/.claude/local/claude"
+
+export PATH="/home/veer/.local/bin:$PATH"
