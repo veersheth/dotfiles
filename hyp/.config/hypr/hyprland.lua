@@ -186,7 +186,7 @@ hl.bind("SUPER + Q", hl.dsp.window.close())
 hl.bind("SUPER + R", hl.dsp.exec_cmd("pkill -x waybar; pkill -x hypridle; waybar & hypridle &"))
 hl.bind("CTRL + ALT + Delete", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
 hl.bind("SUPER + E", hl.dsp.exec_cmd(fileManager))
-hl.bind("SUPER + V", hl.dsp.window.float({ action = "toggle" }))
+hl.bind("SUPER + T", hl.dsp.window.float({ action = "toggle" }))
 hl.bind("SUPER + P", hl.dsp.window.pseudo())
 hl.bind("SUPER + F", hl.dsp.window.fullscreen("maximized", "toggle"))
 hl.bind("SUPER + N", hl.dsp.exec_cmd("pkill hyprsunset || hyprsunset -t 3500"))
@@ -195,6 +195,8 @@ hl.bind("Print",         hl.dsp.exec_cmd("hyprshot -m region --raw | tee ~/Pictu
 hl.bind("SUPER + Print", hl.dsp.exec_cmd("hyprshot -m output --raw | tee ~/Pictures/Screenshots/$(date +%Y%m%d_%H%M%S).png | wl-copy --type image/png"))
  
 hl.bind("ALT + Space", hl.dsp.exec_cmd("/home/veer/code/quarry/src-tauri/target/release/quarry-toggle"))
+hl.bind("SUPER + V", hl.dsp.exec_cmd("/home/veer/code/quarry/src-tauri/target/release/quarry --with 'cp '"))
+hl.bind("SUPER + period", hl.dsp.exec_cmd("/home/veer/code/quarry/src-tauri/target/release/quarry --with 'em '"))
 hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("/home/veer/code/quarry/src-tauri/target/release/quarry-toggle"), { release = true })
 
 -- Move focus with arrow keys or hjkl
