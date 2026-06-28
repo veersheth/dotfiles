@@ -5,6 +5,35 @@ CONFIG_DIR="/home/veer/dotfiles/nixos"
 CONFIG_FILE="$CONFIG_DIR/configuration.nix"
 UPDATE_CHANNELS=false
 
+usage() {
+    cat <<EOF
+nixx — NixOS rebuild helper
+
+Flags:
+  -u, --update   Update nix channels before rebuilding
+  -c, --clean    Garbage collect old nix generations and exit
+  -h, --help     Show this help message and exit
+
+Interactive build options (shown after editing config):
+  y   Build
+  u   Update channels & build
+  v   Verbose build
+  n   Abort
+EOF
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+if [[ "$1" == "-c" || "$1" == "--clean" ]]; then
+    echo "Collecting nix garbage (removing old generations)..."
+    sudo nix-collect-garbage -d
+    echo "Done."
+    exit 0
+fi
+
 # Check for update flag
 if [[ "$1" == "-u" || "$1" == "--update" ]]; then
     UPDATE_CHANNELS=true

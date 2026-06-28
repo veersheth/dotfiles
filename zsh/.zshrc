@@ -1,9 +1,14 @@
 autoload -U colors && colors
 setopt PROMPT_SUBST
 
+git_branch() {
+  local branch
+  branch=$(git symbolic-ref --short HEAD 2>/dev/null) || return
+  echo " %{$fg[cyan]%}($branch)%{$reset_color%}"
+}
+
 NEWLINE=$'\n'
-ZSHCOLOR="#d9bfff"
-PS1="${NEWLINE} %{$fg[magenta]%}%~%{$fg[red]%} %{$reset_color%}$%b "
+PS1="${NEWLINE} %{$fg[yellow]%}%~%{$fg[red]%}\$(git_branch) %{$reset_color%}${NEWLINE} \$%b "
 
 HISTFILE=~/.zsh_history
 HISTSIZE=1500
@@ -22,6 +27,8 @@ alias open="xdg-open"
 alias lg="lazygit"
 alias ..="cd .."
 alias ...="cd ../.."
+
+bindkey '^r' history-incremental-search-backward
 
 cdc() {
   local dir
@@ -58,7 +65,14 @@ export PATH="$HOME/.cargo/bin:$PATH"
 export PATH="/home/veer/.bun/bin:$PATH"
 
 alias nxp="sudo nvim /etc/nixos/configuration.nix; sudo nixos-rebuild switch"
-alias quarry="/home/veer/code/personal/quarry/src-tauri/target/release/quarry"
-
+alias quarry="/home/veer/code/quarry/src-tauri/target/release/quarry"
 
 export PATH="/home/veer/.local/bin:$PATH"
+
+# pnpm
+export PNPM_HOME="/home/veer/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

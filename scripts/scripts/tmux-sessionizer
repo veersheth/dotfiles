@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 
 HOME_SESSION="HOME"
@@ -7,74 +8,119 @@ TEMP_DIR="/tmp/tmuxtmp"
 
 SEARCH_DIRS=(
     "$HOME"
-    "$HOME/obsidian-vault-03"
+    "$HOME/syncthing"
     "$HOME/code"
-    "$HOME/code/personal"
-    "$HOME/code/unsw"
 )
 
+create_session() {
+    local session_name="$1"
+    local session_dir="$2"
+
+    if ! tmux has-session -t="$session_name" 2>/dev/null; then
+        tmux new-session -ds "$session_name" -c "$session_dir"
+    fi
+}
+
+switch_or_attach() {
+    local session_name="$1"
+
+    if [[ -n "${TMUX:-}" ]]; then
+        tmux switch-client -t "$session_name"
+    else
+        exec tmux attach-session -t "$session_name"
+    fi
+}
+
+make_session_name() {
+    local dir="$1"
+
+    dir="$(realpath "$dir")"
+
+    # Strip HOME prefix for readability
+    dir="${dir/#$HOME\//}"
+
+    # tmux-safe session name
+    printf '%s\n' "$dir" \
+        | tr '/' '_' \
+        | tr -cd '[:alnum:]_-'
+}
+
+# -----------------------------------------------------------------------------
 # --init
+# -----------------------------------------------------------------------------
+
 if [[ "${1:-}" == "--init" ]]; then
     mkdir -p "$TEMP_DIR"
+
     tmux start-server
 
-    if ! tmux has-session -t "$HOME_SESSION" 2>/dev/null; then
-        tmux new-session -d -s "$HOME_SESSION" -c "$HOME"
-    fi
-    if ! tmux has-session -t "$TEMP_SESSION" 2>/dev/null; then
-        tmux new-session -d -s "$TEMP_SESSION" -c "$TEMP_DIR"
-    fi
+    create_session "$HOME_SESSION" "$HOME"
+    create_session "$TEMP_SESSION" "$TEMP_DIR"
 
-    if [[ -z "${TMUX:-}" ]]; then
-        exec tmux attach-session -t "$HOME_SESSION"
-    else
-        tmux switch-client -t "$HOME_SESSION"
-    fi
+    switch_or_attach "$HOME_SESSION"
+    exit 0
 fi
 
-# sessionizer
+# -----------------------------------------------------------------------------
+# Session selection
+# -----------------------------------------------------------------------------
+
 if [[ $# -eq 1 ]]; then
     selected="$1"
 else
-    selected=$(
+  selected=$(
         {
-            printf '%s\n' "HOME" "TEMP"
+            printf '%s\n' "$HOME_SESSION" "$TEMP_SESSION"
+
+            # 1. find -L follows symlinks
             find -L "${SEARCH_DIRS[@]}" \
-                -mindepth 1 -maxdepth 1 -type d 2>/dev/null \
-                | sed "s|^$HOME/||" \
-                | grep -vxF -e "HOME" -e "TEMP"
-        } | awk '!seen[$0]++' | fzf --layout=reverse
-    )
+                -mindepth 1 \
+                -maxdepth 2 \
+                -type d \
+                2>/dev/null \
+                | sed "s|^$HOME/||" # 2. Strip HOME directly from the find output
+        } \
+        | awk '!seen[$0]++' \
+        | sort \
+        | fzf --layout=reverse 
+    ) || exit 0
 fi
 
 [[ -z "${selected:-}" ]] && exit 0
 
+# -----------------------------------------------------------------------------
+# Resolve session
+# -----------------------------------------------------------------------------
+
 case "$selected" in
-    HOME)
+    "$HOME_SESSION")
         session_name="$HOME_SESSION"
         session_dir="$HOME"
         ;;
-    TEMP)
+
+    "$TEMP_SESSION")
         session_name="$TEMP_SESSION"
         session_dir="$TEMP_DIR"
         ;;
+
     *)
         if [[ "$selected" == /* ]]; then
             session_dir="$selected"
         else
             session_dir="$HOME/$selected"
         fi
-        session_name=$(echo "$session_dir" | awk -F/ '{print $(NF-1)"/"$NF}' | tr './ ' '___')
+
+        session_dir="$(realpath -m "$session_dir")"
+
+        mkdir -p "$session_dir"
+
+        session_name="$(make_session_name "$session_dir")"
         ;;
 esac
 
-if ! tmux has-session -t "$session_name" 2>/dev/null; then
-    mkdir -p "$session_dir"
-    tmux new-session -d -s "$session_name" -c "$session_dir"
-fi
+# -----------------------------------------------------------------------------
+# Create/switch
+# -----------------------------------------------------------------------------
 
-if [[ -z "${TMUX:-}" ]]; then
-    exec tmux attach-session -t "$session_name"
-else
-    tmux switch-client -t "$session_name"
-fi
+create_session "$session_name" "$session_dir"
+switch_or_attach "$session_name"
