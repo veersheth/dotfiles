@@ -1,9 +1,23 @@
 local vim = vim
 vim.pack.add({ "https://github.com/neovim/nvim-lspconfig" })
 vim.pack.add({ "https://github.com/mason-org/mason.nvim" })
+vim.pack.add({ "https://github.com/mason-org/mason-lspconfig.nvim" })
 vim.pack.add({ "https://github.com/aznhe21/actions-preview.nvim" })
-
 require("mason").setup()
+
+require("mason-lspconfig").setup({
+  ensure_installed = {
+    "lua_ls", "ts_ls", "cssls",
+    "html",
+    "emmet_ls",
+    "svelte",
+    "rust_analyzer", "clangd",
+    "ruff", "pyright",
+    "tinymist",
+  },
+  automatic_enable = false,
+})
+
 require("actions-preview").setup({
   backend = { "telescope" },
   extensions = { "env" },
@@ -11,27 +25,29 @@ require("actions-preview").setup({
 })
 
 local orig_open_floating_preview   = vim.lsp.util.open_floating_preview
+
 vim.lsp.util.open_floating_preview = function(contents, syntax, opts, ...)
   opts = opts or {}
   opts.border = opts.border or "rounded"
   return orig_open_floating_preview(contents, syntax, opts, ...)
 end
 
-vim.o.pumborder = "rounded"
-vim.opt.completeopt = { "menuone", "noinsert", "popup" }
+vim.o.pumborder                    = "rounded"
+
+vim.opt.completeopt                = { "menuone", "noinsert", "noselect", "popup" }
 
 vim.lsp.enable({
-  "lua_ls", "ts_ls", "cssls", "tailwindcss",
-  "svelte", "emmet_language_server", "emmet_ls",
-  "rust_analyzer", "clangd", "zls",
+  "lua_ls", "ts_ls", "cssls",
+  "svelte",
+  "rust_analyzer", "clangd",
   "ruff", "pyright",
-  "haskell-language-server", "hlint",
-  "intelephense", "solargraph",
-  "tinymist", "glsl_analyzer",
+  "tinymist", 
+  "emmet_ls"
 })
 
 vim.api.nvim_create_autocmd("LspAttach", {
   group = vim.api.nvim_create_augroup("my.lsp", {}),
+
   callback = function(args)
     local client = assert(vim.lsp.get_client_by_id(args.data.client_id))
     local bufnr  = args.buf
@@ -44,11 +60,15 @@ vim.api.nvim_create_autocmd("LspAttach", {
       for i = 32, 126 do table.insert(chars, string.char(i)) end
       client.server_capabilities.completionProvider.triggerCharacters = chars
       vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
+      vim.keymap.set("i", "<CR>", function()
+        return vim.fn.pumvisible() == 1 and "<C-e><CR>" or "<CR>"
+      end, { buffer = bufnr, expr = true, silent = true })
     end
 
     map("n", "<leader>lk", function()
       vim.diagnostic.config({ virtual_text = not vim.diagnostic.config().virtual_text })
     end, "toggle inline diagnostics")
+
     map("n", "<leader>ln", vim.diagnostic.goto_next, "next diagnostic")
     map("n", "<leader>lp", vim.diagnostic.goto_prev, "prev diagnostic")
     map("n", "<leader>lf", function() vim.lsp.buf.format({ async = true }) end, "format buffer")

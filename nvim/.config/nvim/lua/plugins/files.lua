@@ -6,6 +6,7 @@ vim.pack.add({ "https://github.com/stevearc/oil.nvim" })
 vim.pack.add({ "https://github.com/nvim-tree/nvim-web-devicons" })
 
 vim.keymap.set({ "n" }, "<leader>/", "<cmd>Oil<CR>", { desc = "open oil" })
+vim.keymap.set({ "n" }, "<leader>?", "<cmd>Oil --preview<CR>", { desc = "preview oil" })
 
 require "oil".setup({
   view_options = {
