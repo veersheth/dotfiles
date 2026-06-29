@@ -1,0 +1,28 @@
+[font]
+size = 14
+
+[font.normal]
+family = "JetBrainsMono Nerd Font"
+style = "Regular"
+
+# [font.bold]
+# family = "JetBrainsMono Nerd Font"
+# style = "Bold"
+#
+# [font.italic]
+# family = "JetBrainsMono Nerd Font"
+# style = "Italic"
+#
+[colors.primary]
+background = "#111111"
+foreground = "#fdfdfd"
+
+[window]
+opacity = 0.80
+decorations = "None"
+
+[window.padding]
+x = 12
+y = 12
+
+
