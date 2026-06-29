@@ -1,6 +1,13 @@
 vim.pack.add({ "https://github.com/akinsho/bufferline.nvim" })
 require('bufferline').setup({
   options = {
+    offsets = {
+      {
+        filetype = "neo-tree",
+        text = "",
+        separator = false,
+      },
+    },
     indicator = { style = 'none' },
     buffer_close_icon = '',
     modified_icon = '',
