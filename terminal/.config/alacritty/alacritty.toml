@@ -1,8 +1,9 @@
 [font]
-size = 14
+size = 13
 
 [font.normal]
-family = "JetBrainsMono Nerd Font"
+family = "Iosevka Nerd Font"
+# family = "JetBrainsMono Nerd Font"
 style = "Regular"
 
 # [font.bold]
@@ -14,11 +15,11 @@ style = "Regular"
 # style = "Italic"
 #
 [colors.primary]
-background = "#111111"
+background = "#000000"
 foreground = "#fdfdfd"
 
 [window]
-opacity = 0.80
+opacity = 0.75
 decorations = "None"
 
 [window.padding]
