@@ -1,9 +1,5 @@
 {
   "plugins": {
-    "BufferTabs.nvim": {
-      "rev": "4b0872392a3d7430237c69b24a49b123aac88f5b",
-      "src": "https://github.com/tomiis4/BufferTabs.nvim"
-    },
     "LuaSnip": {
       "rev": "a62e1083a3cfe8b6b206e7d3d33a51091df25357",
       "src": "https://github.com/L3MON4D3/LuaSnip"
@@ -12,13 +8,14 @@
       "rev": "0ac9c2aa3cfc8c885321c0862b50b6b1c3392405",
       "src": "https://github.com/aznhe21/actions-preview.nvim"
     },
-    "alpha-nvim": {
-      "rev": "6c6a89d5b068b5251c8bdf0dd57bb921bcfeeb09",
-      "src": "https://github.com/goolord/alpha-nvim"
-    },
     "blink.cmp": {
       "rev": "d3874d2a13aa19b095bdd10d37a82a8f0aa7cad3",
-      "src": "https://github.com/saghen/blink.cmp"
+      "src": "https://github.com/Saghen/blink.cmp",
+      "version": ">=0.0.0"
+    },
+    "blink.lib": {
+      "rev": "5876dd95deeb70aadbe9f1c0b7117a135061cdac",
+      "src": "https://github.com/Saghen/blink.lib"
     },
     "bufferline.nvim": {
       "rev": "655133c3b4c3e5e05ec549b9f8cc2894ac6f51b3",
@@ -30,7 +27,11 @@
     },
     "gitsigns.nvim": {
       "rev": "6d808f99bd63303646794406e270bd553ad7792e",
-      "src": "https://github.com/lewis6991/gitsigns.nvim"
+      "src": "lewis6991/gitsigns.nvim"
+    },
+    "gruvbox.nvim": {
+      "rev": "154eb5ff5b96d0641307113fa385eaf0d36d9796",
+      "src": "https://github.com/ellisonleao/gruvbox.nvim"
     },
     "image.nvim": {
       "rev": "da2be65c153ba15a14a342b05591652a6df70d58",
@@ -48,10 +49,6 @@
       "rev": "84c75e7a7e443586f60508d12fc50f90d9aee14e",
       "src": "https://github.com/nvim-neo-tree/neo-tree.nvim",
       "version": "3.0.0 - 4.0.0"
-    },
-    "neovim": {
-      "rev": "ff483051a47e27d84bdef47703538df1ed9f4a47",
-      "src": "https://github.com/rose-pine/neovim"
     },
     "nui.nvim": {
       "rev": "de740991c12411b663994b2860f1a4fd0937c130",
@@ -74,8 +71,8 @@
       "src": "https://github.com/nvim-tree/nvim-web-devicons"
     },
     "obsidian.nvim": {
-      "rev": "726b60c89f4bafef267a714ea1faa1335bdd414a",
-      "src": "https://github.com/epwalsh/obsidian.nvim"
+      "rev": "3fab7347007710209284d101b287c337ad4aa39c",
+      "src": "https://github.com/obsidian-nvim/obsidian.nvim"
     },
     "oil.nvim": {
       "rev": "0fcc83805ad11cf714a949c98c605ed717e0b83e",
@@ -99,11 +96,11 @@
     },
     "vague.nvim": {
       "rev": "fd58046b9d64259d9785e4aeb6d6f494c6943cad",
-      "src": "https://github.com/vague2k/vague.nvim"
+      "src": "https://github.com/vague-theme/vague.nvim"
     },
     "vim-tmux-navigator": {
       "rev": "e41c431a0c7b7388ae7ba341f01a0d217eb3a432",
-      "src": "https://github.com/christoomey/vim-tmux-navigator"
+      "src": "christoomey/vim-tmux-navigator"
     }
   }
 }

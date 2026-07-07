@@ -1,9 +1,35 @@
 local vim = vim
-vim.pack.add({ "https://github.com/neovim/nvim-lspconfig" })
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
 vim.pack.add({ "https://github.com/mason-org/mason.nvim" })
+require("mason").setup()
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+vim.pack.add({ "https://github.com/Saghen/blink.lib" })
+vim.pack.add({ { src = 'https://github.com/Saghen/blink.cmp', version = vim.version.range('*') } })
+
+
+require("blink.cmp").setup({
+  keymap = { preset = "default" },
+  fuzzy = { implementation = "lua" },
+  sources = {
+    default = { "lsp", "path", "snippets", "buffer" },
+  },
+})
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+vim.pack.add({ "https://github.com/neovim/nvim-lspconfig" })
 vim.pack.add({ "https://github.com/mason-org/mason-lspconfig.nvim" })
 vim.pack.add({ "https://github.com/aznhe21/actions-preview.nvim" })
-require("mason").setup()
 
 require("mason-lspconfig").setup({
   ensure_installed = {
@@ -24,18 +50,6 @@ require("actions-preview").setup({
   telescope = vim.tbl_extend("force", require("telescope.themes").get_dropdown(), {}),
 })
 
-local orig_open_floating_preview   = vim.lsp.util.open_floating_preview
-
-vim.lsp.util.open_floating_preview = function(contents, syntax, opts, ...)
-  opts = opts or {}
-  opts.border = opts.border or "rounded"
-  return orig_open_floating_preview(contents, syntax, opts, ...)
-end
-
-vim.o.pumborder                    = "rounded"
-
-vim.opt.completeopt                = { "menuone", "noinsert", "noselect", "popup" }
-
 vim.lsp.enable({
   "lua_ls", "ts_ls", "cssls",
   "svelte",
@@ -55,16 +69,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
       vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true, desc = desc })
     end
 
-    if client:supports_method("textDocument/completion") then
-      local chars = {}
-      for i = 32, 126 do table.insert(chars, string.char(i)) end
-      client.server_capabilities.completionProvider.triggerCharacters = chars
-      vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
-      vim.keymap.set("i", "<CR>", function()
-        return vim.fn.pumvisible() == 1 and "<C-e><CR>" or "<CR>"
-      end, { buffer = bufnr, expr = true, silent = true })
-    end
-
     map("n", "<leader>lk", function()
       vim.diagnostic.config({ virtual_text = not vim.diagnostic.config().virtual_text })
     end, "toggle inline diagnostics")
@@ -72,7 +76,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "<leader>ln", vim.diagnostic.goto_next, "next diagnostic")
     map("n", "<leader>lp", vim.diagnostic.goto_prev, "prev diagnostic")
     map("n", "<leader>lf", function() vim.lsp.buf.format({ async = true }) end, "format buffer")
-    map({ "n", "v" }, "ca", require("actions-preview").code_actions, "code actions (preview)")
+    map({ "n", "v" }, "<leader>ca", require("actions-preview").code_actions, "code actions (preview)")
     map("n", "<leader>rn", vim.lsp.buf.rename, "rename symbol")
     map("n", "K", vim.lsp.buf.hover, "hover docs")
   end,

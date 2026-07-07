@@ -22,8 +22,18 @@ telescope.setup({
 
 
 local builtin = require("telescope.builtin")
-vim.keymap.set("n", "<leader>f", builtin.find_files, { desc = "find files" })
-vim.keymap.set("n", "<A-p>", builtin.find_files, { desc = "find files" })
+
+local function find_files()
+  local vault = vim.fn.expand("~/syncthing/notes")
+  if vim.fn.getcwd():find(vault, 1, true) then
+    vim.cmd("Obsidian search")
+  else
+    builtin.find_files()
+  end
+end
+
+vim.keymap.set("n", "<leader>f", find_files, { desc = "find files" })
+vim.keymap.set("n", "<A-p>", find_files, { desc = "find files" })
 vim.keymap.set("n", "<leader>F", builtin.resume, { desc = "resume search" })
 vim.keymap.set("n", "<leader>s", builtin.live_grep, { desc = "find strings" })
 vim.keymap.set("n", "<leader>o", builtin.oldfiles, { desc = "old files" })

@@ -6,7 +6,7 @@ vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.cursorline = true -- highlight current line
 vim.opt.wrap = false
-vim.opt.scrolloff = 18
+vim.opt.scrolloff = 12
 vim.o.winborder = "rounded"
 
 -- indentation

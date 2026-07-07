@@ -1,15 +1,11 @@
-vim.pack.add({ "https://github.com/epwalsh/obsidian.nvim" })
+vim.pack.add({ "https://github.com/obsidian-nvim/obsidian.nvim" })
 
+require("obsidian").setup {
+  legacy_commands = false,
 
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "markdown",
-  callback = function()
-    vim.opt_local.conceallevel = 2
-  end,
-})
-
-require("obsidian").setup({
-  legacy_commands = false, 
+  picker = {
+    name = "telescope.nvim",
+  },
 
   workspaces = {
     {
@@ -18,31 +14,14 @@ require("obsidian").setup({
     },
   },
 
-  picker = {
-    name = "telescope.nvim",
+  attachments = {
+    folder = "999-attachments",
+    img_text_func = require("obsidian.builtin").img_text_func,
+    img_name_func = function()
+      return string.format("Pasted image %s", os.date "%Y%m%d%H%M%S")
+    end,
+    confirm_img_paste = true, -- TODO: move to paste module, paste.confirm
   },
 
-  -- new_notes_location = "notes_subdir",
-  -- notes_subdir = "notes", 
-
-  attachments = { folder = "attachments", },
-
-  templates = {
-    enabled = true,
-    folder = "999-templates", -- relative to vault root
-    date_format = "YYYY-MM-DD",
-    time_format = "HH:mm",
-  },
-
-  -- daily_notes = {
-  --   enabled = true,
-  --   folder = "dailies",
-  --   date_format = "YYYY-MM-DD",
-  -- },
-
-  frontmatter = {
-    enabled = true,
-    sort = { "id", "aliases", "tags" },
-  },
-
-})
+  -- new_notes_location = "current_dir",
+}

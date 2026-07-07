@@ -38,10 +38,10 @@ require("plugins.treesitter")
 require("plugins.ccc")
 require("plugins.luasnip")
 require("plugins.git")
-require("plugins.markdown")
-require("plugins.obsidian")
 require("plugins.image")
 require("plugins.bufferline")
+require("plugins.markdown")
+require("plugins.obsidian")
 
-require("theme")
+require("color-theme")
 
