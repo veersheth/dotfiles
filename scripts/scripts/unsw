@@ -1,0 +1,276 @@
+#!/usr/bin/env bash
+
+# interface for working with cse.unsw.edu.au fuck you tigervnc
+
+set -uo pipefail
+
+# ---------- Configuration ----------
+REMOTE_USER="z5494316"
+REMOTE_HOST="cse.unsw.edu.au"
+REMOTE_PATH="cse"                    # relative to remote $HOME -> ~/cse
+LOCAL_MOUNT="${HOME}/cse-sync"
+SSH_TARGET="${REMOTE_USER}@${REMOTE_HOST}"
+LOG_TAG="[unsw]"
+
+# ---------- Colours / logging helpers ----------
+COLOR_RED=$(tput setaf 1 2>/dev/null || echo "")
+COLOR_GREEN=$(tput setaf 2 2>/dev/null || echo "")
+COLOR_YELLOW=$(tput setaf 3 2>/dev/null || echo "")
+COLOR_RESET=$(tput sgr0 2>/dev/null || echo "")
+
+info()  { echo "${COLOR_GREEN}${LOG_TAG}${COLOR_RESET} $*"; }
+warn()  { echo "${COLOR_YELLOW}${LOG_TAG}${COLOR_RESET} $*" >&2; }
+error() { echo "${COLOR_RED}${LOG_TAG} ERROR:${COLOR_RESET} $*" >&2; }
+
+die() {
+    error "$*"
+    exit 1
+}
+
+# ---------- Pre-flight checks ----------
+
+check_sshfs_installed() {
+    if command -v sshfs >/dev/null 2>&1; then
+        return 0
+    fi
+
+    error "sshfs is not installed."
+    if command -v apt-get >/dev/null 2>&1; then
+        warn "Install it with: sudo apt-get update && sudo apt-get install -y sshfs"
+    else
+        warn "Install 'sshfs' using your distro's package manager, then re-run this script."
+    fi
+    exit 1
+}
+
+check_local_mount_dir() {
+    if [ -e "$LOCAL_MOUNT" ] && [ ! -d "$LOCAL_MOUNT" ]; then
+        die "'$LOCAL_MOUNT' exists and is not a directory. Remove/rename it and try again."
+    fi
+
+    if [ ! -d "$LOCAL_MOUNT" ]; then
+        info "Creating local mount point at $LOCAL_MOUNT"
+        mkdir -p "$LOCAL_MOUNT" || die "Could not create $LOCAL_MOUNT"
+    fi
+}
+
+is_mounted() {
+    # Returns 0 (true) if LOCAL_MOUNT is currently a mount point
+    mountpoint -q "$LOCAL_MOUNT" 2>/dev/null
+}
+
+check_ssh_reachable() {
+    info "Checking SSH connectivity to $SSH_TARGET (this may prompt for a password/passphrase)..."
+    if ! ssh -o ConnectTimeout=8 -o BatchMode=yes "$SSH_TARGET" true 2>/dev/null; then
+        warn "Passwordless (key-based) SSH check failed."
+        warn "This usually means either:"
+        warn "  1) You haven't set up an SSH key with $REMOTE_HOST, or"
+        warn "  2) The host is unreachable / down."
+        warn "Attempting an interactive connectivity test instead..."
+        if ! ssh -o ConnectTimeout=8 "$SSH_TARGET" true; then
+            die "Could not establish an SSH connection to $SSH_TARGET. Aborting."
+        fi
+    fi
+}
+
+# ---------- Commands ----------
+
+cmd_ssh() {
+    info "Connecting to $SSH_TARGET..."
+    exec ssh "$SSH_TARGET"
+}
+
+cmd_key_setup() {
+    local key_path="${HOME}/.ssh/id_ed25519_unsw"
+    local ssh_config="${HOME}/.ssh/config"
+
+    if ! command -v ssh-keygen >/dev/null 2>&1; then
+        die "ssh-keygen not found. Install openssh-client and re-run."
+    fi
+    if ! command -v ssh-copy-id >/dev/null 2>&1; then
+        die "ssh-copy-id not found. Install openssh-client and re-run."
+    fi
+
+    mkdir -p "${HOME}/.ssh" && chmod 700 "${HOME}/.ssh"
+
+    if [ -f "$key_path" ]; then
+        warn "A key already exists at $key_path"
+        read -r -p "Reuse it instead of generating a new one? [Y/n] " reply
+        case "$reply" in
+            [nN][oO]|[nN])
+                info "Backing up old key to ${key_path}.bak / ${key_path}.pub.bak"
+                mv -f "$key_path" "${key_path}.bak"
+                mv -f "${key_path}.pub" "${key_path}.pub.bak" 2>/dev/null
+                ;;
+            *)
+                info "Reusing existing key."
+                ;;
+        esac
+    fi
+
+    if [ ! -f "$key_path" ]; then
+        info "Generating a new ed25519 key at $key_path"
+        info "You'll be asked for a passphrase — you can leave it empty, but a passphrase is more secure."
+        ssh-keygen -t ed25519 -f "$key_path" -C "unsw-cse-key" || die "Key generation failed."
+    fi
+
+    info "Copying the public key to $SSH_TARGET (you'll be asked for your zPass)..."
+    ssh-copy-id -i "${key_path}.pub" "$SSH_TARGET" || die "ssh-copy-id failed."
+
+    info "Updating $ssh_config so plain 'ssh $REMOTE_HOST' also uses this key..."
+    touch "$ssh_config" && chmod 600 "$ssh_config"
+
+    if grep -q "^Host ${REMOTE_HOST}$" "$ssh_config" 2>/dev/null; then
+        warn "An entry for $REMOTE_HOST already exists in $ssh_config — leaving it as-is."
+        warn "Make sure it points IdentityFile at: $key_path"
+    else
+        {
+            echo ""
+            echo "Host ${REMOTE_HOST}"
+            echo "    User ${REMOTE_USER}"
+            echo "    IdentityFile ${key_path}"
+            echo "    IdentitiesOnly yes"
+        } >> "$ssh_config"
+        info "Added a Host entry for $REMOTE_HOST to $ssh_config"
+    fi
+
+    info "Testing passwordless connection..."
+    if ssh -o ConnectTimeout=8 -o BatchMode=yes "$SSH_TARGET" true 2>/dev/null; then
+        info "Success — 'unsw ssh' and 'unsw mount' should no longer prompt for a password."
+    else
+        warn "Key was installed, but the passwordless test failed. If you set a passphrase, that's expected — ssh-agent will still prompt for it once per session."
+    fi
+}
+
+cmd_mount() {
+    check_sshfs_installed
+    check_local_mount_dir
+
+    if is_mounted; then
+        info "$LOCAL_MOUNT is already mounted. Nothing to do."
+        exit 0
+    fi
+
+    check_ssh_reachable
+
+    info "Mounting ${SSH_TARGET}:~/${REMOTE_PATH} -> ${LOCAL_MOUNT}"
+
+    sshfs "${SSH_TARGET}:${REMOTE_PATH}" "$LOCAL_MOUNT" \
+        -o reconnect \
+        -o ServerAliveInterval=15 \
+        -o ServerAliveCountMax=3 \
+        -o follow_symlinks \
+        -o cache=yes \
+        -o kernel_cache \
+        -o compression=yes
+
+    local status=$?
+
+    if [ $status -ne 0 ]; then
+        die "sshfs mount failed (exit code $status). Check that '~/${REMOTE_PATH}' exists on the remote host."
+    fi
+
+    if is_mounted; then
+        info "Successfully mounted. Your CSE files are available at $LOCAL_MOUNT"
+    else
+        die "sshfs returned success but $LOCAL_MOUNT does not appear mounted. Something went wrong."
+    fi
+}
+
+cmd_stop() {
+    local force="${1:-}"
+
+    if ! is_mounted; then
+        info "$LOCAL_MOUNT is not currently mounted. Nothing to do."
+        exit 0
+    fi
+
+    if [ "$force" = "--force" ]; then
+        warn "Force-unmounting $LOCAL_MOUNT (lazy unmount)..."
+        if command -v fusermount >/dev/null 2>&1; then
+            fusermount -uz "$LOCAL_MOUNT"
+        else
+            sudo umount -l "$LOCAL_MOUNT"
+        fi
+
+        if [ $? -ne 0 ]; then
+            die "Force unmount failed. You may need to reboot or investigate open file handles (lsof +D $LOCAL_MOUNT)."
+        fi
+
+        info "Force unmount issued. It may take a moment to fully release."
+        exit 0
+    fi
+
+    info "Unmounting $LOCAL_MOUNT..."
+    if command -v fusermount >/dev/null 2>&1; then
+        fusermount -u "$LOCAL_MOUNT"
+    else
+        umount "$LOCAL_MOUNT"
+    fi
+
+    if [ $? -ne 0 ]; then
+        error "Normal unmount failed (mount point may be busy — files open, or a shell 'cd'-ed into it)."
+        warn "Retry with: $0 stop --force"
+        exit 1
+    fi
+
+    info "Successfully unmounted $LOCAL_MOUNT"
+}
+
+cmd_status() {
+    if is_mounted; then
+        info "MOUNTED: ${SSH_TARGET}:~/${REMOTE_PATH} is mounted at $LOCAL_MOUNT"
+    else
+        info "NOT MOUNTED: $LOCAL_MOUNT is not currently mounted."
+    fi
+}
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") {ssh|mount|stop|stop --force|status|key-setup}
+
+  ssh            SSH into ${SSH_TARGET}
+  mount          Mount ${SSH_TARGET}:~/${REMOTE_PATH} onto ${LOCAL_MOUNT}
+  stop           Cleanly unmount ${LOCAL_MOUNT}
+  stop --force   Force/lazy unmount if a clean unmount fails
+  status         Show current mount status
+  key-setup      Generate an SSH key and install it on ${REMOTE_HOST}
+                 for passwordless ssh/mount
+EOF
+}
+
+# ---------- Argument parsing ----------
+
+main() {
+    local cmd="${1:-}"
+
+    case "$cmd" in
+        ssh)
+            cmd_ssh
+            ;;
+        mount)
+            cmd_mount
+            ;;
+        stop)
+            cmd_stop "${2:-}"
+            ;;
+        status)
+            cmd_status
+            ;;
+        key-setup)
+            cmd_key_setup
+            ;;
+        -h|--help|"")
+            usage
+            exit 0
+            ;;
+        *)
+            error "Unknown command: '$cmd'"
+            usage
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"
+
