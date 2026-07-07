@@ -1,0 +1,78 @@
+import Quickshell
+import Quickshell.Wayland
+import QtQuick
+import QtQuick.Layouts
+import qs.common
+import qs.components
+import qs.notifications
+
+Variants {
+    model: Quickshell.screens
+
+    PanelWindow {
+        id: root
+        required property var modelData
+        screen: modelData
+
+        anchors { top: true; left: true; right: true }
+        implicitHeight: Theme.barHeight
+        exclusiveZone: Theme.barHeight
+        color: "transparent"
+
+        WlrLayershell.namespace: "quickshell:bar"
+
+        mask: Region { item: bar }
+
+        Rectangle {
+            id: bar
+            anchors { top: parent.top; left: parent.left; right: parent.right }
+            height: Theme.barHeight
+            color: Theme.background
+
+            Rectangle {
+                anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
+                height: Theme.borderWidth
+                color: Theme.border
+            }
+
+            // ── Left: workspaces + active window ────────────────────────
+            RowLayout {
+                anchors {
+                    left: parent.left
+                    leftMargin: 14
+                    verticalCenter: parent.verticalCenter
+                }
+                spacing: Theme.moduleSpacing
+
+                Item {
+                    implicitWidth: 120
+                    implicitHeight: Theme.fontSize
+                    Workspaces {
+                        monitorName: root.screen?.name ?? ""
+                        anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                    }
+                }
+
+                ActiveWindow {}
+            }
+
+            // ── Right: system info ───────────────────────────────────────
+            RowLayout {
+                anchors {
+                    right: parent.right
+                    rightMargin: 14
+                    verticalCenter: parent.verticalCenter
+                }
+                spacing: Theme.moduleSpacing
+
+                Media {}
+                Tray {}
+                NotificationBell {}
+                BluetoothIndicator {}
+                WifiIndicator {}
+                Clock {}
+                Battery {}
+            }
+        }
+    }
+}

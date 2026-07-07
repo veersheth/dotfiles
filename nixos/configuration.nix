@@ -27,9 +27,13 @@
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
-  boot.kernelModules = [ 
+  boot.kernelModules = [
     "hid_sensor_hub" # for autobrightness
     "kvm-amd"
+  ];
+  boot.kernelParams = [
+    "mem_sleep_default=s2idle"
+    "amdgpu.sg_display=0"
   ];
 
   networking.hostName = "nixos"; # Define your hostname.
@@ -132,12 +136,12 @@
       typst texlive.combined.scheme-full
       pnpm_9 nodejs_22
       docker_25
-      btop
+      btop powertop
       bun
       claude-code
 
 
-      # GNOME Extensions
+      # GNOME 
       gnomeExtensions.media-controls
       gnomeExtensions.rounded-window-corners-reborn
       gnomeExtensions.user-themes
@@ -163,6 +167,7 @@
       inter
       helvetica-neue-lt-std
       nerd-fonts.jetbrains-mono
+      nerd-fonts.iosevka
       
       noto-fonts-color-emoji
     ];
@@ -246,9 +251,15 @@
     framework-tool
 
 
+    # customization
+    kora-icon-theme
+
     # hyprland
     hyprland hypridle hyprlock hyprpicker hyprsunset hyprpolkitagent 
-    hyprpanel dunst hyprshot cliphist hyprpaper waybar satty
+    hyprshot cliphist satty
+
+    quickshell
+    qt5.qtgraphicaleffects
   ];
 
   environment.etc."keyd/default.conf" = {
