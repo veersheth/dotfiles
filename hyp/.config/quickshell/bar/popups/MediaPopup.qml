@@ -49,7 +49,7 @@ BarPopup {
     }
 
     Timer {
-        interval: 500; repeat: true; triggeredOnStart: true
+        interval: 2000; repeat: true; triggeredOnStart: true
         running: root.visible && root.player !== null && !root.seeking
         onTriggered: root.syncPos()
     }
@@ -142,10 +142,9 @@ BarPopup {
                 anchors.centerIn: parent
 
                 // Album art — circular clip with crossfade
-                Rectangle {
+                ClippingRectangle {
                     anchors.fill: parent
                     radius: width / 2
-                    clip: true
                     color: "#0d0d0d"
 
                     Image {
@@ -169,16 +168,6 @@ BarPopup {
                         const ctx = getContext("2d");
                         ctx.clearRect(0, 0, width, height);
                         const cx = width / 2, cy = height / 2, r = Math.min(cx, cy);
-                        const bg = Theme.background;
-
-                        // Mask corners: rect (clockwise) + arc (counterclockwise) with
-                        // non-zero winding fills only the square-minus-circle frame.
-                        // destination-out is unreliable in Qt Quick Canvas.
-                        ctx.fillStyle = `rgb(${Math.round(bg.r*255)},${Math.round(bg.g*255)},${Math.round(bg.b*255)})`;
-                        ctx.beginPath();
-                        ctx.rect(0, 0, width, height);          // clockwise  → winding +1
-                        ctx.arc(cx, cy, r, 0, Math.PI * 2, true); // counterclockwise → winding -1 inside
-                        ctx.fill();                               // net=0 inside circle → hole
 
                         // Edge vignette
                         const vgn = ctx.createRadialGradient(cx, cy, r * 0.55, cx, cy, r);
@@ -212,7 +201,7 @@ BarPopup {
                 Timer {
                     interval: 16
                     repeat: true
-                    running: root.playing
+                    running: root.playing && root.visible
                     onTriggered: vinyl.rotation = (vinyl.rotation + 360 * 16 / 9000) % 360
                 }
             }
