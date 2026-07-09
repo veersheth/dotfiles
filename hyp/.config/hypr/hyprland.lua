@@ -30,6 +30,7 @@ end)
 hl.env("XCURSOR_THEME", "Bibata-Modern-Classic")
 hl.env("HYPRCURSOR_SIZE", "20")
 hl.env("XCURSOR_SIZE", "20")
+hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 
 -- Autostart
 -- hl.exec_once("dunst")
@@ -62,7 +63,7 @@ hl.config({
 
     shadow           = {
       enabled        = true,
-      range          = 60,
+      range          = 20,
       render_power   = 4,
       color          = "rgba(00000088)",
       color_inactive = "rgba(00000044)",
@@ -107,7 +108,7 @@ hl.animation({ leaf = "fadeLayersOut", enabled = true, speed = 1, bezier = "almo
 hl.animation({ leaf = "workspaces", enabled = true, speed = 1.5, bezier = "easeOutQuint", style = "slidefade 1%" })
 hl.animation({ leaf = "workspacesIn", enabled = true, speed = 1.5, bezier = "easeOutQuint", style = "slidefade 1%" })
 hl.animation({ leaf = "workspacesOut", enabled = true, speed = 1.5, bezier = "easeOutQuint", style = "slidefade 1%" })
-hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 3, bezier = "easeOutQuint", style = "slidefadevert 20%" })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 3, bezier = "easeOutQuint", style = "slidefade 1%" })
 hl.animation({ leaf = "zoomFactor", enabled = false, speed = 7, bezier = "quick" })
 
 -- -- "Smart gaps" / "No gaps when only"
@@ -306,8 +307,8 @@ hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("~/.config/hypr/scripts/volume-n
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd("~/.config/hypr/scripts/mute-notify.sh @DEFAULT_AUDIO_SINK@"), { locked = true, repeating = true })
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("~/.config/hypr/scripts/mute-notify.sh @DEFAULT_AUDIO_SOURCE@"), { locked = true, repeating = true })
 
-hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("~/.config/hypr/scripts/brightness-notify.sh   10%+"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("~/.config/hypr/scripts/brightness-notify.sh 10%-"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("~/.config/hypr/scripts/brightness-notify.sh   --instant 6%+"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("~/.config/hypr/scripts/brightness-notify.sh --instant 6%-"), { locked = true, repeating = true })
 
 -- Requires playerctl
 hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })
@@ -352,7 +353,8 @@ hl.layer_rule({
   name  = "quickshell", -- status bar, notifications, osd, dock
   match = { namespace = "quickshell:.+" },
   blur  = true,
-  ignore_alpha = 0.1
+  ignore_alpha = 0.1,
+  no_anim = true, -- so that it doesn't interefere with the native bounce morph animation
 })
 
 hl.window_rule({

@@ -71,7 +71,7 @@ PanelWindow {
     NumberAnimation {
         id: enterAnim
         target: root; property: "progress"
-        to: 1; duration: 400
+        to: 1; duration: 600
         easing.type: Easing.OutBack
         easing.overshoot: 1.2
     }
@@ -79,7 +79,7 @@ PanelWindow {
         id: exitAnim
         NumberAnimation {
             target: root; property: "progress"
-            to: 0; duration: 160; easing.type: Easing.InCubic
+            to: 0; duration: 260; easing.type: Easing.InCubic
         }
         ScriptAction { script: root.visible = false }
     }

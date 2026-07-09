@@ -44,13 +44,9 @@ Variants {
                 }
                 spacing: Theme.moduleSpacing
 
-                Item {
-                    implicitWidth: 120
-                    implicitHeight: Theme.fontSize
-                    Workspaces {
-                        monitorName: root.screen?.name ?? ""
-                        anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-                    }
+                Workspaces {
+                    monitorName: root.screen?.name ?? ""
+                    Layout.alignment: Qt.AlignVCenter
                 }
 
                 ActiveWindow {}

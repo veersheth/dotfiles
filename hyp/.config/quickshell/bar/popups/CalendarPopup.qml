@@ -24,8 +24,8 @@ BarPopup {
     readonly property int minYear: 1900
     readonly property int maxYear: 2100
 
-    contentWidth: col.implicitWidth + 24
-    contentHeight: col.implicitHeight + 24
+    contentWidth: col.implicitWidth + 44
+    contentHeight: col.implicitHeight + 44
 
     // always open on the current month
     onShownChanged: if (shown) goToday()
@@ -78,7 +78,7 @@ BarPopup {
     ColumnLayout {
         id: col
         anchors.centerIn: parent
-        spacing: 6
+        spacing: 10
 
         WheelHandler {
             target: null

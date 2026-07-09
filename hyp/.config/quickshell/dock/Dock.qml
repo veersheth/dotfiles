@@ -24,11 +24,7 @@ Variants {
 
         // Pinned apps: appId = wayland app_id (case-insensitive match),
         // exec = launch command, icon = icon theme name.
-        readonly property var pinned: [
-            { appId: "Alacritty", exec: "alacritty", icon: "Alacritty" },
-            { appId: "firefox",   exec: "firefox",   icon: "firefox"   },
-            { appId: "spotify",   exec: "spotify",   icon: "spotify"   }
-        ]
+        readonly property var pinned: []
 
         // Pinned entries first, then running apps that aren't pinned.
         readonly property var entries: {

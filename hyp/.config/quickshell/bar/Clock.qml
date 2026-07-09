@@ -24,8 +24,8 @@ Pill {
 
     Text {
         Layout.alignment: Qt.AlignVCenter
-        // "Sun Jul 04  02:20 PM"
-        text: Qt.formatDateTime(clock.date, "ddd MMM dd  hh:mm AP")
+        // "Sun Jul 04  14:20"
+        text: Qt.formatDateTime(clock.date, "ddd MMM dd  HH:mm")
         font.family: Theme.font
         font.pixelSize: Theme.fontSize
         font.weight: Font.Medium
