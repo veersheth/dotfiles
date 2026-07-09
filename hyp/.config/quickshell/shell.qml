@@ -9,10 +9,9 @@ import qs.lock
 
 ShellRoot {
     Bar {}
-    Desktop {}
-    WallpaperPicker {}
+    Desktop { wallpaper: "/home/veer/dotfiles/wallpapers/wallpapers/black leaves.jpg" }
     NotificationPopups {}
     Osd {}
-    Dock {}
     Lock {}
+    // Dock {}
 }

@@ -4,6 +4,13 @@ import QtQuick
 import qs.wallpaper
 
 Scope {
+    id: root
+
+    property string wallpaper: ""
+
+    onWallpaperChanged: WallpaperService.current = wallpaper
+    Component.onCompleted: WallpaperService.current = wallpaper
+
     // Background layer — wallpaper image, one per screen
     Variants {
         model: Quickshell.screens
@@ -18,31 +25,10 @@ Scope {
 
             Image {
                 anchors.fill: parent
-                source:       WallpaperService.current.length > 0
-                                  ? "file://" + WallpaperService.current : ""
+                source:       root.wallpaper.length > 0 ? "file://" + root.wallpaper : ""
                 fillMode:     Image.PreserveAspectCrop
                 smooth:       true
                 asynchronous: true
-            }
-        }
-    }
-
-    // Bottom layer — catches right-click to open picker
-    Variants {
-        model: Quickshell.screens
-        PanelWindow {
-            required property var modelData
-            screen: modelData
-            anchors { top: true; bottom: true; left: true; right: true }
-            exclusiveZone: -1
-            color: "transparent"
-            WlrLayershell.layer: WlrLayer.Bottom
-            WlrLayershell.namespace: "quickshell:desktop"
-
-            MouseArea {
-                anchors.fill:    parent
-                acceptedButtons: Qt.RightButton
-                onClicked:       WallpaperService.togglePicker()
             }
         }
     }
