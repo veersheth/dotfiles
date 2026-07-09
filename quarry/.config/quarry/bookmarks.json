@@ -1,3 +1,12 @@
 {
-  "bookmarks": []
+  "bookmarks": [
+    {
+      "name": "unsw-castle",
+      "url": "https://castle.unsw.edu.au/login"
+    },
+    {
+      "name": "26t2-1531-gitlab",
+      "url": "https://gitlab.cse.unsw.edu.au/coursework/comp1531/26T2"
+    }
+  ]
 }

@@ -39,8 +39,7 @@ gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-9  "['<Super><S
 gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-10 "['<Super><Shift>0']"
 
 # special workspaces
-# move GNOME Shell message tray + overview off Super+m → Super+n
-gsettings set org.gnome.shell.keybindings toggle-message-tray "['<Super>n']"
+gsettings set org.gnome.shell.keybindings toggle-message-tray "[]"
 
 gsettings set org.gnome.desktop.wm.keybindings move-to-workspace-5  "['<Super><Shift>e']"
 gsettings set org.gnome.desktop.wm.keybindings switch-to-workspace-5  "['<Super>e']"
@@ -76,7 +75,8 @@ gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings \
   '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', \
   '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', \
   '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', \
-  '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/']"
+  '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', \
+  '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/']"
 
 # browser super b
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ name 'Browser'
@@ -97,4 +97,9 @@ gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/or
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ name 'Clipboard'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ command "/home/veer/code/quarry/src-tauri/target/release/quarry --with 'cp '"
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/ binding '<Super>v'
+
+# super n night light toggle
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ name 'Night Light Toggle'
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ command 'bash -c '\''v=$(gsettings get org.gnome.settings-daemon.plugins.color night-light-enabled); if [ "$v" = "true" ]; then gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled false; else gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true; fi'\'''
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ binding '<Super>n'
 
