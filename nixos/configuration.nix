@@ -251,12 +251,11 @@
     framework-tool
 
 
-    # customization
-    kora-icon-theme
-
     # hyprland
-    hyprland hypridle hyprlock hyprpicker hyprsunset hyprpolkitagent 
+    hyprland hypridle hyprpicker hyprsunset hyprpolkitagent 
     hyprshot cliphist satty
+
+    hyprlock 
 
     quickshell
     qt5.qtgraphicaleffects
