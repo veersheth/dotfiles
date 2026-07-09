@@ -16,6 +16,10 @@ PanelWindow {
     property Item anchorItem: null
     property double dismissedAt: 0
     property real progress: 0
+    // false → popup survives losing focus (e.g. while dragging files into it)
+    property bool grabFocus: true
+    // false → clicking outside leaves the popup open (close via toggle/Esc)
+    property bool dismissOnFocusLoss: true
 
     function toggle() {
         if (shown) { shown = false; return; }
@@ -86,8 +90,9 @@ PanelWindow {
 
     HyprlandFocusGrab {
         windows: [root]
-        active: root.shown
+        active: root.shown && root.grabFocus
         onCleared: {
+            if (!root.dismissOnFocusLoss) return;
             root.dismissedAt = Date.now();
             root.shown = false;
         }

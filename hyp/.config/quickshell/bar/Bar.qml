@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import qs.common
 import qs.components
 import qs.notifications
+import qs.bar.popups
 
 Variants {
     model: Quickshell.screens
@@ -28,6 +29,26 @@ Variants {
             anchors { top: parent.top; left: parent.left; right: parent.right }
             height: Theme.barHeight
             color: Theme.background
+
+            // Empty bar space → scratchpad. First child, so every module's
+            // own MouseArea stays on top and wins input over it.
+            MouseArea {
+                anchors.fill: parent
+                onClicked: scratchpad.toggle()
+            }
+
+            // invisible nub the scratchpad morphs out of
+            Item {
+                id: scratchAnchor
+                anchors { top: parent.top; horizontalCenter: parent.horizontalCenter }
+                width: 120
+                height: parent.height
+            }
+
+            ScratchpadPopup {
+                id: scratchpad
+                anchorItem: scratchAnchor
+            }
 
             Rectangle {
                 anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
