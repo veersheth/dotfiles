@@ -124,8 +124,6 @@
       onlyoffice-desktopeditors
       packet
 
-      syncthingtray
-
       # CLI
       marp-cli
       lazygit
@@ -212,6 +210,11 @@
       withUWSM = true;
       xwayland.enable = true;
     };
+
+    kdeconnect = {
+      enable = true;
+      package = pkgs.kdePackages.kdeconnect-kde;
+    };
   };
 
   # Allow unfree packages
@@ -220,6 +223,7 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    zenity
     tree-sitter
     ffmpeg
     brightnessctl
@@ -276,14 +280,6 @@
     keyd.enable = true;
     fprintd.enable = true;
     flatpak.enable = true;
-    syncthing = {
-      enable = true;
-      openDefaultPorts = true;
-      user = "veer";
-      group = "users";
-      dataDir = "/home/veer";          # where the default sync folder lives
-      configDir = "/home/veer/.config/syncthing"; # config + key/cert
-    };
     logind = {
       powerKey = "suspend";
       lidSwitch = "suspend";
