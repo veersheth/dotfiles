@@ -5,6 +5,16 @@
         "name": "Mumbai, IN",
         "payload": "Mumbai, IN"
       }
+    ],
+    "emojis": [
+      {
+        "name": "😭",
+        "payload": "😭"
+      },
+      {
+        "name": "💀",
+        "payload": "💀"
+      }
     ]
   }
 }
