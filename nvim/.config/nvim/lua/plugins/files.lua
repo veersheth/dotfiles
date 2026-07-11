@@ -83,7 +83,7 @@ vim.cmd([[
   highlight NeoTreeDiagnosticHint  guifg=#2c2c2c
 ]])
 
-vim.keymap.set("n", "<leader>e", "<cmd>Neotree toggle<cr>", { desc = "Toggle file tree" })
+vim.keymap.set("n", "<leader>e", "<cmd>Neotree toggle right<cr>", { desc = "Toggle file tree" })
 
 -- vim.api.nvim_create_autocmd("VimEnter", {
 --   callback = vim.schedule_wrap(function()
