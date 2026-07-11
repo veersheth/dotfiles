@@ -19,7 +19,7 @@ background = "#000000"
 foreground = "#fdfdfd"
 
 [window]
-opacity = 0.75
+opacity = 0.80
 decorations = "None"
 
 [window.padding]
