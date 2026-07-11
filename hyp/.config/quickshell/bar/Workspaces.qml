@@ -29,8 +29,6 @@ RowLayout {
                     ? Qt.alpha(Theme.foreground, 0.7)
                     : Qt.alpha(Theme.foreground, 0.35)
 
-            Behavior on color { ColorAnimation { duration: Theme.animDuration } }
-
             MouseArea {
                 id: mouse
                 anchors.fill: parent

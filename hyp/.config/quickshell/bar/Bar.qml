@@ -34,7 +34,7 @@ Variants {
             // own MouseArea stays on top and wins input over it.
             MouseArea {
                 anchors.fill: parent
-                onClicked: scratchpad.toggle()
+                onDoubleClicked: scratchpad.toggle()
             }
 
             // invisible nub the scratchpad morphs out of
@@ -53,7 +53,7 @@ Variants {
             Rectangle {
                 anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
                 height: Theme.borderWidth
-                color: Theme.border
+                color: Theme.barBorder
             }
 
             // ── Left: workspaces + active window ────────────────────────

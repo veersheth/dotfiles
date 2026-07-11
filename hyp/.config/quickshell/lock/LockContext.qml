@@ -16,7 +16,6 @@ Scope {
     property bool   authenticating: false
     property bool   succeeded: false
     property string currentText: ""
-    readonly property bool fingerprintListening: armed && !succeeded && fprint.active
 
     // brief green success beat before the lock actually releases
     function succeed() {
@@ -85,7 +84,7 @@ Scope {
             } else {
                 root.authenticating = false;
                 root.currentText = "";
-                root.status = "Incorrect password";
+                root.status = "BITCH";
                 root.failed();
             }
         }

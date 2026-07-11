@@ -46,6 +46,9 @@ Item {
             const m  = root.flare;
             const left  = (width - cw) / 2;
             const right = left + cw;
+            // keep the stroke inside the surface — it straddles the path,
+            // so half the border width would clip at the window edge
+            const chB = ch - Theme.borderWidth / 2;
             const br = Math.min(
                 root.lerp(root.startHeight / 2, Theme.popupRadius, root.progress),
                 ch / 2, cw / 2);
@@ -53,10 +56,10 @@ Item {
             ctx.beginPath();
             ctx.moveTo(left - m, 0);
             ctx.arc(left - m, m, m, -Math.PI / 2, 0, false);              // left flare
-            ctx.lineTo(left, ch - br);
-            ctx.arc(left + br,  ch - br, br, Math.PI,      Math.PI / 2, true); // bottom-left
-            ctx.lineTo(right - br, ch);
-            ctx.arc(right - br, ch - br, br, Math.PI / 2,  0,            true); // bottom-right
+            ctx.lineTo(left, chB - br);
+            ctx.arc(left + br,  chB - br, br, Math.PI,      Math.PI / 2, true); // bottom-left
+            ctx.lineTo(right - br, chB);
+            ctx.arc(right - br, chB - br, br, Math.PI / 2,  0,            true); // bottom-right
             ctx.lineTo(right, m);
             ctx.arc(right + m, m, m, Math.PI, Math.PI * 1.5, false);     // right flare
 

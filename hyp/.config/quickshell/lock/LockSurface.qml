@@ -36,38 +36,6 @@ Item {
         opacity: 0.45
     }
 
-    Canvas {
-        id: fingerprintGlow
-        anchors { right: parent.right; bottom: parent.bottom }
-        width: 340
-        height: 340
-        opacity: root.ctx.fingerprintListening ? 0.75 : 0
-        visible: opacity > 0
-
-        onPaint: {
-            const ctx = getContext("2d");
-            ctx.reset();
-
-            const g = ctx.createRadialGradient(width, height, 0, width, height, width);
-            g.addColorStop(0.00, Qt.alpha(Theme.green, 0.34));
-            g.addColorStop(0.32, Qt.alpha(Theme.green, 0.16));
-            g.addColorStop(0.68, Qt.alpha(Theme.blue, 0.07));
-            g.addColorStop(1.00, "transparent");
-
-            ctx.fillStyle = g;
-            ctx.fillRect(0, 0, width, height);
-        }
-
-        Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
-
-        SequentialAnimation on scale {
-            running: root.ctx.fingerprintListening
-            loops: Animation.Infinite
-            NumberAnimation { to: 1.05; duration: 1200; easing.type: Easing.InOutSine }
-            NumberAnimation { to: 1.00; duration: 1200; easing.type: Easing.InOutSine }
-        }
-    }
-
     // fade in on lock; also arm auth — surfaces only exist while the
     // session is actually locked, so this is the reliable trigger
     opacity: 0

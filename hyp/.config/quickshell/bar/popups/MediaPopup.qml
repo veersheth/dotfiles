@@ -96,7 +96,6 @@ BarPopup {
         implicitWidth: 36; implicitHeight: 36
         radius: width / 2
         color: mo.containsMouse && enabled ? Theme.hover : "transparent"
-        Behavior on color { ColorAnimation { duration: 120 } }
 
         Text {
             id: lbl
@@ -336,7 +335,6 @@ BarPopup {
                 implicitWidth: 52; implicitHeight: 52; radius: 26
                 color: playMo.containsMouse ? Qt.lighter(root.accentColor, 1.15) : root.accentColor
                 opacity: (root.player?.canTogglePlaying ?? false) ? 1 : 0.4
-                Behavior on color { ColorAnimation { duration: 400 } }
                 Text { anchors.centerIn: parent; text: root.playing ? "󰏤" : "󰐊"; font.family: Theme.nerdFont; font.pixelSize: 22; color: "white" }
                 MouseArea { id: playMo; anchors.fill: parent; hoverEnabled: true; enabled: root.player?.canTogglePlaying ?? false; onClicked: root.player.togglePlaying() }
             }

@@ -6,7 +6,7 @@ import QtQuick
 import qs.common
 
 // On-screen display for volume, brightness and keyboard backlight.
-// Slides in from the right edge as a canvas-drawn pill.
+// Leaks in from the bottom edge as a canvas-drawn card.
 Scope {
     id: root
 
@@ -107,27 +107,27 @@ Scope {
 
     // ── The card ──────────────────────────────────────────────────────
     // Morphs from a small nub into the full card (same as BarPopup), always
-    // rooted flush against the right edge so the bounce never detaches it.
+    // rooted flush against the bottom edge so the bounce never detaches it.
     PanelWindow {
         id: win
 
-        readonly property int cardW:   64
-        readonly property int cardH:   252
+        readonly property int cardW:   252
+        readonly property int cardH:   64
         readonly property int flare:   14
         readonly property int cornerR: Theme.popupRadius
 
         property real progress: 0
         function lerp(a, b, t) { return a + (b - a) * t }
-        readonly property real startW: 18
-        readonly property real startH: 64
+        readonly property real startW: 64
+        readonly property real startH: 18
         readonly property real drawW:  lerp(startW, cardW, progress)
         readonly property real drawH:  lerp(startH, cardH, progress)
 
-        anchors.right:  true
+        anchors.bottom: true
         exclusiveZone:  0
         // Slack so the OutBack overshoot grows into the window, not past it
-        implicitWidth:  cardW + 12
-        implicitHeight: cardH + flare * 2 + 24
+        implicitWidth:  cardW + flare * 2 + 24
+        implicitHeight: cardH + 12
         color:          "transparent"
         visible:        root.shown || hideDelay.running
         mask: Region {}
@@ -168,25 +168,26 @@ Scope {
                     const ctx = getContext("2d");
                     ctx.reset();
 
-                    const w    = width;
-                    const m    = win.flare;
-                    const dw   = win.drawW;
-                    const dh   = win.drawH;
-                    const yTop = (height - dh) / 2;
-                    const yBot = yTop + dh;
-                    const br   = Math.min(
-                        win.lerp(win.startW / 2, win.cornerR, win.progress),
+                    const W  = width;
+                    const H  = height;
+                    const m  = win.flare;
+                    const dw = win.drawW;
+                    const dh = win.drawH;
+                    const xL = (W - dw) / 2;
+                    const xR = xL + dw;
+                    const br = Math.min(
+                        win.lerp(win.startH / 2, win.cornerR, win.progress),
                         dw / 2, dh / 2);
 
                     ctx.beginPath();
-                    ctx.moveTo(w, yTop - m);
-                    ctx.arc(w - m, yTop - m, m, 0, Math.PI / 2, false);
-                    ctx.lineTo(w - dw + br, yTop);
-                    ctx.arc(w - dw + br, yTop + br, br, -Math.PI / 2, Math.PI, true);
-                    ctx.lineTo(w - dw, yBot - br);
-                    ctx.arc(w - dw + br, yBot - br, br, Math.PI, Math.PI / 2, true);
-                    ctx.lineTo(w - m, yBot);
-                    ctx.arc(w - m, yBot + m, m, -Math.PI / 2, 0, false);
+                    ctx.moveTo(xL - m, H);
+                    ctx.arc(xL - m, H - m, m, Math.PI / 2, 0, true);
+                    ctx.lineTo(xL, H - dh + br);
+                    ctx.arc(xL + br, H - dh + br, br, Math.PI, Math.PI * 1.5, false);
+                    ctx.lineTo(xR - br, H - dh);
+                    ctx.arc(xR - br, H - dh + br, br, Math.PI * 1.5, Math.PI * 2, false);
+                    ctx.lineTo(xR, H - m);
+                    ctx.arc(xR + m, H - m, m, Math.PI, Math.PI / 2, true);
 
                     ctx.fillStyle   = Theme.background;
                     ctx.fill();
@@ -198,48 +199,49 @@ Scope {
 
             // Content clipped to the morphing card rect
             Item {
-                anchors.right: parent.right
-                y: (parent.height - win.drawH) / 2
+                anchors.bottom: parent.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
                 width:  win.drawW
                 height: win.drawH
                 clip: true
 
                 Item {
-                    anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                    anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
                     width:  win.cardW
                     height: win.cardH
                     opacity: Math.max(0, (win.progress - 0.35) / 0.65)
 
                     Text {
-                        anchors { top: parent.top; topMargin: 16; horizontalCenter: parent.horizontalCenter }
-                        text:            root.icon
-                        font.family:     Theme.nerdFont
-                        font.pixelSize:  20
+                        id: osdIcon
+                        anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
+                        text:           root.icon
+                        font.family:    Theme.nerdFont
+                        font.pixelSize: 20
                         color: root.muted ? Qt.alpha(Theme.foreground, 0.4) : Theme.foreground
                     }
 
                     Rectangle {
                         id: track
                         anchors {
-                            top: parent.top; topMargin: 48
-                            bottom: parent.bottom; bottomMargin: 36
-                            horizontalCenter: parent.horizontalCenter
+                            left: parent.left;  leftMargin: 56
+                            right: parent.right; rightMargin: 62
+                            verticalCenter: parent.verticalCenter
                         }
-                        width:  6
+                        height: 6
                         radius: 3
                         color:  Theme.hover
 
                         Rectangle {
-                            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                            height: Math.min(1, root.value) * parent.height
+                            anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                            width: Math.min(1, root.value) * parent.width
                             radius: 3
                             color:  root.muted ? Qt.alpha(Theme.foreground, 0.35) : Theme.blue
-                            Behavior on height { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+                            Behavior on width { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
                         }
                     }
 
                     Text {
-                        anchors { bottom: parent.bottom; bottomMargin: 12; horizontalCenter: parent.horizontalCenter }
+                        anchors { right: parent.right; rightMargin: 18; verticalCenter: parent.verticalCenter }
                         text:           `${Math.round(root.value * 100)}%`
                         font.family:    Theme.font
                         font.pixelSize: Theme.fontSize - 2

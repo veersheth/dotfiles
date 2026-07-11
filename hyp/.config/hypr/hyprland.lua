@@ -5,15 +5,6 @@ local hl = hl
 ---- MONITORS ----
 ------------------
 
--- See https://wiki.hypr.land/Configuring/Basics/Monitors/
-hl.monitor({
-  output   = "",
-  mode     = "preferred",
-  position = "auto",
-  scale    = "1",
-})
-
-
 local terminal    = "alacritty"
 local browser     = "firefox"
 local fileManager = "nautilus"
@@ -22,9 +13,10 @@ hl.on("hyprland.start", function()
   -- hl.exec_cmd("hyprpanel")
   -- hl.exec_cmd("waybar")
   -- hl.exec_cmd("hyprpaper")
-  hl.exec_cmd("systemctl --user start hyprpolkitagent")
   hl.exec_cmd("quickshell")
   hl.exec_cmd("hypridle")
+  hl.exec_cmd("systemctl --user start hyprpolkitagent")
+  hl.exec_cmd("systemd-run --user --scope kdeconnect-indicator")
 end)
 
 hl.env("XCURSOR_THEME", "Bibata-Modern-Classic")
@@ -39,14 +31,14 @@ hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 
 hl.config({
   general = {
-    gaps_in          = 2,
-    gaps_out         = 12,
+    gaps_in          = 1,
+    gaps_out         = 2,
 
     border_size      = 1,
 
     col              = {
-      active_border   = "rgba(100, 100, 100, 0.6)",
-      inactive_border = "rgba(100, 100, 100, 0.4)",
+      active_border   = "rgba(200, 200, 200, 0.5)",
+      inactive_border = "rgba(200, 200, 200, 0.2)",
     },
 
     resize_on_border = true,
@@ -62,7 +54,7 @@ hl.config({
     inactive_opacity = 0.95,
 
     shadow           = {
-      enabled        = true,
+      enabled        = false,
       range          = 20,
       render_power   = 4,
       color          = "rgba(00000088)",
@@ -71,15 +63,15 @@ hl.config({
 
     blur             = {
       enabled  = true,
-      size     = 8,
-      passes   = 5,
-      vibrancy = 0,
+      size     = 4,
+      passes   = 2,
+      vibrancy = 3,
       special  = true,
     },
   },
 
   animations = {
-    enabled = true
+    enabled = false
   },
 })
 
@@ -205,12 +197,9 @@ hl.bind("SUPER + comma", hl.dsp.exec_cmd("hypr-settings"))
 
 hl.bind("SUPER + Return", hl.dsp.exec_cmd(terminal))
 
-hl.bind("SUPER + B", hl.dsp.exec_cmd(browser))
-
 hl.bind("SUPER + Q", hl.dsp.window.close())
 
--- hl.bind("SUPER + SHIFT + W", hl.dsp.exec_cmd("pkill dunst; pkill waybar; pkill -x hypridle; sleep 0.5; dunst & waybar & hypridle &"))
-hl.bind("SUPER + SHIFT + W", hl.dsp.exec_cmd("pkill quickshell; pkill -x hypridle; sleep 0.5; quickshell & hypridle & disown; sleep 0.5; notify-send 'Reloaded'"))
+hl.bind("SUPER + SHIFT + W", hl.dsp.exec_cmd("pkill quickshell; pkill -x hypridle; sleep 0.5; quickshell & hypridle & disown; sleep 0.5;"))
 
 hl.bind("SUPER + CTRL + W", hl.dsp.exec_cmd("pkill hyprpaper || hyprpaper &"))
 
@@ -280,7 +269,6 @@ end
 hl.bind("SUPER + Grave", hl.dsp.workspace.toggle_special("magic"))
 hl.bind("SUPER + SHIFT + Grave", hl.dsp.window.move({ workspace = "special:magic" }))
 hl.workspace_rule({ workspace = "special:magic", gaps_out = 38, gaps_in = 4 })
-
 
 -- m/shift+m as named shortcuts for workspace 6
 hl.bind("SUPER + M", hl.dsp.focus({ workspace = 6 }))
@@ -370,7 +358,7 @@ hl.window_rule({
   match       = { class = "quarry" },
   float       = true,
   pin         = true,
-  -- no_anim     = true,
+  no_anim     = true,
   -- animation   = "gnomed",
   -- dim_around   = true
 })

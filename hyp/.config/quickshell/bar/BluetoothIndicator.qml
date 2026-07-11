@@ -4,27 +4,48 @@ import QtQuick
 import QtQuick.Layouts
 import qs.common
 
-// Bluetooth adapter/connection state. Click to open hypr-settings.
-Text {
+// Bluetooth adapter/connection state + connected device name.
+// Click to open hypr-settings.
+Item {
     id: root
 
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property bool enabled: adapter?.enabled ?? false
-    readonly property bool connected: {
-        if (!enabled) return false;
-        const devices = Bluetooth.devices.values;
-        for (const d of devices)
-            if (d.connected) return true;
-        return false;
-    }
+    readonly property var connectedDevices:
+        enabled ? Bluetooth.devices.values.filter(d => d.connected) : []
+    readonly property bool connected: connectedDevices.length > 0
 
     Layout.alignment: Qt.AlignVCenter
-    text: connected ? "󰂱" : enabled ? "󰂯" : "󰂲"
-    font.family: Theme.nerdFont
-    font.pixelSize: Theme.iconSize
-    color: enabled ? Theme.foreground : Qt.alpha(Theme.foreground, 0.4)
+    implicitWidth: row.implicitWidth
+    implicitHeight: row.implicitHeight
 
-    Behavior on color { ColorAnimation { duration: Theme.animDuration } }
+    Row {
+        id: row
+        spacing: 7
+        anchors.verticalCenter: parent.verticalCenter
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.connected ? "󰂱" : root.enabled ? "󰂯" : "󰂲"
+            font.family: Theme.nerdFont
+            font.pixelSize: Theme.iconSize
+            color: root.enabled ? Theme.foreground : Qt.alpha(Theme.foreground, 0.4)
+
+            Behavior on color { ColorAnimation { duration: Theme.animDuration } }
+        }
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.connected
+            text: root.connectedDevices.length > 1
+                ? `${root.connectedDevices[0]?.name ?? ""} +${root.connectedDevices.length - 1}`
+                : (root.connectedDevices[0]?.name ?? "")
+            font.family: Theme.font
+            font.pixelSize: Theme.fontSize - 1
+            font.weight: Font.Medium
+            color: Qt.alpha(Theme.foreground, 0.85)
+        }
+    }
 
     MouseArea {
         anchors.fill: parent

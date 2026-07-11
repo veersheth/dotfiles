@@ -26,8 +26,6 @@ BarPopup {
              : rowMouse.containsMouse ? Theme.hover
              : "transparent"
 
-        Behavior on color { ColorAnimation { duration: Theme.animDuration } }
-
         RowLayout {
             anchors {
                 left: parent.left

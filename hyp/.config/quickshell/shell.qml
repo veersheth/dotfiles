@@ -9,7 +9,7 @@ import qs.lock
 
 ShellRoot {
     Bar {}
-    Desktop { wallpaper: "/home/veer/dotfiles/wallpapers/wallpapers/black leaves.jpg" }
+    Desktop { wallpaper: "/home/veer/dotfiles/wallpapers/wallpapers/valley-water.jpg" }
     NotificationPopups {}
     Osd {}
     Lock {}

@@ -17,9 +17,9 @@ BarPopup {
     property bool shelfLoaded: false
     property var shelf: []   // array of URL strings
 
-    dismissOnFocusLoss: false
+    dismissOnFocusLoss: true
 
-    contentWidth: 460
+    contentWidth: 960
     contentHeight: 340 + (shelf.length > 0 ? 88 : 0)
 
     onShownChanged: {
@@ -118,7 +118,7 @@ BarPopup {
     Text {
         anchors { top: parent.top; left: parent.left; margins: 20 }
         visible: edit.text === ""
-        text: "Scratchpad… (drop files here)"
+        text: "Scratchpad... (drop files here)"
         font.family: Theme.font
         font.pixelSize: Theme.fontSize
         color: Qt.alpha(Theme.foreground, 0.35)
