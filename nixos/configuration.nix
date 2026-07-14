@@ -36,6 +36,8 @@
     "amdgpu.sg_display=0"
   ];
 
+  hardware.graphics.enable32Bit = true; # for lutris
+
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
@@ -106,17 +108,18 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       # GUI 
+      steam lutris wine winetricks
       ladybird
       blender
-      gimp3
-      spotify
+      gimp2
+      spotify spotify-qt
       sioyek mupdf
       tor-browser
       obsidian
       mpv
       ghostty alacritty
       vscode android-studio
-      brave vivaldi
+      brave 
       livecaptions
       obs-studio
       gnome-extension-manager
@@ -284,6 +287,10 @@
       powerKey = "suspend";
       lidSwitch = "suspend";
       lidSwitchExternalPower = "suspend"; 
+    };
+    upower = {
+      enable = true;
+      criticalPowerAction = "PowerOff";
     };
   };
 

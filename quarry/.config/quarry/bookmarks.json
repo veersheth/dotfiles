@@ -11,6 +11,10 @@
     {
       "name": "whatsapp",
       "url": "https://web.whatsapp.com"
+    },
+    {
+      "name": "zlibrary",
+      "url": "https://zlib.bz/"
     }
   ]
 }

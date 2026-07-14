@@ -1,24 +1,24 @@
 window-decoration = none
-# window-padding-x = 8 
-# window-padding-y = 6
-# window-padding-balance = true
+window-padding-x = 8 
+window-padding-y = 6
+window-padding-balance = true
 
 background-opacity = 0.80
 
 window-height = 95
 window-width = 140
 
-background = #111111
+background = #101010
 foreground = #F8F7FF
 selection-background = #44415a
 selection-foreground = #e0def4
 cursor-color = #e0def4
 cursor-text = #232136
 
-# font-size = 12
+font-size = 13
 # font-feature = -calt
 # confirm-close-surface = false
-# font-family = "JetBrainsMono Nerd Font"
+font-family = "Iosevka Nerd Font"
 
 keybind = alt+one=text:\x1b1
 keybind = alt+two=text:\x1b2

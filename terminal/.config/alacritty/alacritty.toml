@@ -15,11 +15,11 @@ style = "Regular"
 # style = "Italic"
 #
 [colors.primary]
-background = "#000000"
+background = "#101010"
 foreground = "#fdfdfd"
 
 [window]
-opacity = 0.80
+opacity = 0.90
 decorations = "None"
 
 [window.padding]
