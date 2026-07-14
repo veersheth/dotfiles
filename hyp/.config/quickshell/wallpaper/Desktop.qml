@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Dialogs
 import qs.common
+import qs.components
 import qs.wallpaper
 
 Scope {
@@ -108,85 +109,69 @@ Scope {
                     asynchronous: true
                 }
 
+                // right click → context menu leaking from the bar above the cursor
                 MouseArea {
                     anchors.fill: parent
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton
-                    onClicked: mouse => menuWin.openAt(mouse.x, mouse.y)
+                    acceptedButtons: Qt.RightButton
+                    onClicked: mouse => {
+                        const half = desktopMenu.implicitWidth / 2 + 8;
+                        menuAnchor.x = Math.max(half, Math.min(mouse.x, width - half));
+                        desktopMenu.toggle();
+                    }
+                }
+
+                // invisible nub the menu morphs out of, moved to the click x
+                Item {
+                    id: menuAnchor
+                    y: 0
+                    width: 1
+                    height: 1
                 }
             }
 
-            // Desktop context menu, drawn on its own overlay surface
-            PanelWindow {
-                id: menuWin
-                screen: perScreen.modelData
-                anchors { top: true; bottom: true; left: true; right: true }
-                exclusiveZone: -1
-                color: "transparent"
-                visible: false
-                WlrLayershell.layer: WlrLayer.Overlay
-                WlrLayershell.namespace: "quickshell:desktopmenu"
-
-                function openAt(x, y) {
-                    menuBox.x = Math.max(10, Math.min(x, width - menuBox.width - 10));
-                    menuBox.y = Math.max(10, Math.min(y, height - menuBox.height - 10));
-                    visible = true;
-                }
-
-                // clicking anywhere else dismisses
-                MouseArea {
-                    anchors.fill: parent
-                    acceptedButtons: Qt.AllButtons
-                    onPressed: menuWin.visible = false
-                }
+            // Desktop context menu — same leak card as every bar popup
+            BarPopup {
+                id: desktopMenu
+                anchorItem: menuAnchor
+                contentWidth: entry.width + 20
+                contentHeight: entry.height + 20
 
                 Rectangle {
-                    id: menuBox
+                    id: entry
+                    anchors.centerIn: parent
                     width: 210
-                    height: entry.height + 12
-                    radius: 14
-                    color: Theme.surface
-                    border.width: Theme.borderWidth
-                    border.color: Theme.border
+                    height: 34
+                    radius: 9
+                    color: entryMouse.containsMouse ? Theme.hover : "transparent"
 
-                    // swallow presses on the menu chrome itself
-                    MouseArea { anchors.fill: parent }
+                    Row {
+                        anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                        spacing: 9
 
-                    Rectangle {
-                        id: entry
-                        anchors { top: parent.top; left: parent.left; right: parent.right; margins: 6 }
-                        height: 34
-                        radius: 9
-                        color: entryMouse.containsMouse ? Theme.hover : "transparent"
-
-                        Row {
-                            anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                            spacing: 9
-
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: "󰸉"
-                                font.family: Theme.nerdFont
-                                font.pixelSize: Theme.iconSize
-                                color: Theme.foreground
-                            }
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: "Change background…"
-                                font.family: Theme.font
-                                font.pixelSize: Theme.fontSize
-                                font.weight: Font.Medium
-                                color: Theme.foreground
-                            }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "󰸉"
+                            font.family: Theme.nerdFont
+                            font.pixelSize: Theme.iconSize
+                            color: Theme.foreground
                         }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "Change background…"
+                            font.family: Theme.font
+                            font.pixelSize: Theme.fontSize
+                            font.weight: Font.Medium
+                            color: Theme.foreground
+                        }
+                    }
 
-                        MouseArea {
-                            id: entryMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: {
-                                menuWin.visible = false;
-                                zenityProc.running = true;
-                            }
+                    MouseArea {
+                        id: entryMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: {
+                            desktopMenu.close();
+                            zenityProc.running = true;
                         }
                     }
                 }

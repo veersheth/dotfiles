@@ -2,6 +2,7 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 import qs.common
+import qs.components
 
 RowLayout {
     id: root
@@ -29,12 +30,11 @@ RowLayout {
                     ? Qt.alpha(Theme.foreground, 0.7)
                     : Qt.alpha(Theme.foreground, 0.35)
 
-            MouseArea {
+            BarHitArea {
                 id: mouse
-                anchors.fill: parent
-                anchors.margins: -4
+                slackX: 4
                 hoverEnabled: true
-                onClicked: Hyprland.dispatch(`workspace ${parent.modelData.id}`)
+                onClicked: parent.modelData.activate()
             }
         }
     }

@@ -3,6 +3,7 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import qs.common
+import qs.components
 import qs.bar.popups
 
 // Wifi via nmcli: signal icon + SSID, tinted yellow when the link is up but
@@ -22,13 +23,13 @@ Item {
     readonly property var icons: ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"]
 
     Layout.alignment: Qt.AlignVCenter
-    implicitWidth: row.implicitWidth
-    implicitHeight: row.implicitHeight
+    implicitWidth: row.implicitWidth + 20
+    implicitHeight: Theme.pillHeight
 
     Row {
         id: row
         spacing: 7
-        anchors.verticalCenter: parent.verticalCenter
+        anchors.centerIn: parent
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
@@ -59,9 +60,16 @@ Item {
         }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        anchors.margins: -4
+    Rectangle {
+        anchors.fill: parent; radius: height / 2
+        color: Theme.hover
+        opacity: hitArea.containsMouse ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 100 } }
+    }
+
+    BarHitArea {
+        id: hitArea
+        hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: mouse => {
             if (mouse.button === Qt.RightButton)

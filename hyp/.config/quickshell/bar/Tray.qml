@@ -3,96 +3,121 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 import qs.common
+import qs.components
 import qs.bar.popups
 
-// System tray icons; left click activates, right click opens the menu.
-RowLayout {
+// Single chevron in the bar; click to open a popup listing every tray app.
+Item {
     id: root
     visible: SystemTray.items.values.length > 0
-    spacing: 8
+    Layout.alignment: Qt.AlignVCenter
+    implicitWidth:  chevron.implicitWidth + 20
+    implicitHeight: Theme.pillHeight
 
-    // one shared menu popup, re-anchored to whichever icon opened it
-    TrayMenuPopup {
-        id: trayMenu
+    // shared context-menu popup, re-anchored per item
+    TrayMenuPopup { id: trayMenu }
+
+    // ── Chevron button ─────────────────────────────────────────────────
+    Rectangle {
+        anchors.fill: parent; radius: height / 2
+        color: Theme.hover
+        opacity: hitArea.containsMouse || trayPopup.shown ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 100 } }
     }
 
-    // shared tooltip popup
-    Rectangle {
-        id: tooltip
-        visible: false
-        parent: root
-        z: 999
-        color: Theme.background
-        border.color: Theme.barBorder
-        border.width: 1
-        radius: 6
-        width: tooltipCol.implicitWidth + 16
-        height: tooltipCol.implicitHeight + 10
-        property string title: ""
-        property string subtitle: ""
+    Text {
+        id: chevron
+        anchors.centerIn: parent
+        text: "󰅀"
+        font.family: Theme.nerdFont
+        font.pixelSize: Theme.iconSize
+        color: trayPopup.shown
+            ? Theme.foreground
+            : Qt.alpha(Theme.foreground, 0.55)
+        Behavior on color { ColorAnimation { duration: Theme.animDuration } }
+    }
 
-        function showFor(icon, item) {
-            title = item.title ?? ""
-            subtitle = item.tooltipSubtitle ?? item.status ?? ""
-            // position centred below the icon
-            const pos = icon.mapToItem(root, 0, 0)
-            x = Math.max(0, Math.min(pos.x + icon.width / 2 - width / 2, root.width - width))
-            y = pos.y + icon.height + 6
-            visible = true
-        }
+    BarHitArea {
+        id: hitArea
+        hoverEnabled: true
+        onClicked: trayPopup.toggle()
+    }
 
-        function hide() {
-            visible = false
-        }
+    // ── Tray popup ─────────────────────────────────────────────────────
+    BarPopup {
+        id: trayPopup
+        anchorItem: root
+        contentWidth:  240
+        contentHeight: trayCol.implicitHeight + 20
 
         ColumnLayout {
-            id: tooltipCol
-            anchors.centerIn: parent
+            id: trayCol
+            anchors { top: parent.top; left: parent.left; right: parent.right; margins: 10 }
             spacing: 2
 
-            Text {
-                text: tooltip.title
-                color: Theme.foreground
-                font.pixelSize: Theme.fontSize
-                font.weight: Font.Medium
-                visible: text !== ""
-                Layout.alignment: Qt.AlignHCenter
-            }
-            Text {
-                text: tooltip.subtitle
-                color: Theme.mutedForeground ?? Theme.foreground
-                font.pixelSize: Theme.fontSize - 1
-                visible: text !== ""
-                Layout.alignment: Qt.AlignHCenter
-            }
-        }
-    }
+            Repeater {
+                model: SystemTray.items
 
-    Repeater {
-        model: SystemTray.items
-        IconImage {
-            id: trayIcon
-            required property var modelData
-            Layout.alignment: Qt.AlignVCenter
-            implicitWidth: 16
-            implicitHeight: 16
-            source: modelData.icon
-            opacity: mouse.containsMouse ? 1.0 : 0.85
+                Rectangle {
+                    id: trayRow
+                    required property var modelData
 
-            MouseArea {
-                id: mouse
-                anchors.fill: parent
-                hoverEnabled: true
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    Layout.fillWidth: true
+                    implicitHeight: 36
+                    radius: 8
+                    color: rowMo.containsMouse ? Theme.hover : "transparent"
+                    Behavior on color { ColorAnimation { duration: 80 } }
 
-                onEntered: tooltip.showFor(trayIcon, trayIcon.modelData)
-                onExited: tooltip.hide()
+                    RowLayout {
+                        anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                        spacing: 10
 
-                onClicked: mouse => {
-                    if (mouse.button === Qt.LeftButton && !trayIcon.modelData.onlyMenu)
-                        trayIcon.modelData.activate();
-                    else if (trayIcon.modelData.hasMenu)
-                        trayMenu.openFor(trayIcon, trayIcon.modelData.menu);
+                        IconImage {
+                            id: rowIcon
+                            implicitWidth: 16; implicitHeight: 16
+                            Layout.alignment: Qt.AlignVCenter
+                            source: trayRow.modelData.icon
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            text: (trayRow.modelData.title
+                                || trayRow.modelData.id
+                                || "").replace(/[-_]/g, " ")
+                            font.family: Theme.font
+                            font.pixelSize: Theme.fontSize - 1
+                            color: Theme.foreground
+                        }
+
+                        // menu indicator
+                        Text {
+                            visible: trayRow.modelData.hasMenu
+                            text: "›"
+                            font.family: Theme.font
+                            font.pixelSize: Theme.fontSize
+                            color: Qt.alpha(Theme.foreground, 0.35)
+                        }
+                    }
+
+                    MouseArea {
+                        id: rowMo
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        onClicked: mouse => {
+                            if (mouse.button === Qt.RightButton
+                                    || trayRow.modelData.onlyMenu) {
+                                if (trayRow.modelData.hasMenu) {
+                                    trayPopup.close();
+                                    trayMenu.openFor(root, trayRow.modelData.menu);
+                                }
+                            } else {
+                                trayRow.modelData.activate();
+                                trayPopup.close();
+                            }
+                        }
+                    }
                 }
             }
         }

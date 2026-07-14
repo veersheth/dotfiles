@@ -2,9 +2,11 @@ import Quickshell.Services.UPower
 import QtQuick
 import QtQuick.Layouts
 import qs.common
+import qs.components
 import qs.bar.popups
 
-// Battery level. Flashes red when critical; click for the power profile popup.
+// Battery level. Flashes red when critical; hover for time remaining,
+// click for the power profile popup.
 Item {
     id: root
 
@@ -20,7 +22,7 @@ Item {
     // hide entirely on desktops with no battery
     visible: battery !== null && battery.isLaptopBattery
 
-    implicitWidth: row.implicitWidth + 16
+    implicitWidth: row.implicitWidth + 20
     implicitHeight: Theme.pillHeight
 
     // flashing red backdrop when critical
@@ -68,13 +70,60 @@ Item {
         }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        onClicked: powerMenu.toggle()
+    Rectangle {
+        anchors.fill: parent; radius: height / 2
+        color: Theme.hover
+        opacity: hitArea.containsMouse ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 100 } }
+    }
+
+    BarHitArea {
+        id: hitArea
+        hoverEnabled: true
+        onEntered: batTip.show(root)
+        onExited:  batTip.hide()
+        onClicked: {
+            batTip.hide();
+            powerMenu.toggle();
+        }
     }
 
     PowerProfilePopup {
         id: powerMenu
         anchorItem: root
+    }
+
+    BarTooltip {
+        id: batTip
+
+        readonly property int secs: root.charging
+            ? (root.battery?.timeToFull ?? 0)
+            : (root.battery?.timeToEmpty ?? 0)
+
+        function fmt(s) {
+            const m = Math.round(s / 60);
+            return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`;
+        }
+
+        contentWidth:  batTipText.implicitWidth + 28
+        contentHeight: batTipText.implicitHeight + 16
+
+        Text {
+            id: batTipText
+            anchors.centerIn: parent
+            text: {
+                if (root.battery?.state === UPowerDeviceState.FullyCharged)
+                    return "Fully charged";
+                if (batTip.secs <= 0)
+                    return root.charging ? "Charging" : "On battery";
+                return root.charging
+                    ? `${batTip.fmt(batTip.secs)} until full`
+                    : `${batTip.fmt(batTip.secs)} remaining`;
+            }
+            font.family: Theme.font
+            font.pixelSize: Theme.fontSize - 1
+            font.weight: Font.Medium
+            color: Theme.foreground
+        }
     }
 }

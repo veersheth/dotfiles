@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Effects
 import qs.common
 
 // Canvas-drawn card that "leaks" from a bar edge. Concave flares at the
@@ -86,16 +85,6 @@ Item {
             width:   root.contentWidth
             height:  root.contentHeight
             opacity: Math.max(0, (root.progress - 0.35) / 0.65)
-
-            // Dynamic-island blur: content sharpens as the card reaches full
-            // size. Layer only exists mid-morph so the settled popup renders
-            // without the offscreen pass.
-            layer.enabled: root.progress < 0.999
-            layer.effect: MultiEffect {
-                blurEnabled: true
-                blurMax:     40
-                blur:        Math.min(1, Math.max(0, 1 - root.progress))
-            }
         }
     }
 }

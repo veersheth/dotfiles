@@ -3,9 +3,11 @@ import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Layouts
 import qs.common
+import qs.components
+import qs.bar.popups
 
 // Bluetooth adapter/connection state + connected device name.
-// Click to open hypr-settings.
+// Click to open the device popup; settings button inside handles hypr-settings.
 Item {
     id: root
 
@@ -16,13 +18,13 @@ Item {
     readonly property bool connected: connectedDevices.length > 0
 
     Layout.alignment: Qt.AlignVCenter
-    implicitWidth: row.implicitWidth
-    implicitHeight: row.implicitHeight
+    implicitWidth: Math.max(row.implicitWidth + 10, 33)
+    implicitHeight: Theme.pillHeight
 
     Row {
         id: row
         spacing: 7
-        anchors.verticalCenter: parent.verticalCenter
+        anchors.centerIn: parent
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
@@ -47,9 +49,21 @@ Item {
         }
     }
 
-    MouseArea {
-        anchors.fill: parent
-        anchors.margins: -4
-        onClicked: Quickshell.execDetached(["hypr-settings", "--bluetooth"])
+    Rectangle {
+        anchors.fill: parent; radius: height / 2
+        color: Theme.hover
+        opacity: hitArea.containsMouse ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 100 } }
+    }
+
+    BarHitArea {
+        id: hitArea
+        hoverEnabled: true
+        onClicked: btPopup.toggle()
+    }
+
+    BluetoothPopup {
+        id: btPopup
+        anchorItem: root
     }
 }

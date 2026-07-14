@@ -8,7 +8,7 @@ Rectangle {
 
     default property alias content: row.data
     property alias spacing: row.spacing
-    property int hPadding: 12
+    property int hPadding: 10
     property bool clickable: false
     signal clicked()
 
@@ -26,9 +26,18 @@ Rectangle {
         spacing: 7
     }
 
-    MouseArea {
+    Rectangle {
         anchors.fill: parent
+        radius: parent.radius
+        color: Theme.hover
+        opacity: hitArea.containsMouse && root.clickable ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 100 } }
+    }
+
+    BarHitArea {
+        id: hitArea
         enabled: root.clickable
+        hoverEnabled: root.clickable
         onClicked: root.clicked()
     }
 }

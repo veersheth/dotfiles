@@ -2,6 +2,7 @@ import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
 import qs.common
+import qs.components
 import qs.bar.popups
 
 Item {
@@ -36,13 +37,14 @@ Item {
     readonly property bool playing:
         player !== null && player.playbackState === MprisPlaybackState.Playing
 
+    // hide when no player exists at all; stay visible while paused
     visible: player !== null
-    implicitWidth: row.implicitWidth
-    implicitHeight: row.implicitHeight
+    implicitWidth: row.implicitWidth + 20
+    implicitHeight: Theme.pillHeight
 
     RowLayout {
         id: row
-        anchors.verticalCenter: parent.verticalCenter
+        anchors.centerIn: parent
         spacing: 7
 
         Text {
@@ -69,8 +71,16 @@ Item {
         }
     }
 
-    MouseArea {
-        anchors.fill: parent
+    Rectangle {
+        anchors.fill: parent; radius: height / 2
+        color: Theme.hover
+        opacity: hitArea.containsMouse ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 100 } }
+    }
+
+    BarHitArea {
+        id: hitArea
+        hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         onClicked: mouse => {
             if (!root.player) return;

@@ -1,5 +1,6 @@
 import QtQuick
 import qs.common
+import qs.components
 import qs.notifications
 import qs.bar.popups
 
@@ -10,8 +11,8 @@ Item {
     readonly property int count: NotificationService.unreadCount
 
     // Use the wider glyph's width as the constant size
-    implicitWidth: sizer.implicitWidth
-    implicitHeight: sizer.implicitHeight
+    implicitWidth: sizer.implicitWidth + 20
+    implicitHeight: Theme.pillHeight
 
     Text {
         id: sizer
@@ -35,8 +36,16 @@ Item {
         Behavior on color { ColorAnimation { duration: Theme.animDuration } }
     }
 
-    MouseArea {
-        anchors.fill: parent
+    Rectangle {
+        anchors.fill: parent; radius: height / 2
+        color: Theme.hover
+        opacity: hitArea.containsMouse ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 100 } }
+    }
+
+    BarHitArea {
+        id: hitArea
+        hoverEnabled: true
         onClicked: {
             NotificationService.dismiss();
             centerPopup.toggle();

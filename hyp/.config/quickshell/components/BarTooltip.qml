@@ -1,32 +1,33 @@
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Wayland
 import QtQuick
 import qs.common
 
-// Popup that leaks from the bar. Set anchorItem to the bar module and call
-// toggle() / close(). Layer-shell surface so Hyprland blur applies.
+// Hover tooltip that leaks from the bar under a module — same card language
+// as BarPopup, but click-through, unfocusable and quick. Call show(item) on
+// hover-enter and hide() on hover-exit.
 PanelWindow {
     id: root
 
     default property alias content: card.content
-    property real contentWidth: 200
-    property real contentHeight: 200
-    property bool shown: false
+    property real contentWidth: 120
+    property real contentHeight: 32
     property Item anchorItem: null
-    property double dismissedAt: 0
     property real progress: 0
-    // false → popup survives losing focus (e.g. while dragging files into it)
-    property bool grabFocus: true
-    // false → clicking outside leaves the popup open (close via toggle/Esc)
-    property bool dismissOnFocusLoss: true
+    property bool shown: false
 
-    function toggle() {
-        if (shown) { shown = false; return; }
-        if (Date.now() - dismissedAt < 150) return;
-        shown = true;
+    // hover-intent delay on first appearance; hopping anchors is instant
+    function show(item) {
+        anchorItem = item;
+        if (shown || visible) shown = true;
+        else showDelay.restart();
     }
-    function close() { shown = false; }
+    function hide() {
+        showDelay.stop();
+        shown = false;
+    }
+
+    Timer { id: showDelay; interval: 300; onTriggered: root.shown = true }
 
     // ── layer-shell placement ─────────────────────────────────────────
     screen: anchorItem?.Window.window?.screen ?? null
@@ -35,15 +36,15 @@ PanelWindow {
     exclusiveZone: -1
     color: "transparent"
     visible: false
+    // pure display — never takes input
+    mask: Region {}
 
     WlrLayershell.namespace: "quickshell:popup"
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
     WlrLayershell.margins.top:  Theme.barHeight - card.overlap
     WlrLayershell.margins.left: {
         if (!anchorItem) return 0;
-        const track = anchorItem.x;  // mapToGlobal isn't reactive; re-run when the anchor moves
         const mid = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x;
         const sx  = screen?.x ?? 0;
         return Math.max(0, Math.round(mid - sx - implicitWidth / 2));
@@ -69,16 +70,17 @@ PanelWindow {
         contentWidth:  root.contentWidth
         contentHeight: root.contentHeight
         progress:      root.progress
+        flare:         12
         startWidth: Math.min(root.contentWidth,
-            Math.max(40, root.anchorItem?.width ?? root.contentWidth * 0.35))
+            Math.max(36, root.anchorItem?.width ?? 40))
     }
 
     NumberAnimation {
         id: enterAnim
         target: root; property: "progress"
-        to: 1; duration: 280
+        to: 1; duration: 240
         easing.type: Easing.OutBack
-        easing.overshoot: 1.2
+        easing.overshoot: 1.1
     }
     SequentialAnimation {
         id: exitAnim
@@ -87,15 +89,5 @@ PanelWindow {
             to: 0; duration: 140; easing.type: Easing.InCubic
         }
         ScriptAction { script: root.visible = false }
-    }
-
-    HyprlandFocusGrab {
-        windows: [root]
-        active: root.shown && root.grabFocus
-        onCleared: {
-            if (!root.dismissOnFocusLoss) return;
-            root.dismissedAt = Date.now();
-            root.shown = false;
-        }
     }
 }

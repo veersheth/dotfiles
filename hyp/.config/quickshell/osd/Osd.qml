@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
+import Quickshell.Services.UPower
 import QtQuick
 import qs.common
 
@@ -13,6 +14,7 @@ Scope {
     property string icon:  ""
     property real   value: 0
     property bool   muted: false
+    property string message: ""
     property bool   shown: false
 
     property bool ready: false
@@ -20,6 +22,7 @@ Scope {
 
     function show(icon, value, muted) {
         if (!ready) return;
+        root.message = "";
         root.icon  = icon;
         root.value = value;
         root.muted = muted ?? false;
@@ -27,7 +30,23 @@ Scope {
         hideTimer.restart();
     }
 
-    Timer { id: hideTimer; interval: 1600; onTriggered: root.shown = false }
+    // text mode ("Charging — 2 h until full"); replaces the meter row
+    function showMessage(icon, msg) {
+        if (!ready) return;
+        root.message = msg;
+        root.icon  = icon;
+        root.muted = false;
+        iconPop.restart();
+        shown = true;
+        hideTimer.restart();
+    }
+
+    // messages need longer to be read than a glanceable meter
+    Timer {
+        id: hideTimer
+        interval: root.message !== "" ? 2600 : 1600
+        onTriggered: root.shown = false
+    }
 
     // ── Volume ────────────────────────────────────────────────────────
     readonly property var sink: Pipewire.defaultAudioSink
@@ -105,13 +124,89 @@ Scope {
         }
     }
 
+    // ── Charger events + low-battery nudges ───────────────────────────
+    readonly property var battery: UPower.displayDevice
+    property bool warned20: false
+    property bool warned10: false
+
+    function fmtMins(s) {
+        const m = Math.round(s / 60);
+        return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`;
+    }
+    function batteryIcon(pct) {
+        const icons = ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"];
+        return icons[Math.min(9, Math.max(0, Math.floor(pct / 10)))];
+    }
+
+    Connections {
+        target: root.battery
+        enabled: root.battery?.isLaptopBattery ?? false
+
+        function onStateChanged() {
+            const b = root.battery;
+            if (b.state === UPowerDeviceState.Charging) {
+                root.warned20 = false;
+                root.warned10 = false;
+                const t = b.timeToFull;
+                root.showMessage("󰂄", t > 0
+                    ? `Charging - ${root.fmtMins(t)} until full` : "Charging");
+            } else if (b.state === UPowerDeviceState.Discharging) {
+                const t = b.timeToEmpty;
+                root.showMessage(root.batteryIcon(b.percentage * 100), t > 0
+                    ? `On battery - ${root.fmtMins(t)} remaining` : "On battery");
+            } else if (b.state === UPowerDeviceState.FullyCharged) {
+                root.showMessage("󰂅", "Fully charged");
+            }
+        }
+
+        // one nudge per threshold per discharge cycle; flags reset on plug-in
+        function onPercentageChanged() {
+            const b = root.battery;
+            if (b.state !== UPowerDeviceState.Discharging) return;
+            const pct  = b.percentage * 100;
+            const left = b.timeToEmpty > 0 ? ` - about ${root.fmtMins(b.timeToEmpty)} left` : "";
+            if (pct <= 10 && !root.warned10) {
+                root.warned10 = true;
+                root.warned20 = true;
+                Quickshell.execDetached(["notify-send", "-u", "critical", "-a", "Power",
+                    "Battery critical", `${Math.round(pct)}% remaining${left}`]);
+            } else if (pct <= 20 && !root.warned20) {
+                root.warned20 = true;
+                Quickshell.execDetached(["notify-send", "-u", "normal", "-a", "Power",
+                    "Battery low", `${Math.round(pct)}% remaining${left}`]);
+            }
+        }
+    }
+
+    // manual triggers for previewing: qs ipc call osd charging|discharging|full
+    IpcHandler {
+        target: "osd"
+
+        function charging(): void {
+            const t = root.battery?.timeToFull ?? 0;
+            root.showMessage("󰂄", t > 0
+                ? `Charging - ${root.fmtMins(t)} until full` : "Charging");
+        }
+        function discharging(): void {
+            const b = root.battery;
+            const t = b?.timeToEmpty ?? 0;
+            root.showMessage(root.batteryIcon((b?.percentage ?? 0.5) * 100), t > 0
+                ? `On battery - ${root.fmtMins(t)} remaining` : "On battery");
+        }
+        function full(): void {
+            root.showMessage("󰂅", "Fully charged");
+        }
+    }
+
     // ── The card ──────────────────────────────────────────────────────
     // Morphs from a small nub into the full card (same as BarPopup), always
     // rooted flush against the bottom edge so the bounce never detaches it.
     PanelWindow {
         id: win
 
-        readonly property int cardW:   252
+        readonly property int cardW: root.message !== ""
+            ? Math.min(Math.round(msgText.implicitWidth + osdIcon.implicitWidth) + 50, 440)
+            : 252
         readonly property int cardH:   64
         readonly property int flare:   14
         readonly property int cornerR: Theme.popupRadius
@@ -220,8 +315,34 @@ Scope {
                         color: root.muted ? Qt.alpha(Theme.foreground, 0.4) : Theme.foreground
                     }
 
+                    NumberAnimation {
+                        id: iconPop
+                        target: osdIcon; property: "scale"
+                        from: 0.5; to: 1
+                        duration: 380
+                        easing.type: Easing.OutBack
+                        easing.overshoot: 2.2
+                    }
+
+                    Text {
+                        id: msgText
+                        anchors {
+                            left: osdIcon.right; leftMargin: 10
+                            right: parent.right; rightMargin: 20
+                            verticalCenter: parent.verticalCenter
+                        }
+                        visible: root.message !== ""
+                        elide: Text.ElideRight
+                        text: root.message
+                        font.family: Theme.font
+                        font.pixelSize: Theme.fontSize - 1
+                        font.weight: Font.Medium
+                        color: Theme.foreground
+                    }
+
                     Rectangle {
                         id: track
+                        visible: root.message === ""
                         anchors {
                             left: parent.left;  leftMargin: 56
                             right: parent.right; rightMargin: 62
@@ -241,6 +362,7 @@ Scope {
                     }
 
                     Text {
+                        visible: root.message === ""
                         anchors { right: parent.right; rightMargin: 18; verticalCenter: parent.verticalCenter }
                         text:           `${Math.round(root.value * 100)}%`
                         font.family:    Theme.font

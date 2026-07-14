@@ -70,7 +70,7 @@ Variants {
                     Layout.alignment: Qt.AlignVCenter
                 }
 
-                ActiveWindow {}
+                // ActiveWindow {}
             }
 
             // ── Right: system info ───────────────────────────────────────
@@ -84,6 +84,7 @@ Variants {
 
                 Media {}
                 Tray {}
+                Caffeine {}
                 NotificationBell {}
                 BluetoothIndicator {}
                 WifiIndicator {}

@@ -1,8 +1,10 @@
 import Quickshell
 import Quickshell.Services.UPower
+import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Effects
 import qs.common
+import qs.components
 import qs.wallpaper
 
 // The lock face: blurred wallpaper, clock, date, battery, password box.
@@ -101,6 +103,10 @@ Item {
             property real shackle: 0   // 0 closed → 1 swung open
             property real morph:   0   // 0 padlock → 1 green tick
 
+            // true while pam_fprintd is prompting for a finger scan
+            readonly property bool fprintMode:
+                root.ctx.status.toLowerCase().includes("finger") && !root.ctx.succeeded
+
             anchors.horizontalCenter: parent.horizontalCenter
             width: 34
             height: 34
@@ -108,9 +114,34 @@ Item {
             onShackleChanged: cv.requestPaint()
             onMorphChanged:   cv.requestPaint()
 
+            // green circle behind the tick — grows in as morph progresses
+            Rectangle {
+                anchors.centerIn: parent
+                width: parent.width * 3.35
+                height: width
+                radius: width / 2
+                color: Theme.green
+                opacity: Math.max(0, padlock.morph - 0.2) / 0.8 * 0.25
+                scale: 0.4 + padlock.morph * 0.6
+                Behavior on scale { NumberAnimation { duration: 400; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+            }
+
+            // fingerprint icon, crossfades with the padlock
+            Text {
+                anchors.centerIn: parent
+                text: "󰈷"
+                font.family: Theme.nerdFont
+                font.pixelSize: 28
+                color: Theme.foreground
+                opacity: padlock.fprintMode ? 0.85 : 0
+                Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.InOutCubic } }
+            }
+
             Canvas {
                 id: cv
                 anchors.fill: parent
+                opacity: padlock.fprintMode ? 0 : 1
+                Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.InOutCubic } }
 
                 onPaint: {
                     const ctx = getContext("2d");
@@ -205,13 +236,29 @@ Item {
 
         Item { width: 1; height: 6 }
 
-        Text {
+        Row {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: Qt.formatDateTime(clock.date, "HH:mm")
-            font.family: Theme.font
-            font.pixelSize: 92
-            font.weight: Font.DemiBold
-            color: Theme.foreground
+            spacing: 10
+
+            // AP must be in the same format string as hh or Qt ignores it
+            readonly property string fullTime: Qt.formatDateTime(clock.date, "hh:mm AP")
+
+            Text {
+                id: lockTime
+                text: parent.fullTime.split(" ")[0]
+                font.family: Theme.font
+                font.pixelSize: 92
+                font.weight: Font.DemiBold
+                color: Theme.foreground
+            }
+            Text {
+                anchors.baseline: lockTime.baseline
+                text: parent.fullTime.split(" ")[1]
+                font.family: Theme.font
+                font.pixelSize: 30
+                font.weight: Font.DemiBold
+                color: Qt.alpha(Theme.foreground, 0.6)
+            }
         }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -294,6 +341,65 @@ Item {
             font.pixelSize: Theme.fontSize - 1
             color: root.ctx.status === "Incorrect password"
                 ? Qt.alpha(Theme.red, 0.9) : Qt.alpha(Theme.foreground, 0.55)
+        }
+    }
+
+    // ── Lock screen media player ───────────────────────────────────────
+    Item {
+        id: lockMediaHost
+
+        // sticky player tracking
+        property var _lastPlayer: null
+        readonly property var player: {
+            const players = Mpris.players.values;
+            if (players.length === 0) return null;
+            for (const p of players)
+                if (p.playbackState === MprisPlaybackState.Playing) {
+                    lockMediaHost._lastPlayer = p; return p;
+                }
+            if (lockMediaHost._lastPlayer !== null)
+                for (const p of players)
+                    if (p === lockMediaHost._lastPlayer) return p;
+            lockMediaHost._lastPlayer = players[0];
+            return players[0];
+        }
+
+        anchors {
+            left: parent.left; leftMargin: parent.width * 0.08
+            verticalCenter: parent.verticalCenter
+        }
+        width: 300
+        height: card.implicitHeight
+
+        opacity: player !== null ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.InOutCubic } }
+        visible: opacity > 0
+
+        Rectangle {
+            anchors.fill: parent
+            radius: Theme.popupRadius
+            color: Qt.rgba(0, 0, 0, 0.35)
+            border.width: Theme.borderWidth
+            border.color: Theme.border
+        }
+
+        // accent glow ring
+        Rectangle {
+            anchors.centerIn: parent
+            width: parent.width + 40; height: parent.height + 40
+            radius: Theme.popupRadius + 20
+            color: "transparent"
+            border.width: 18
+            border.color: Qt.rgba(card.accentColor.r, card.accentColor.g, card.accentColor.b, 0.07)
+            z: -1
+            Behavior on border.color { ColorAnimation { duration: 500 } }
+        }
+
+        MediaCard {
+            id: card
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            player: lockMediaHost.player
+            active: lockMediaHost.visible
         }
     }
 }
