@@ -108,6 +108,7 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       # GUI 
+      syncthingtray
       steam lutris wine winetricks
       ladybird
       blender
@@ -291,6 +292,14 @@
     upower = {
       enable = true;
       criticalPowerAction = "PowerOff";
+    };
+    syncthing = {
+      enable = true;
+      user = "veer";      
+      group = "users";         
+      dataDir = "/home/veer";
+      configDir = "/home/veer/.config/syncthing";
+      openDefaultPorts = true;    
     };
   };
 

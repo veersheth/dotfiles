@@ -48,7 +48,12 @@ Item {
         id: trayPopup
         anchorItem: root
         contentWidth:  240
-        contentHeight: trayCol.implicitHeight + 20
+        contentHeight: trayCol.implicitHeight + 24
+        // Include trayMenu in the same grab so Hyprland delivers hover/pointer
+        // events to trayMenu's surface while the grab is active.
+        extraGrabWindow: trayMenu
+        // Close the context menu whenever the tray popup closes.
+        onShownChanged: if (!shown) trayMenu.close()
 
         ColumnLayout {
             id: trayCol
@@ -58,63 +63,89 @@ Item {
             Repeater {
                 model: SystemTray.items
 
-                Rectangle {
+                Item {
                     id: trayRow
                     required property var modelData
 
                     Layout.fillWidth: true
                     implicitHeight: 36
-                    radius: 8
-                    color: rowMo.containsMouse ? Theme.hover : "transparent"
-                    Behavior on color { ColorAnimation { duration: 80 } }
 
                     RowLayout {
-                        anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
-                        spacing: 10
+                        anchors { fill: parent; margins: 4 }
+                        spacing: 4
 
-                        IconImage {
-                            id: rowIcon
-                            implicitWidth: 16; implicitHeight: 16
-                            Layout.alignment: Qt.AlignVCenter
-                            source: trayRow.modelData.icon
-                        }
-
-                        Text {
+                        // ── Icon + name button ─────────────────────────
+                        Rectangle {
                             Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            text: (trayRow.modelData.title
-                                || trayRow.modelData.id
-                                || "").replace(/[-_]/g, " ")
-                            font.family: Theme.font
-                            font.pixelSize: Theme.fontSize - 1
-                            color: Theme.foreground
-                        }
+                            Layout.fillHeight: true
+                            radius: 6
+                            color: leftMo.containsMouse ? Theme.hover : "transparent"
+                            Behavior on color { ColorAnimation { duration: 80 } }
 
-                        // menu indicator
-                        Text {
-                            visible: trayRow.modelData.hasMenu
-                            text: "›"
-                            font.family: Theme.font
-                            font.pixelSize: Theme.fontSize
-                            color: Qt.alpha(Theme.foreground, 0.35)
-                        }
-                    }
+                            RowLayout {
+                                anchors { fill: parent; leftMargin: 8; rightMargin: 6 }
+                                spacing: 10
 
-                    MouseArea {
-                        id: rowMo
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        onClicked: mouse => {
-                            if (mouse.button === Qt.RightButton
-                                    || trayRow.modelData.onlyMenu) {
-                                if (trayRow.modelData.hasMenu) {
-                                    trayPopup.close();
-                                    trayMenu.openFor(root, trayRow.modelData.menu);
+                                IconImage {
+                                    implicitWidth: 16; implicitHeight: 16
+                                    Layout.alignment: Qt.AlignVCenter
+                                    source: trayRow.modelData.icon
                                 }
-                            } else {
-                                trayRow.modelData.activate();
-                                trayPopup.close();
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                    text: (trayRow.modelData.title
+                                        || trayRow.modelData.id
+                                        || "").replace(/[-_]/g, " ")
+                                    font.family: Theme.font
+                                    font.pixelSize: Theme.fontSize - 1
+                                    color: Theme.foreground
+                                }
+                            }
+
+                            MouseArea {
+                                id: leftMo
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onClicked: mouse => {
+                                    if (mouse.button === Qt.RightButton
+                                            || trayRow.modelData.onlyMenu) {
+                                        if (trayRow.modelData.hasMenu)
+                                            trayMenu.openFor(root, trayRow.modelData.menu)
+                                    } else {
+                                        trayRow.modelData.activate()
+                                    }
+                                }
+                            }
+                        }
+
+                        // ── Arrow button ───────────────────────────────
+                        Rectangle {
+                            visible: trayRow.modelData.hasMenu
+                            implicitWidth: 26
+                            Layout.fillHeight: true
+                            radius: 6
+                            color: arrowMo.containsMouse ? Theme.hover : "transparent"
+                            Behavior on color { ColorAnimation { duration: 80 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "›"
+                                font.family: Theme.font
+                                font.pixelSize: Theme.fontSize
+                                color: arrowMo.containsMouse
+                                    ? Theme.foreground
+                                    : Qt.alpha(Theme.foreground, 0.35)
+                                Behavior on color { ColorAnimation { duration: 80 } }
+                            }
+
+                            MouseArea {
+                                id: arrowMo
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: trayMenu.openFor(root, trayRow.modelData.menu)
                             }
                         }
                     }

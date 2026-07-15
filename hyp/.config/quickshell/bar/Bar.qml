@@ -70,7 +70,7 @@ Variants {
                     Layout.alignment: Qt.AlignVCenter
                 }
 
-                // ActiveWindow {}
+                ActiveWindow {}
             }
 
             // ── Right: system info ───────────────────────────────────────

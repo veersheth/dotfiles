@@ -2,35 +2,36 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import qs.common
-import qs.components
 
-// Focused window class in a pill.
-Pill {
-    id: root
-
+RowLayout {
     readonly property var active: ToplevelManager.activeToplevel
     readonly property string appClass: active?.appId ?? ""
+    readonly property string displayName: {
+        if (appClass.length === 0) return ""
+        const parts = appClass.split(".")
+        const raw = parts.length > 1 ? parts[parts.length - 1] : appClass
+        return raw.charAt(0).toUpperCase() + raw.slice(1)
+    }
 
     visible: appClass !== ""
+    spacing: 6
+    Layout.alignment: Qt.AlignVCenter
+    Layout.leftMargin: 10
 
     Text {
-        Layout.alignment: Qt.AlignVCenter
         text: ""
         font.family: Theme.nerdFont
         font.pixelSize: Theme.iconSize
-        color: Theme.foreground
+        color: Qt.alpha(Theme.foreground, 0.3)
     }
 
     Text {
-        Layout.alignment: Qt.AlignVCenter
         Layout.maximumWidth: 260
         elide: Text.ElideRight
-        text: root.appClass.length > 0
-            ? root.appClass.charAt(0).toUpperCase() + root.appClass.slice(1)
-            : ""
+        text: displayName
         font.family: Theme.font
         font.pixelSize: Theme.fontSize
         font.weight: Font.Medium
-        color: Theme.foreground
+        color: Qt.alpha(Theme.foreground, 0.4)
     }
 }

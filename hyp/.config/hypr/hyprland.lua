@@ -5,7 +5,7 @@ local hl = hl
 ---- MONITORS ----
 ------------------
 
-local terminal    = "alacritty"
+local terminal    = "ghostty"
 local browser     = "firefox"
 local fileManager = "nautilus"
 
@@ -70,9 +70,7 @@ hl.config({
     },
   },
 
-  animations = {
-    enabled = false
-  },
+  animations = { enabled = true },
 })
 
 
@@ -181,6 +179,7 @@ hl.gesture({ fingers = 4, direction = "pinch", action = "cursorZoom", zoom_level
 hl.device({
   name        = "usb-optical-mouse-",
   sensitivity = -0.2,
+  scroll_factor = 5,
 })
 
 
@@ -209,7 +208,8 @@ hl.bind("SUPER + T", hl.dsp.window.float({ action = "toggle" }))
 
 hl.bind("SUPER + P", hl.dsp.window.pseudo())
 
-hl.bind("SUPER + F", hl.dsp.window.fullscreen())
+hl.bind("SUPER + F", hl.dsp.window.fullscreen({ mode = "maximized"}))
+hl.bind("SUPER + SHIFT + F", hl.dsp.window.fullscreen())
 
 hl.bind("SUPER + N", hl.dsp.exec_cmd("pkill hyprsunset || hyprsunset -t 2500"))
 
@@ -384,3 +384,16 @@ hl.window_rule({
 })
 
 dofile(os.getenv("HOME") .. "/.config/hypr/monitors.lua")
+-- change monitor to high resolution, the last argument is the scale factor
+hl.monitor({ output = "", mode = "highres", position = "auto", scale = "2" })
+
+-- unscale XWayland
+hl.config({
+  xwayland = {
+    force_zero_scaling = true
+  }
+})
+
+-- toolkit-specific scale
+hl.env("GDK_SCALE", "2")
+hl.env("XCURSOR_SIZE", "32")

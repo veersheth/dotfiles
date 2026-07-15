@@ -3,12 +3,12 @@ window-padding-x = 8
 window-padding-y = 6
 window-padding-balance = true
 
-background-opacity = 0.80
+background-opacity = 0.88
 
 window-height = 95
 window-width = 140
 
-background = #101010
+background = #000000
 foreground = #F8F7FF
 selection-background = #44415a
 selection-foreground = #e0def4
@@ -16,8 +16,8 @@ cursor-color = #e0def4
 cursor-text = #232136
 
 font-size = 13
-# font-feature = -calt
-# confirm-close-surface = false
+confirm-close-surface = false
+font-feature = -calt
 font-family = "Iosevka Nerd Font"
 
 keybind = alt+one=text:\x1b1

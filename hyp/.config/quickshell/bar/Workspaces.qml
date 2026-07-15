@@ -2,39 +2,51 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 import qs.common
-import qs.components
 
-RowLayout {
+Rectangle {
     id: root
-    spacing: 10
-
     property string monitorName: ""
 
-    Repeater {
-        model: Hyprland.workspaces
+    implicitWidth: row.implicitWidth + 16
+    implicitHeight: Theme.pillHeight
+    radius: height / 2
+    color: Theme.surface
+    border.color: Theme.border
+    border.width: Theme.borderWidth
+    Layout.alignment: Qt.AlignVCenter
 
-        Text {
-            required property var modelData
-            readonly property bool isFocused: modelData.focused
+    RowLayout {
+        id: row
+        anchors.centerIn: parent
+        spacing: 5
 
-            visible: modelData.monitor?.name === root.monitorName
+        Repeater {
+            model: Hyprland.workspaces
 
-            Layout.alignment: Qt.AlignVCenter
-            text: modelData.id
-            font.family: Theme.font
-            font.pixelSize: Theme.fontSize
-            font.weight: isFocused ? Font.Bold : Font.Normal
-            color: isFocused
-                ? Theme.blue
-                : mouse.containsMouse
-                    ? Qt.alpha(Theme.foreground, 0.7)
-                    : Qt.alpha(Theme.foreground, 0.35)
+            Rectangle {
+                required property var modelData
+                readonly property bool isFocused: modelData.focused
 
-            BarHitArea {
-                id: mouse
-                slackX: 4
-                hoverEnabled: true
-                onClicked: parent.modelData.activate()
+                visible: modelData.monitor?.name === root.monitorName
+                Layout.alignment: Qt.AlignVCenter
+                implicitWidth: isFocused ? 18 : 6
+                implicitHeight: 6
+                radius: 3
+                color: isFocused
+                    ? Qt.alpha(Theme.foreground, 0.85)
+                    : wsMouse.containsMouse
+                        ? Qt.alpha(Theme.foreground, 0.5)
+                        : Qt.alpha(Theme.foreground, 0.22)
+
+                Behavior on implicitWidth { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on color { ColorAnimation { duration: 100 } }
+
+                MouseArea {
+                    id: wsMouse
+                    anchors { fill: parent; margins: -4 }
+                    hoverEnabled: true
+                    onClicked: parent.modelData.activate()
+                }
             }
         }
     }

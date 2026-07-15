@@ -8,7 +8,7 @@ import QtQuick
 
 QtObject {
     // Colors
-    readonly property color background: "#EE000000"   // #00000088
+    readonly property color background: "#EE232323"   // #00000088
     readonly property color surface:    "#ff262626"   // #262626ff
     readonly property color border:     "#66ffffff"   // #ffffff22
     readonly property color barBorder:  "#55ffffff"   // bottom border of the status bar

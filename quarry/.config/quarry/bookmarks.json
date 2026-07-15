@@ -15,6 +15,10 @@
     {
       "name": "zlibrary",
       "url": "https://zlib.bz/"
+    },
+    {
+      "name": "unsw-mail",
+      "url": "https://outlook.cloud.microsoft/mail/"
     }
   ]
 }

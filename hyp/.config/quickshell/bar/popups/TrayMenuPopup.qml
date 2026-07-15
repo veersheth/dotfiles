@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Wayland
 import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
@@ -8,13 +9,36 @@ import qs.components
 // Custom-rendered tray menu: reads a tray item's DBus menu through
 // QsMenuOpener and draws it in the shared popup card. One instance serves
 // every tray icon; openFor() re-anchors it. Submenus expand inline.
+//
+// Designed to float beside the tray popup without closing it.
+// grabFocus:false keeps the tray popup's focus grab alive.
 BarPopup {
     id: root
 
     property var menuHandle: null
+    property real trayContentWidth: 240   // width of the sibling tray popup
 
-    contentWidth: col.implicitWidth + 20
-    contentHeight: col.implicitHeight + 20
+    contentWidth: col.implicitWidth + 28
+    contentHeight: col.implicitHeight + 28
+
+    // Don't steal focus from the tray popup; mouse clicks still reach us.
+    grabFocus: false
+    // keyboardFocus: None prevents the compositor from giving us keyboard
+    // focus, which would clear the tray popup's HyprlandFocusGrab and
+    // cause both windows to immediately collapse.
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+    // Position to the RIGHT of the tray popup.
+    // trayContentWidth / 2 is the half-width of the sibling tray popup
+    // (no extra flare padding in the new rectangle-based BarPopup).
+    WlrLayershell.margins.left: {
+        if (!anchorItem) return 0;
+        const track     = anchorItem.x;
+        const mid       = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x;
+        const sx        = screen?.x ?? 0;
+        const trayRight = (mid - sx) + trayContentWidth / 2;
+        return Math.max(4, Math.round(trayRight + 4));
+    }
 
     function openFor(item, menu) {
         if (shown) {
@@ -56,6 +80,7 @@ BarPopup {
         radius: 8
         color: !modelData.isSeparator && entryMouse.containsMouse && modelData.enabled
             ? Theme.hover : "transparent"
+        Behavior on color { ColorAnimation { duration: 80 } }
 
         // separator: a hairline instead of a row
         Rectangle {

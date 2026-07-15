@@ -18,12 +18,21 @@ Item {
          battery.state === UPowerDeviceState.FullyCharged ||
          battery.state === UPowerDeviceState.PendingCharge)
     readonly property bool critical: !charging && percent < 10
+    readonly property bool perfMode: PowerProfiles.profile === PowerProfile.Performance
 
     // hide entirely on desktops with no battery
     visible: battery !== null && battery.isLaptopBattery
 
     implicitWidth: row.implicitWidth + 20
     implicitHeight: Theme.pillHeight
+
+    // performance mode orange backdrop
+    Rectangle {
+        anchors.fill: parent; radius: height / 2
+        color: Qt.alpha("#d4783a", 0.22)
+        opacity: root.perfMode ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
+    }
 
     // flashing red backdrop when critical
     Rectangle {
@@ -68,6 +77,7 @@ Item {
             font.weight: Font.Medium
             color: Theme.foreground
         }
+
     }
 
     Rectangle {

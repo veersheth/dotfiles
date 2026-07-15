@@ -199,30 +199,19 @@ Scope {
     }
 
     // ── The card ──────────────────────────────────────────────────────
-    // Morphs from a small nub into the full card (same as BarPopup), always
-    // rooted flush against the bottom edge so the bounce never detaches it.
     PanelWindow {
         id: win
 
         readonly property int cardW: root.message !== ""
             ? Math.min(Math.round(msgText.implicitWidth + osdIcon.implicitWidth) + 50, 440)
             : 252
-        readonly property int cardH:   64
-        readonly property int flare:   14
-        readonly property int cornerR: Theme.popupRadius
-
-        property real progress: 0
-        function lerp(a, b, t) { return a + (b - a) * t }
-        readonly property real startW: 64
-        readonly property real startH: 18
-        readonly property real drawW:  lerp(startW, cardW, progress)
-        readonly property real drawH:  lerp(startH, cardH, progress)
+        readonly property int cardH: 64
 
         anchors.bottom: true
         exclusiveZone:  0
-        // Slack so the OutBack overshoot grows into the window, not past it
-        implicitWidth:  cardW + flare * 2 + 24
-        implicitHeight: cardH + 12
+        WlrLayershell.margins.bottom: 32
+        implicitWidth:  win.cardW
+        implicitHeight: win.cardH
         color:          "transparent"
         visible:        root.shown || hideDelay.running
         mask: Region {}
@@ -232,145 +221,88 @@ Scope {
 
         NumberAnimation {
             id: enterAnim
-            target: win; property: "progress"
-            to: 1; duration: 400
-            easing.type: Easing.OutBack
-            easing.overshoot: 1.2
+            target: card; property: "opacity"
+            from: 0; to: 1; duration: 180; easing.type: Easing.OutCubic
         }
         NumberAnimation {
             id: exitAnim
-            target: win; property: "progress"
-            to: 0; duration: 160; easing.type: Easing.InCubic
+            target: card; property: "opacity"
+            to: 0; duration: 140; easing.type: Easing.InCubic
         }
 
-        Item {
-            id: slider
+        Rectangle {
+            id: card
             anchors.fill: parent
-            opacity: Math.min(1, win.progress * 4)
-            visible: win.progress > 0
+            radius: 14
+            color: Theme.surface
+            border.color: Theme.border
+            border.width: Theme.borderWidth
+            opacity: 0
+            clip: true
 
-            Canvas {
-                anchors.fill: parent
+            Text {
+                id: osdIcon
+                anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
+                text:           root.icon
+                font.family:    Theme.nerdFont
+                font.pixelSize: 20
+                color: root.muted ? Qt.alpha(Theme.foreground, 0.4) : Theme.foreground
+            }
 
-                readonly property real cw:  win.drawW
-                readonly property real chh: win.drawH
-                onCwChanged:  requestPaint()
-                onChhChanged: requestPaint()
-                onWidthChanged:  requestPaint()
-                onHeightChanged: requestPaint()
+            NumberAnimation {
+                id: iconPop
+                target: osdIcon; property: "scale"
+                from: 0.5; to: 1
+                duration: 380
+                easing.type: Easing.OutBack
+                easing.overshoot: 2.2
+            }
 
-                onPaint: {
-                    const ctx = getContext("2d");
-                    ctx.reset();
+            Text {
+                id: msgText
+                anchors {
+                    left: osdIcon.right; leftMargin: 10
+                    right: parent.right; rightMargin: 20
+                    verticalCenter: parent.verticalCenter
+                }
+                visible: root.message !== ""
+                elide: Text.ElideRight
+                text: root.message
+                font.family: Theme.font
+                font.pixelSize: Theme.fontSize - 1
+                font.weight: Font.Medium
+                color: Theme.foreground
+            }
 
-                    const W  = width;
-                    const H  = height;
-                    const m  = win.flare;
-                    const dw = win.drawW;
-                    const dh = win.drawH;
-                    const xL = (W - dw) / 2;
-                    const xR = xL + dw;
-                    const br = Math.min(
-                        win.lerp(win.startH / 2, win.cornerR, win.progress),
-                        dw / 2, dh / 2);
+            Rectangle {
+                id: track
+                visible: root.message === ""
+                anchors {
+                    left: parent.left;  leftMargin: 56
+                    right: parent.right; rightMargin: 62
+                    verticalCenter: parent.verticalCenter
+                }
+                height: 6
+                radius: 3
+                color:  Theme.hover
 
-                    ctx.beginPath();
-                    ctx.moveTo(xL - m, H);
-                    ctx.arc(xL - m, H - m, m, Math.PI / 2, 0, true);
-                    ctx.lineTo(xL, H - dh + br);
-                    ctx.arc(xL + br, H - dh + br, br, Math.PI, Math.PI * 1.5, false);
-                    ctx.lineTo(xR - br, H - dh);
-                    ctx.arc(xR - br, H - dh + br, br, Math.PI * 1.5, Math.PI * 2, false);
-                    ctx.lineTo(xR, H - m);
-                    ctx.arc(xR + m, H - m, m, Math.PI, Math.PI / 2, true);
-
-                    ctx.fillStyle   = Theme.background;
-                    ctx.fill();
-                    ctx.strokeStyle = Theme.border;
-                    ctx.lineWidth   = Theme.borderWidth;
-                    ctx.stroke();
+                Rectangle {
+                    anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                    width: Math.min(1, root.value) * parent.width
+                    radius: 3
+                    color:  root.muted ? Qt.alpha(Theme.foreground, 0.35) : Theme.blue
+                    Behavior on width { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
                 }
             }
 
-            // Content clipped to the morphing card rect
-            Item {
-                anchors.bottom: parent.bottom
-                anchors.horizontalCenter: parent.horizontalCenter
-                width:  win.drawW
-                height: win.drawH
-                clip: true
-
-                Item {
-                    anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
-                    width:  win.cardW
-                    height: win.cardH
-                    opacity: Math.max(0, (win.progress - 0.35) / 0.65)
-
-                    Text {
-                        id: osdIcon
-                        anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
-                        text:           root.icon
-                        font.family:    Theme.nerdFont
-                        font.pixelSize: 20
-                        color: root.muted ? Qt.alpha(Theme.foreground, 0.4) : Theme.foreground
-                    }
-
-                    NumberAnimation {
-                        id: iconPop
-                        target: osdIcon; property: "scale"
-                        from: 0.5; to: 1
-                        duration: 380
-                        easing.type: Easing.OutBack
-                        easing.overshoot: 2.2
-                    }
-
-                    Text {
-                        id: msgText
-                        anchors {
-                            left: osdIcon.right; leftMargin: 10
-                            right: parent.right; rightMargin: 20
-                            verticalCenter: parent.verticalCenter
-                        }
-                        visible: root.message !== ""
-                        elide: Text.ElideRight
-                        text: root.message
-                        font.family: Theme.font
-                        font.pixelSize: Theme.fontSize - 1
-                        font.weight: Font.Medium
-                        color: Theme.foreground
-                    }
-
-                    Rectangle {
-                        id: track
-                        visible: root.message === ""
-                        anchors {
-                            left: parent.left;  leftMargin: 56
-                            right: parent.right; rightMargin: 62
-                            verticalCenter: parent.verticalCenter
-                        }
-                        height: 6
-                        radius: 3
-                        color:  Theme.hover
-
-                        Rectangle {
-                            anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                            width: Math.min(1, root.value) * parent.width
-                            radius: 3
-                            color:  root.muted ? Qt.alpha(Theme.foreground, 0.35) : Theme.blue
-                            Behavior on width { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
-                        }
-                    }
-
-                    Text {
-                        visible: root.message === ""
-                        anchors { right: parent.right; rightMargin: 18; verticalCenter: parent.verticalCenter }
-                        text:           `${Math.round(root.value * 100)}%`
-                        font.family:    Theme.font
-                        font.pixelSize: Theme.fontSize - 2
-                        font.weight:    Font.Medium
-                        color:          Theme.foreground
-                    }
-                }
+            Text {
+                visible: root.message === ""
+                anchors { right: parent.right; rightMargin: 18; verticalCenter: parent.verticalCenter }
+                text:           `${Math.round(root.value * 100)}%`
+                font.family:    Theme.font
+                font.pixelSize: Theme.fontSize - 2
+                font.weight:    Font.Medium
+                color:          Theme.foreground
             }
         }
 
@@ -378,7 +310,14 @@ Scope {
     }
 
     onShownChanged: {
-        if (shown) { exitAnim.stop(); enterAnim.restart(); }
-        else       { enterAnim.stop(); exitAnim.restart(); hideDelay.restart(); }
+        if (shown) {
+            exitAnim.stop()
+            card.opacity = 0
+            enterAnim.restart()
+        } else {
+            enterAnim.stop()
+            exitAnim.restart()
+            hideDelay.restart()
+        }
     }
 }

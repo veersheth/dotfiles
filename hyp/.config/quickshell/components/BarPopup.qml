@@ -4,22 +4,22 @@ import Quickshell.Wayland
 import QtQuick
 import qs.common
 
-// Popup that leaks from the bar. Set anchorItem to the bar module and call
+// Popup that drops from the bar. Set anchorItem to the bar module and call
 // toggle() / close(). Layer-shell surface so Hyprland blur applies.
 PanelWindow {
     id: root
 
-    default property alias content: card.content
+    default property alias content: contentItem.data
     property real contentWidth: 200
     property real contentHeight: 200
     property bool shown: false
     property Item anchorItem: null
     property double dismissedAt: 0
-    property real progress: 0
-    // false → popup survives losing focus (e.g. while dragging files into it)
     property bool grabFocus: true
-    // false → clicking outside leaves the popup open (close via toggle/Esc)
     property bool dismissOnFocusLoss: true
+    // Optional second window (e.g. a context menu) to include in the same
+    // focus grab so hover events reach it while the grab is active.
+    property var extraGrabWindow: null
 
     function toggle() {
         if (shown) { shown = false; return; }
@@ -28,7 +28,6 @@ PanelWindow {
     }
     function close() { shown = false; }
 
-    // ── layer-shell placement ─────────────────────────────────────────
     screen: anchorItem?.Window.window?.screen ?? null
     anchors.top:  true
     anchors.left: true
@@ -40,62 +39,66 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
-    WlrLayershell.margins.top:  Theme.barHeight - card.overlap
+    WlrLayershell.margins.top:  Theme.barHeight + 4
     WlrLayershell.margins.left: {
         if (!anchorItem) return 0;
-        const track = anchorItem.x;  // mapToGlobal isn't reactive; re-run when the anchor moves
-        const mid = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x;
-        const sx  = screen?.x ?? 0;
+        const track = anchorItem.x;
+        const mid   = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x;
+        const sx    = screen?.x ?? 0;
         return Math.max(0, Math.round(mid - sx - implicitWidth / 2));
     }
 
-    implicitWidth:  contentWidth  + card.flare * 2
-    implicitHeight: contentHeight + card.overlap
+    implicitWidth:  contentWidth
+    implicitHeight: contentHeight
 
     onShownChanged: {
         if (shown) {
-            exitAnim.stop();
-            visible = true;
-            enterAnim.restart();
+            exitAnim.stop()
+            card.opacity = 0
+            visible = true
+            enterAnim.restart()
         } else {
-            enterAnim.stop();
-            exitAnim.restart();
+            enterAnim.stop()
+            exitAnim.restart()
         }
     }
 
-    LeakCard {
+    Rectangle {
         id: card
         anchors.fill: parent
-        contentWidth:  root.contentWidth
-        contentHeight: root.contentHeight
-        progress:      root.progress
-        startWidth: Math.min(root.contentWidth,
-            Math.max(40, root.anchorItem?.width ?? root.contentWidth * 0.35))
+        radius: 14
+        color: Theme.surface
+        border.color: Theme.border
+        border.width: Theme.borderWidth
+        clip: true
+
+        Item {
+            id: contentItem
+            anchors.fill: parent
+        }
     }
 
     NumberAnimation {
         id: enterAnim
-        target: root; property: "progress"
-        to: 1; duration: 280
-        easing.type: Easing.OutBack
-        easing.overshoot: 1.2
+        target: card; property: "opacity"
+        from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic
     }
     SequentialAnimation {
         id: exitAnim
         NumberAnimation {
-            target: root; property: "progress"
-            to: 0; duration: 140; easing.type: Easing.InCubic
+            target: card; property: "opacity"
+            to: 0; duration: 120; easing.type: Easing.InCubic
         }
         ScriptAction { script: root.visible = false }
     }
 
     HyprlandFocusGrab {
-        windows: [root]
+        windows: root.extraGrabWindow !== null ? [root, root.extraGrabWindow] : [root]
         active: root.shown && root.grabFocus
         onCleared: {
-            if (!root.dismissOnFocusLoss) return;
-            root.dismissedAt = Date.now();
-            root.shown = false;
+            if (!root.dismissOnFocusLoss) return
+            root.dismissedAt = Date.now()
+            root.shown = false
         }
     }
 }
