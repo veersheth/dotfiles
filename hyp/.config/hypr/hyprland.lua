@@ -1,13 +1,11 @@
+dofile(os.getenv("HOME") .. "/.config/hypr/monitors.lua")
+
 -- local hl = require("hyprland")
 local hl = hl
 
 ------------------
 ---- MONITORS ----
 ------------------
-
-local terminal    = "ghostty"
-local browser     = "firefox"
-local fileManager = "nautilus"
 
 hl.on("hyprland.start", function()
   -- hl.exec_cmd("hyprpanel")
@@ -47,7 +45,7 @@ hl.config({
   },
 
   decoration = {
-    rounding         = 14,
+    rounding         = 12,
     rounding_power   = 2,
 
     active_opacity   = 1.0,
@@ -192,34 +190,30 @@ hl.device({
 ----------------------------------------------------------------------
 
 
-hl.bind("SUPER + comma", hl.dsp.exec_cmd("hypr-settings"))
+hl.bind("SUPER + comma", hl.dsp.exec_cmd("hypr-settings")) -- settings
 
-hl.bind("SUPER + Return", hl.dsp.exec_cmd(terminal))
+hl.bind("SUPER + Return", hl.dsp.exec_cmd("ghostty")) -- terminal
 
 hl.bind("SUPER + Q", hl.dsp.window.close())
 
-hl.bind("SUPER + SHIFT + W", hl.dsp.exec_cmd("pkill quickshell; pkill -x hypridle; sleep 0.5; quickshell & hypridle & disown; sleep 0.5;"))
+hl.bind("SUPER + SHIFT + W", hl.dsp.exec_cmd("pkill quickshell; pkill -x hypridle; sleep 0.5; quickshell & hypridle & disown; sleep 0.5;")) -- restart shell
 
-hl.bind("SUPER + CTRL + W", hl.dsp.exec_cmd("pkill hyprpaper || hyprpaper &"))
+hl.bind("CTRL + ALT + Delete", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'")) -- force logout
 
-hl.bind("CTRL + ALT + Delete", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
-
-hl.bind("SUPER + T", hl.dsp.window.float({ action = "toggle" }))
+hl.bind("SUPER + T", hl.dsp.window.float({ action = "toggle" })) 
 
 hl.bind("SUPER + P", hl.dsp.window.pseudo())
 
 hl.bind("SUPER + F", hl.dsp.window.fullscreen({ mode = "maximized"}))
 hl.bind("SUPER + SHIFT + F", hl.dsp.window.fullscreen())
 
-hl.bind("SUPER + N", hl.dsp.exec_cmd("pkill hyprsunset || hyprsunset -t 2500"))
+hl.bind("SUPER + N", hl.dsp.exec_cmd("pkill hyprsunset || hyprsunset -t 2500")) -- nightlight
 
-hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a"))
+hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a")) -- color picker
 
-hl.bind("Print", hl.dsp.exec_cmd( "hyprshot -m region -z --raw | tee ~/Pictures/Screenshots/Screenshot\\ $(date\\ +%y-%m-%d\\ %H-%M-%S).png | wl-copy --type image/png"))
-
-hl.bind("SHIFT + Print", hl.dsp.exec_cmd( "hyprshot -m region -z --raw | satty --filename - --output-filename ~/Pictures/Screenshots/Screenshot\\ $(date\\ +%y-%m-%d\\ %H-%M-%S).png --copy-command wl-copy"))
-
-hl.bind("SUPER + Print", hl.dsp.exec_cmd( "hyprshot -m output -z --raw | tee ~/Pictures/Screenshots/Screenshot\\ $(date\\ +%y-%m-%d\\ %H-%M-%S).png | wl-copy --type image/png"))
+hl.bind("Print",       hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh region"))
+hl.bind("SHIFT + Print", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh annotate"))
+hl.bind("SUPER + Print", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh output"))
 
 -- Quarry
 
@@ -383,17 +377,13 @@ hl.window_rule({
   pin   = true,
 })
 
-dofile(os.getenv("HOME") .. "/.config/hypr/monitors.lua")
 -- change monitor to high resolution, the last argument is the scale factor
 hl.monitor({ output = "", mode = "highres", position = "auto", scale = "2" })
-
 -- unscale XWayland
 hl.config({
   xwayland = {
     force_zero_scaling = true
   }
 })
-
 -- toolkit-specific scale
 hl.env("GDK_SCALE", "2")
-hl.env("XCURSOR_SIZE", "32")
