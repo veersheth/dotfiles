@@ -19,6 +19,10 @@
     {
       "name": "unsw-mail",
       "url": "https://outlook.cloud.microsoft/mail/"
+    },
+    {
+      "name": "myunsw",
+      "url": "https://my.unsw.edu.au"
     }
   ]
 }

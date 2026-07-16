@@ -20,7 +20,7 @@ settings = '^set\s*(.*)$'
 timer = '^timer\s*(.*)$'
 screenshots = '^ss\s*(.*)$'
 shortcuts = '^q\s*(.*)$'
-scripts = '^sc\s*(.*)$'
+scripts = '^s \s*(.*)$'
 
 [theme]
 background_color = "rgba(10, 10, 10, 1)"
