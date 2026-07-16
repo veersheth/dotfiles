@@ -158,7 +158,7 @@ BarPopup {
                 id: thumb
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: 52; height: 52
-                radius: 10
+                radius: Theme.itemRadius
                 color: Theme.surface
                 border.width: Theme.borderWidth
                 border.color: hover.hovered ? Theme.blue : Theme.border
@@ -171,7 +171,7 @@ BarPopup {
                 ClippingRectangle {
                     anchors.fill: parent
                     anchors.margins: Theme.borderWidth
-                    radius: 9
+                    radius: Theme.itemRadius
                     color: "transparent"
                     visible: root.isImage(chip.modelData)
 

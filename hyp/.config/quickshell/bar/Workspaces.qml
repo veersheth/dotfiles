@@ -18,32 +18,38 @@ Rectangle {
     RowLayout {
         id: row
         anchors.centerIn: parent
-        spacing: 5
+        spacing: 2
 
         Repeater {
             model: Hyprland.workspaces
 
-            Rectangle {
+            Item {
                 required property var modelData
                 readonly property bool isFocused: modelData.focused
 
                 visible: modelData.monitor?.name === root.monitorName
                 Layout.alignment: Qt.AlignVCenter
-                implicitWidth: isFocused ? 18 : 6
-                implicitHeight: 6
-                radius: 3
-                color: isFocused
-                    ? Qt.alpha(Theme.foreground, 0.85)
-                    : wsMouse.containsMouse
-                        ? Qt.alpha(Theme.foreground, 0.5)
-                        : Qt.alpha(Theme.foreground, 0.22)
+                implicitWidth: label.implicitWidth + 6
+                implicitHeight: label.implicitHeight
 
-                Behavior on implicitWidth { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                Behavior on color { ColorAnimation { duration: 100 } }
+                Text {
+                    id: label
+                    anchors.centerIn: parent
+                    text: parent.modelData.id
+                    font.family: Theme.font
+                    font.pixelSize: Theme.fontSize - 1
+                    font.weight: parent.isFocused ? Font.SemiBold : Font.Normal
+                    color: parent.isFocused
+                        ? Theme.blue
+                        : wsMouse.containsMouse
+                            ? Qt.alpha(Theme.foreground, 0.6)
+                            : Qt.alpha(Theme.foreground, 0.3)
+                    Behavior on color { ColorAnimation { duration: 100 } }
+                }
 
                 MouseArea {
                     id: wsMouse
-                    anchors { fill: parent; margins: -4 }
+                    anchors.fill: parent
                     hoverEnabled: true
                     onClicked: parent.modelData.activate()
                 }

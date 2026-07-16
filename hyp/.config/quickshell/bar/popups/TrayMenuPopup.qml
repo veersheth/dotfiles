@@ -77,7 +77,7 @@ BarPopup {
         Layout.leftMargin: indent
         implicitWidth: entryRow.implicitWidth + 24
         implicitHeight: modelData.isSeparator ? 9 : 30
-        radius: 8
+        radius: Theme.smallRadius
         color: !modelData.isSeparator && entryMouse.containsMouse && modelData.enabled
             ? Theme.hover : "transparent"
         Behavior on color { ColorAnimation { duration: 80 } }

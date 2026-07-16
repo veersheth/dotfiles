@@ -78,7 +78,7 @@ Item {
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            radius: 6
+                            radius: Theme.smallRadius
                             color: leftMo.containsMouse ? Theme.hover : "transparent"
                             Behavior on color { ColorAnimation { duration: 80 } }
 
@@ -126,7 +126,7 @@ Item {
                             visible: trayRow.modelData.hasMenu
                             implicitWidth: 26
                             Layout.fillHeight: true
-                            radius: 6
+                            radius: Theme.smallRadius
                             color: arrowMo.containsMouse ? Theme.hover : "transparent"
                             Behavior on color { ColorAnimation { duration: 80 } }
 

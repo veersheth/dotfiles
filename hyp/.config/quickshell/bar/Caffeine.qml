@@ -251,7 +251,7 @@ Item {
 
         Layout.fillWidth: true
         implicitHeight: 34
-        radius: 8
+        radius: Theme.smallRadius
         color: durMo.containsMouse ? Theme.hover : "transparent"
         Behavior on color { ColorAnimation { duration: 80 } }
 
@@ -301,7 +301,7 @@ Item {
                 }
                 Rectangle {
                     implicitWidth:  offLbl.implicitWidth + 14
-                    implicitHeight: 22; radius: 11
+                    implicitHeight: 22; radius: height / 2
                     color: offMo.containsMouse ? Qt.alpha(Theme.red, 0.22) : Qt.alpha(Theme.red, 0.12)
                     Behavior on color { ColorAnimation { duration: 80 } }
                     Text { id: offLbl; anchors.centerIn: parent; text: "Turn off"

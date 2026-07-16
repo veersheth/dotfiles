@@ -37,8 +37,8 @@ Item {
     readonly property bool playing:
         player !== null && player.playbackState === MprisPlaybackState.Playing
 
-    // hide when no player exists at all; stay visible while paused
-    visible: player !== null
+    // always visible — shows "No media" when no player
+    visible: true
     implicitWidth: row.implicitWidth + 20
     implicitHeight: Theme.pillHeight
 
@@ -49,10 +49,12 @@ Item {
 
         Text {
             Layout.alignment: Qt.AlignVCenter
-            text: root.playing ? "󰏤" : "󰐊"
+            text: root.player === null ? "󰝚" : root.playing ? "󰏤" : "󰐊"
             font.family: Theme.nerdFont
             font.pixelSize: Theme.iconSize
-            color: Theme.foreground
+            color: root.player === null
+                ? Qt.alpha(Theme.foreground, 0.35)
+                : Theme.foreground
         }
 
         Text {
@@ -60,14 +62,16 @@ Item {
             Layout.preferredWidth: 160
             elide: Text.ElideRight
             text: {
-                if (!root.player) return "";
+                if (!root.player) return "No media"
                 const artist = root.player.trackArtist;
                 const title  = root.player.trackTitle;
                 return artist ? `${artist} - ${title}` : title;
             }
             font.family: Theme.font
             font.pixelSize: Theme.fontSize
-            color: Theme.foreground
+            color: root.player === null
+                ? Qt.alpha(Theme.foreground, 0.35)
+                : Theme.foreground
         }
     }
 
@@ -83,10 +87,9 @@ Item {
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         onClicked: mouse => {
-            if (!root.player) return;
             if (mouse.button === Qt.LeftButton)
                 mediaControls.toggle();
-            else if (mouse.button === Qt.MiddleButton && root.player.canGoNext)
+            else if (mouse.button === Qt.MiddleButton && root.player?.canGoNext)
                 root.player.next();
         }
     }

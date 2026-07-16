@@ -38,7 +38,9 @@ PanelWindow {
     WlrLayershell.namespace: "quickshell:popup"
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-    WlrLayershell.margins.top: Theme.barHeight
+    WlrLayershell.margins.top:    Theme.barHeight + 8
+    WlrLayershell.margins.bottom: 8
+    WlrLayershell.margins.right:  8
 
     implicitWidth: 380
 
@@ -83,7 +85,8 @@ PanelWindow {
         anchors.bottom: parent.bottom
         width: parent.width
         x: parent.width
-        color: Theme.surface
+        radius: Theme.popupRadius
+        color: Theme.background
         border.color: Theme.border
         border.width: Theme.borderWidth
         clip: true
@@ -116,11 +119,11 @@ PanelWindow {
                 Item { Layout.fillWidth: true }
 
                 Rectangle {
-                    implicitWidth: 38; implicitHeight: 20; radius: 10
+                    implicitWidth: 38; implicitHeight: 20; radius: height / 2
                     color: NotificationService.dnd ? Theme.blue : Theme.hover
                     Behavior on color { ColorAnimation { duration: 150 } }
                     Rectangle {
-                        width: 14; height: 14; radius: 7
+                        width: 14; height: 14; radius: width / 2
                         anchors.verticalCenter: parent.verticalCenter
                         x: NotificationService.dnd ? parent.width - width - 3 : 3
                         color: NotificationService.dnd ? Theme.onAccent : Theme.foreground
@@ -133,7 +136,7 @@ PanelWindow {
                 }
 
                 Rectangle {
-                    implicitWidth: 28; implicitHeight: 28; radius: 14
+                    implicitWidth: 28; implicitHeight: 28; radius: width / 2
                     color: clearMouse.containsMouse ? Theme.hover : "transparent"
                     visible: root.notifs.length > 0
                     Text {
@@ -193,7 +196,7 @@ PanelWindow {
 
                     width: list.width - 28
                     height: row.implicitHeight + 36
-                    radius: 12
+                    radius: Theme.popupRadius
                     color: itemMouse.containsMouse ? Theme.hoverStrong : Theme.background
                     border.width: Theme.borderWidth
                     border.color: critical ? Qt.alpha(Theme.red, 0.6) : Theme.border
@@ -266,7 +269,7 @@ PanelWindow {
                                         required property var modelData
                                         implicitWidth:  actionText.implicitWidth + 20
                                         implicitHeight: 26
-                                        radius: 6
+                                        radius: Theme.smallRadius
                                         color: actionMouse.containsMouse ? Theme.hoverStrong : Theme.hover
 
                                         Text {

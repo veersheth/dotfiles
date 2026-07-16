@@ -38,7 +38,7 @@ BarPopup {
         connectivity === "none" || connectivity === "limited" || connectivity === "portal"
 
     contentWidth: 360
-    contentHeight: col.implicitHeight + 32
+    contentHeight: 380
 
     onShownChanged: {
         if (shown) {
@@ -160,7 +160,7 @@ BarPopup {
     // ── UI ─────────────────────────────────────────────────────────────
     ColumnLayout {
         id: col
-        anchors { top: parent.top; left: parent.left; right: parent.right; margins: 16 }
+        anchors { fill: parent; margins: 16 }
         spacing: 6
 
         // ── Header: Wi-Fi  subtitle  [⚙] [↺] [toggle] ─────────────────
@@ -189,7 +189,7 @@ BarPopup {
             // settings
             Rectangle {
                 Layout.alignment: Qt.AlignVCenter
-                width: 30; height: 30; radius: 15
+                width: 30; height: 30; radius: width / 2
                 color: settingsMo.containsMouse ? Theme.hover : "transparent"
                 Text { anchors.centerIn: parent; text: "󰒓"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Qt.alpha(Theme.foreground, 0.6) }
                 MouseArea { id: settingsMo; anchors.fill: parent; hoverEnabled: true; onClicked: { Quickshell.execDetached(["hypr-settings", "--wifi"]); root.close() } }
@@ -198,7 +198,7 @@ BarPopup {
             // rescan
             Rectangle {
                 Layout.alignment: Qt.AlignVCenter
-                width: 30; height: 30; radius: 15
+                width: 30; height: 30; radius: width / 2
                 color: rescanMo.containsMouse ? Theme.hover : "transparent"
                 Text {
                     id: rescanIcon; anchors.centerIn: parent; text: "󰑐"
@@ -224,7 +224,7 @@ BarPopup {
         Flickable {
             Layout.fillWidth: true
             Layout.topMargin: 4
-            Layout.preferredHeight: Math.min(netCol.implicitHeight, 400)
+            Layout.fillHeight: true
             contentHeight: netCol.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds
@@ -233,6 +233,24 @@ BarPopup {
                 id: netCol
                 width: parent.width
                 spacing: 2
+
+                Text {
+                    visible: root.wifiEnabled && root.networks.length === 0
+                    width: parent.width
+                    leftPadding: 8; topPadding: 2
+                    text: rescanProc.running ? "Scanning…" : "No networks found"
+                    font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
+                    color: Qt.alpha(Theme.foreground, 0.5)
+                }
+
+                Text {
+                    visible: root.error !== ""
+                    width: parent.width
+                    leftPadding: 8
+                    text: root.error; wrapMode: Text.Wrap
+                    font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
+                    color: Qt.alpha(Theme.red, 0.9)
+                }
 
                 Repeater {
                     model: root.networks
@@ -244,7 +262,7 @@ BarPopup {
                         spacing: 4
 
                         Rectangle {
-                            width: parent.width; height: 38; radius: 10
+                            width: parent.width; height: 38; radius: Theme.itemRadius
                             color: netItem.modelData.inUse ? Qt.alpha(Theme.blue, 0.18)
                                  : netMouse.containsMouse ? Theme.hover : "transparent"
 
@@ -327,20 +345,5 @@ BarPopup {
             }
         }
 
-        Text {
-            visible: root.wifiEnabled && root.networks.length === 0
-            Layout.leftMargin: 8; Layout.topMargin: 2
-            text: rescanProc.running ? "Scanning…" : "No networks found"
-            font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
-            color: Qt.alpha(Theme.foreground, 0.5)
-        }
-
-        Text {
-            visible: root.error !== ""
-            Layout.fillWidth: true; Layout.leftMargin: 8
-            text: root.error; wrapMode: Text.Wrap
-            font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
-            color: Qt.alpha(Theme.red, 0.9)
-        }
     }
 }

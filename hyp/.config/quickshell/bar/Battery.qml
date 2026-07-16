@@ -29,7 +29,7 @@ Item {
     // performance mode orange backdrop
     Rectangle {
         anchors.fill: parent; radius: height / 2
-        color: Qt.alpha("#d4783a", 0.22)
+        color: Qt.alpha("#c60c0c", 0.82)
         opacity: root.perfMode ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
     }
@@ -90,50 +90,11 @@ Item {
     BarHitArea {
         id: hitArea
         hoverEnabled: true
-        onEntered: batTip.show(root)
-        onExited:  batTip.hide()
-        onClicked: {
-            batTip.hide();
-            powerMenu.toggle();
-        }
+        onClicked: powerMenu.toggle()
     }
 
     PowerProfilePopup {
         id: powerMenu
         anchorItem: root
-    }
-
-    BarTooltip {
-        id: batTip
-
-        readonly property int secs: root.charging
-            ? (root.battery?.timeToFull ?? 0)
-            : (root.battery?.timeToEmpty ?? 0)
-
-        function fmt(s) {
-            const m = Math.round(s / 60);
-            return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`;
-        }
-
-        contentWidth:  batTipText.implicitWidth + 28
-        contentHeight: batTipText.implicitHeight + 16
-
-        Text {
-            id: batTipText
-            anchors.centerIn: parent
-            text: {
-                if (root.battery?.state === UPowerDeviceState.FullyCharged)
-                    return "Fully charged";
-                if (batTip.secs <= 0)
-                    return root.charging ? "Charging" : "On battery";
-                return root.charging
-                    ? `${batTip.fmt(batTip.secs)} until full`
-                    : `${batTip.fmt(batTip.secs)} remaining`;
-            }
-            font.family: Theme.font
-            font.pixelSize: Theme.fontSize - 1
-            font.weight: Font.Medium
-            color: Theme.foreground
-        }
     }
 }

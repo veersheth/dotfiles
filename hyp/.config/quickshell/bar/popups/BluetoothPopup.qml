@@ -20,7 +20,7 @@ BarPopup {
     property string connectingAddress: ""
 
     contentWidth: 300
-    contentHeight: col.implicitHeight + 32
+    contentHeight: 360
 
     onShownChanged: {
         if (!shown) connectingAddress = "";
@@ -38,7 +38,7 @@ BarPopup {
 
         Layout.fillWidth: true
         implicitHeight: 40
-        radius: 10
+        radius: Theme.itemRadius
         color: devMo.containsMouse ? Theme.hover : "transparent"
 
         RowLayout {
@@ -110,7 +110,7 @@ BarPopup {
     // ── UI ──────────────────────────────────────────────────────────────
     ColumnLayout {
         id: col
-        anchors { top: parent.top; left: parent.left; right: parent.right; margins: 16 }
+        anchors { fill: parent; margins: 16 }
         spacing: 4
 
         // ── Header: Bluetooth  [⚙] [↺] [toggle] ───────────────────────
@@ -142,7 +142,7 @@ BarPopup {
             // settings
             Rectangle {
                 Layout.alignment: Qt.AlignVCenter
-                width: 30; height: 30; radius: 15
+                width: 30; height: 30; radius: width / 2
                 color: settingsMo.containsMouse ? Theme.hover : "transparent"
                 Text { anchors.centerIn: parent; text: "󰒓"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Qt.alpha(Theme.foreground, 0.6) }
                 MouseArea { id: settingsMo; anchors.fill: parent; hoverEnabled: true; onClicked: { Quickshell.execDetached(["hypr-settings", "--bluetooth"]); root.close() } }
@@ -151,7 +151,7 @@ BarPopup {
             // scan refresh
             Rectangle {
                 Layout.alignment: Qt.AlignVCenter
-                width: 30; height: 30; radius: 15
+                width: 30; height: 30; radius: width / 2
                 color: scanMo.containsMouse ? Theme.hover : "transparent"
                 Text {
                     id: scanIcon; anchors.centerIn: parent; text: "󰑐"
@@ -170,71 +170,86 @@ BarPopup {
             }
         }
 
-        // ── Off state ───────────────────────────────────────────────────
-        Text {
-            visible: !root.enabled
-            Layout.fillWidth: true; Layout.topMargin: 6; Layout.bottomMargin: 6
-            horizontalAlignment: Text.AlignHCenter
-            text: "Bluetooth is off"
-            font.family: Theme.font; font.pixelSize: Theme.fontSize - 1
-            color: Qt.alpha(Theme.foreground, 0.45)
-        }
-
-        // ── Known / paired devices ──────────────────────────────────────
-        Repeater {
-            model: root.enabled ? root.pairedDevices : []
-            delegate: DevRow {}
-        }
-
-        Text {
-            visible: root.enabled && root.pairedDevices.length === 0
-            Layout.leftMargin: 8; Layout.topMargin: 2; Layout.bottomMargin: 2
-            text: "No saved devices"
-            font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
-            color: Qt.alpha(Theme.foreground, 0.45)
-        }
-
-        // ── Divider + nearby section ────────────────────────────────────
-        ColumnLayout {
-            visible: root.enabled
+        // Scrollable device list
+        Flickable {
             Layout.fillWidth: true
-            spacing: 6
+            Layout.fillHeight: true
+            contentHeight: devContent.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
 
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.topMargin: 6
-                Layout.leftMargin: 8; Layout.rightMargin: 8
+            ColumnLayout {
+                id: devContent
+                width: parent.width
+                spacing: 4
 
-                Rectangle {
-                    Layout.fillWidth: true; implicitHeight: Theme.borderWidth
-                    color: Theme.border; opacity: 0.5
-                }
+                // ── Off state ───────────────────────────────────────────
                 Text {
-                    text: "Nearby"
-                    font.family: Theme.font; font.pixelSize: Theme.fontSize - 3
-                    font.weight: Font.DemiBold
-                    color: Qt.alpha(Theme.foreground, 0.4)
-                    leftPadding: 8; rightPadding: 8
+                    visible: !root.enabled
+                    Layout.fillWidth: true; Layout.topMargin: 6; Layout.bottomMargin: 6
+                    horizontalAlignment: Text.AlignHCenter
+                    text: "Bluetooth is off"
+                    font.family: Theme.font; font.pixelSize: Theme.fontSize - 1
+                    color: Qt.alpha(Theme.foreground, 0.45)
                 }
-                Rectangle {
-                    Layout.fillWidth: true; implicitHeight: Theme.borderWidth
-                    color: Theme.border; opacity: 0.5
+
+                // ── Known / paired devices ──────────────────────────────
+                Repeater {
+                    model: root.enabled ? root.pairedDevices : []
+                    delegate: DevRow {}
                 }
-            }
 
-            Repeater {
-                model: root.nearbyDevices
-                delegate: DevRow {}
-            }
+                Text {
+                    visible: root.enabled && root.pairedDevices.length === 0
+                    Layout.leftMargin: 8; Layout.topMargin: 2; Layout.bottomMargin: 2
+                    text: "No saved devices"
+                    font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
+                    color: Qt.alpha(Theme.foreground, 0.45)
+                }
 
-            Text {
-                visible: root.nearbyDevices.length === 0
-                Layout.fillWidth: true
-                Layout.bottomMargin: 4
-                horizontalAlignment: Text.AlignHCenter
-                text: root.scanning ? "Scanning…" : "No devices nearby"
-                font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
-                color: Qt.alpha(Theme.foreground, 0.4)
+                // ── Divider + nearby section ────────────────────────────
+                ColumnLayout {
+                    visible: root.enabled
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.topMargin: 6
+                        Layout.leftMargin: 8; Layout.rightMargin: 8
+
+                        Rectangle {
+                            Layout.fillWidth: true; implicitHeight: Theme.borderWidth
+                            color: Theme.border; opacity: 0.5
+                        }
+                        Text {
+                            text: "Nearby"
+                            font.family: Theme.font; font.pixelSize: Theme.fontSize - 3
+                            font.weight: Font.DemiBold
+                            color: Qt.alpha(Theme.foreground, 0.4)
+                            leftPadding: 8; rightPadding: 8
+                        }
+                        Rectangle {
+                            Layout.fillWidth: true; implicitHeight: Theme.borderWidth
+                            color: Theme.border; opacity: 0.5
+                        }
+                    }
+
+                    Repeater {
+                        model: root.nearbyDevices
+                        delegate: DevRow {}
+                    }
+
+                    Text {
+                        visible: root.nearbyDevices.length === 0
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: 4
+                        horizontalAlignment: Text.AlignHCenter
+                        text: root.scanning ? "Scanning…" : "No devices nearby"
+                        font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
+                        color: Qt.alpha(Theme.foreground, 0.4)
+                    }
+                }
             }
         }
     }

@@ -56,7 +56,7 @@ BarPopup {
 
         implicitWidth: 26
         implicitHeight: 26
-        radius: 6
+        radius: Theme.smallRadius
         color: navMouse.containsMouse ? Theme.hoverStrong : "transparent"
 
         Text {
@@ -132,7 +132,7 @@ BarPopup {
             Rectangle {
                 Layout.fillWidth: true
                 implicitHeight: 26
-                radius: 6
+                radius: Theme.smallRadius
                 color: titleMouse.containsMouse ? Theme.hover : "transparent"
 
                 Text {
@@ -227,7 +227,7 @@ BarPopup {
 
                             width: root.cellW
                             height: root.cellH
-                            radius: 8
+                            radius: Theme.smallRadius
                             color: isToday ? Theme.blue
                                  : isSelected ? Theme.hoverStrong
                                  : dayMouse.containsMouse ? Theme.hover
