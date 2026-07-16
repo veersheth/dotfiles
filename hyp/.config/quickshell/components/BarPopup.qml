@@ -21,12 +21,30 @@ PanelWindow {
     // focus grab so hover events reach it while the grab is active.
     property var extraGrabWindow: null
 
+    // Seed pill the morph expands from / collapses into
+    readonly property real _pillW: 96
+    readonly property real _pillH: Theme.pillHeight
+
     function toggle() {
         if (shown) { shown = false; return; }
         if (Date.now() - dismissedAt < 150) return;
         shown = true;
     }
     function close() { shown = false; }
+
+    // ── Runtime morph on content resize ───────────────────────────────
+    // When dimensions change while the popup is stable, spring the card
+    // to the new size with the same liquid feel as the open animation.
+    onContentWidthChanged: {
+        if (shown && !enterAnim.running && !exitAnim.running) {
+            morphW.to = contentWidth; morphW.restart()
+        }
+    }
+    onContentHeightChanged: {
+        if (shown && !enterAnim.running && !exitAnim.running) {
+            morphH.to = contentHeight; morphH.restart()
+        }
+    }
 
     screen: anchorItem?.Window.window?.screen ?? null
     anchors.top:  true
@@ -42,31 +60,61 @@ PanelWindow {
     WlrLayershell.margins.top:  Theme.barHeight + 4
     WlrLayershell.margins.left: {
         if (!anchorItem) return 0;
-        const track = anchorItem.x;
-        const mid   = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x;
-        const sx    = screen?.x ?? 0;
-        return Math.max(0, Math.round(mid - sx - implicitWidth / 2));
+        const mid  = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x;
+        const sx   = screen?.x ?? 0;
+        const sw   = screen?.width ?? 9999;
+        const ideal = Math.round(mid - sx - contentWidth / 2);
+        // clamp so the popup never bleeds past the right screen edge (+2 for border surface)
+        return Math.max(0, Math.min(ideal, sw - contentWidth - 2));
     }
 
-    implicitWidth:  contentWidth
-    implicitHeight: contentHeight
+    // +2 on each axis so border antialiased edges are never flush with the
+    // window boundary (compositor clips the very edge, hiding the border).
+    implicitWidth:  contentWidth  + 2
+    implicitHeight: contentHeight + 2
 
     onShownChanged: {
         if (shown) {
             exitAnim.stop()
-            card.opacity = 0
+            morphW.stop(); morphH.stop()
+            // Snap card to seed pill and make window visible
+            card.x      = (root.contentWidth  - root._pillW) / 2
+            card.y      = 0
+            card.width  = root._pillW
+            card.height = root._pillH
+            card.radius = root._pillH / 2
+            contentItem.opacity = 0
             visible = true
-            enterAnim.restart()
+            enterTimer.restart()
         } else {
+            enterTimer.stop()
             enterAnim.stop()
+            morphW.stop(); morphH.stop()
             exitAnim.restart()
+        }
+    }
+
+    Timer {
+        id: enterTimer
+        interval: 0
+        onTriggered: {
+            // Re-snap pill — layout may have settled during the event-loop tick
+            card.x      = (root.contentWidth  - root._pillW) / 2
+            card.width  = root._pillW
+            card.height = root._pillH
+            card.radius = root._pillH / 2
+            enterAnim.restart()
         }
     }
 
     Rectangle {
         id: card
-        anchors.fill: parent
-        radius: 14
+
+        x: 0; y: 0
+        width: root.contentWidth
+        height: root.contentHeight
+        radius: Theme.popupRadius
+
         color: Theme.surface
         border.color: Theme.border
         border.width: Theme.borderWidth
@@ -75,21 +123,49 @@ PanelWindow {
         Item {
             id: contentItem
             anchors.fill: parent
+            opacity: 0
         }
     }
 
-    NumberAnimation {
+    // ── Runtime springs ────────────────────────────────────────────────
+    SpringAnimation { id: morphW; target: card; property: "width";  spring: 4.5; damping: 0.38; epsilon: 0.4 }
+    SpringAnimation { id: morphH; target: card; property: "height"; spring: 3.0; damping: 0.34; epsilon: 0.4 }
+
+    // ── Enter: pill → full (liquid blob physics) ───────────────────────
+    // Width and x expand faster and bounce back once. Height is softer and
+    // lags behind with more overshoot, so the shape momentarily goes wider
+    // than it is tall before settling — a fluid blob bloom. Radius also
+    // springs past the target (momentarily rounder) then settles.
+    ParallelAnimation {
         id: enterAnim
-        target: card; property: "opacity"
-        from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic
+        SpringAnimation { target: card; property: "x";      to: 0;                  spring: 4.5; damping: 0.38; epsilon: 0.4 }
+        SpringAnimation { target: card; property: "width";  to: root.contentWidth;  spring: 4.5; damping: 0.38; epsilon: 0.4 }
+        SpringAnimation { target: card; property: "height"; to: root.contentHeight; spring: 3.0; damping: 0.34; epsilon: 0.4 }
+        SpringAnimation { target: card; property: "radius"; to: Theme.popupRadius;  spring: 2.0; damping: 0.44; epsilon: 0.1 }
+        // Content fades in after the card shape is clearly established
+        SequentialAnimation {
+            PauseAnimation  { duration: 160 }
+            NumberAnimation { target: contentItem; property: "opacity"; to: 1; duration: 240; easing.type: Easing.OutCubic }
+        }
+        onFinished: {
+            // Sync if content dimensions changed during the spring
+            if (Math.abs(card.width  - root.contentWidth)  > 0.5) { morphW.to = root.contentWidth;  morphW.restart() }
+            if (Math.abs(card.height - root.contentHeight) > 0.5) { morphH.to = root.contentHeight; morphH.restart() }
+        }
     }
+
+    // ── Exit: full → pill → gone (fast, snappy) ───────────────────────
     SequentialAnimation {
         id: exitAnim
-        NumberAnimation {
-            target: card; property: "opacity"
-            to: 0; duration: 120; easing.type: Easing.InCubic
+        ParallelAnimation {
+            NumberAnimation { target: contentItem; property: "opacity"; to: 0;                              duration: 80;  easing.type: Easing.InCubic }
+            NumberAnimation { target: card; property: "x";      to: (root.contentWidth - root._pillW) / 2; duration: 240; easing.type: Easing.InBack; easing.overshoot: 0.35 }
+            NumberAnimation { target: card; property: "width";  to: root._pillW;                           duration: 240; easing.type: Easing.InBack; easing.overshoot: 0.35 }
+            NumberAnimation { target: card; property: "height"; to: root._pillH;                           duration: 220; easing.type: Easing.InBack; easing.overshoot: 0.35 }
+            NumberAnimation { target: card; property: "radius"; to: root._pillH / 2;                       duration: 200; easing.type: Easing.InCubic }
         }
-        ScriptAction { script: root.visible = false }
+        PauseAnimation  { duration: 50 }
+        ScriptAction    { script: root.visible = false }
     }
 
     HyprlandFocusGrab {

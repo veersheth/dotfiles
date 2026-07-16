@@ -63,7 +63,7 @@ PanelWindow {
     Rectangle {
         id: card
         anchors.fill: parent
-        radius: 12
+        radius: Theme.popupRadius
         color: Theme.surface
         border.color: Theme.border
         border.width: Theme.borderWidth

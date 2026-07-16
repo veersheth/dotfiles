@@ -127,7 +127,7 @@ Rectangle {
                         required property var modelData
                         implicitWidth:  actionText.implicitWidth + 20
                         implicitHeight: 26
-                        radius: 6
+                        radius: Theme.smallRadius
                         color: actionMouse.containsMouse ? Theme.hoverStrong : Theme.hover
 
                         Text {

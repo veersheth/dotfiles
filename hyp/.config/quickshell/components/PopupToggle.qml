@@ -15,7 +15,7 @@ Rectangle {
     Behavior on color { ColorAnimation { duration: 160 } }
 
     Rectangle {
-        width: 16; height: 16; radius: 8
+        width: 16; height: 16; radius: width / 2
         color: "white"
         anchors.verticalCenter: parent.verticalCenter
         x: root.checked ? parent.width - width - 3 : 3

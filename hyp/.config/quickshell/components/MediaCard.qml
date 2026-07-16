@@ -54,55 +54,6 @@ Item {
         onTriggered: root.syncPos()
     }
 
-    // ── Dominant colour extractor ──────────────────────────────────────
-    Canvas {
-        id: colorExtract
-        width: 24; height: 24; visible: false
-        property string pending: ""
-        function extract(url) {
-            if (!url) { root.accentColor = Theme.blue; return; }
-            pending = url; loadImage(url);
-        }
-        onImageLoaded: requestPaint()
-        onPaint: {
-            const ctx = getContext("2d");
-            ctx.clearRect(0, 0, width, height);
-            ctx.drawImage(pending, 0, 0, width, height);
-            const d = ctx.getImageData(0, 0, width, height).data;
-            let r = 0, g = 0, b = 0;
-            const n = d.length / 4;
-            for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i+1]; b += d[i+2]; }
-            r /= n; g /= n; b /= n;
-            const lum = r * 0.299 + g * 0.587 + b * 0.114;
-            const sat = 2.4;
-            r = Math.min(255, Math.max(0, lum + (r - lum) * sat));
-            g = Math.min(255, Math.max(0, lum + (g - lum) * sat));
-            b = Math.min(255, Math.max(0, lum + (b - lum) * sat));
-            const peak = Math.max(r, g, b);
-            if (peak < 130) { const f = 160 / Math.max(1, peak); r = Math.min(255, r*f); g = Math.min(255, g*f); b = Math.min(255, b*f); }
-            root.accentColor = Qt.rgba(r / 255, g / 255, b / 255, 1);
-        }
-    }
-
-    // ── Control button ─────────────────────────────────────────────────
-    component ControlBtn: Rectangle {
-        id: btn
-        property alias icon: lbl.text
-        property bool  active: false
-        signal activated()
-        implicitWidth: 36; implicitHeight: 36; radius: width / 2
-        color: mo.containsMouse && enabled ? Theme.hover : "transparent"
-        Text {
-            id: lbl; anchors.centerIn: parent
-            font.family: Theme.nerdFont; font.pixelSize: 17
-            color: btn.active ? root.accentColor
-                 : Qt.alpha(Theme.foreground, btn.enabled ? 1 : 0.3)
-            Behavior on color { ColorAnimation { duration: 400 } }
-        }
-        MouseArea { id: mo; anchors.fill: parent; hoverEnabled: true; onClicked: btn.activated() }
-    }
-
-    // ── Layout ─────────────────────────────────────────────────────────
     ColumnLayout {
         id: col
         anchors { left: parent.left; right: parent.right; top: parent.top }
@@ -112,6 +63,7 @@ Item {
         Item {
             Layout.fillWidth: true
             Layout.preferredHeight: 234
+            Layout.topMargin: 20
             clip: true
 
             Rectangle {
@@ -215,7 +167,7 @@ Item {
                         duration: Math.max(0, titleText.implicitWidth - titleText.parent.width) * 22
                         easing.type: Easing.Linear
                     }
-                    PauseAnimation  { duration: 1500 }
+                    PauseAnimation  { duration: 800 }
                     ScriptAction    { script: titleText.x = 0 }
                 }
             }
@@ -290,33 +242,185 @@ Item {
         }
 
         // ── Controls ───────────────────────────────────────────────────
+        // Prev/Play/Next are Canvas-drawn for clean geometry.
+        // Shuffle/Loop stay as nerd font (complex curved arrows).
         RowLayout {
             Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: 14; Layout.bottomMargin: 18
-            spacing: 6
+            Layout.topMargin: 2; Layout.bottomMargin: 20
+            spacing: 0
 
-            ControlBtn { icon: "󰒝"; enabled: root.player?.shuffleSupported ?? false; active: root.player?.shuffle ?? false; onActivated: root.player.shuffle = !root.player.shuffle }
-            ControlBtn { icon: "󰒮"; enabled: root.player?.canGoPrevious ?? false; onActivated: root.player.previous() }
-
-            Rectangle {
-                implicitWidth: 52; implicitHeight: 52; radius: 26
-                color: playMo.containsMouse ? Qt.lighter(root.accentColor, 1.15) : root.accentColor
-                opacity: (root.player?.canTogglePlaying ?? false) ? 1 : 0.4
-                Behavior on color { ColorAnimation { duration: 200 } }
-                Text { anchors.centerIn: parent; text: root.playing ? "󰏤" : "󰐊"; font.family: Theme.nerdFont; font.pixelSize: 22; color: "white" }
-                MouseArea { id: playMo; anchors.fill: parent; hoverEnabled: true; enabled: root.player?.canTogglePlaying ?? false; onClicked: root.player.togglePlaying() }
+            Text {
+                text: "󰒝"
+                font.family: Theme.nerdFont; font.pixelSize: 19
+                color: (root.player?.shuffle ?? false)
+                    ? root.accentColor
+                    : Qt.alpha(Theme.foreground, (root.player?.shuffleSupported ?? false) ? 0.48 : 0.18)
+                Behavior on color { ColorAnimation { duration: 250 } }
+                MouseArea {
+                    id: shuffleMo; anchors.fill: parent; anchors.margins: -10
+                    enabled: root.player?.shuffleSupported ?? false
+                    onClicked: root.player.shuffle = !root.player.shuffle
+                }
             }
 
-            ControlBtn { icon: "󰒭"; enabled: root.player?.canGoNext ?? false; onActivated: root.player.next() }
-            ControlBtn {
-                icon: root.player?.loopState === MprisLoopState.Track ? "󰑘" : "󰑖"
-                enabled: root.player?.loopSupported ?? false
-                active: root.player !== null && root.player.loopState !== MprisLoopState.None
-                onActivated: {
-                    const s = root.player.loopState;
-                    root.player.loopState = s === MprisLoopState.None     ? MprisLoopState.Playlist
-                                          : s === MprisLoopState.Playlist ? MprisLoopState.Track
-                                                                           : MprisLoopState.None;
+            Item { implicitWidth: 14 }
+
+            Canvas {
+                id: prevIcon
+                implicitWidth: 36; implicitHeight: 36
+                opacity: (root.player?.canGoPrevious ?? false) ? 1 : 0.22
+                Behavior on opacity { NumberAnimation { duration: 200 } }
+                onPaint: {
+                    const c = getContext("2d"); c.reset()
+                    const rrect = (x, y, w, h, r) => {
+                        c.beginPath(); c.moveTo(x+r,y)
+                        c.lineTo(x+w-r,y); c.arcTo(x+w,y,x+w,y+r,r)
+                        c.lineTo(x+w,y+h-r); c.arcTo(x+w,y+h,x+w-r,y+h,r)
+                        c.lineTo(x+r,y+h); c.arcTo(x,y+h,x,y+h-r,r)
+                        c.lineTo(x,y+r); c.arcTo(x,y,x+r,y,r); c.closePath()
+                    }
+                    const col = Qt.alpha(Theme.foreground, 0.88)
+                    c.fillStyle = col; c.strokeStyle = col
+                    const s = width, cx = s/2, cy = s/2
+                    const bw = s*0.14, bh = s*0.52, barX = cx - s*0.31
+                    rrect(barX, cy-bh/2, bw, bh, bw/2); c.fill()
+                    const tl = barX+bw+s*0.04, tr = cx+s*0.27, th = s*0.48
+                    c.lineJoin = "round"; c.lineWidth = s*0.10
+                    c.beginPath(); c.moveTo(tr,cy-th/2); c.lineTo(tl,cy); c.lineTo(tr,cy+th/2); c.closePath()
+                    c.fill(); c.stroke()
+                }
+                MouseArea {
+                    id: prevMo; anchors.fill: parent; anchors.margins: -8
+                    enabled: root.player?.canGoPrevious ?? false
+                    onClicked: root.player.previous()
+                }
+            }
+
+            Item { implicitWidth: 18 }
+
+            Canvas {
+                id: playIcon
+                implicitWidth: 52; implicitHeight: 52
+                opacity: (root.player?.canTogglePlaying ?? false) ? 1 : 0.25
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                // 0 = play triangle, 1 = pause bars; animates on playing change
+                property real morph: root.playing ? 1 : 0
+                Behavior on morph { NumberAnimation { duration: 260; easing.type: Easing.InOutCubic } }
+                onMorphChanged: requestPaint()
+
+                onPaint: {
+                    const c = getContext("2d"); c.reset()
+                    const rrect = (x, y, w, h, r) => {
+                        c.beginPath(); c.moveTo(x+r,y)
+                        c.lineTo(x+w-r,y); c.arcTo(x+w,y,x+w,y+r,r)
+                        c.lineTo(x+w,y+h-r); c.arcTo(x+w,y+h,x+w-r,y+h,r)
+                        c.lineTo(x+r,y+h); c.arcTo(x,y+h,x,y+h-r,r)
+                        c.lineTo(x,y+r); c.arcTo(x,y,x+r,y,r); c.closePath()
+                    }
+                    const s = width, cx = s/2, cy = s/2
+                    const t = playIcon.morph
+
+                    // Play triangle — cross-fades out
+                    if (t < 1) {
+                          c.globalAlpha = 1 - t
+                         c.fillStyle = root.accentColor
+                          c.strokeStyle = root.accentColor
+
+                          const offsetX = -s * 0.05 // move left
+                          const h = s * 0.42
+                          const left = cx - s * 0.10 + offsetX
+                          const right = cx + s * 0.22 + offsetX
+
+                          c.lineJoin = "round"
+                          c.lineWidth = s * 0.09
+
+                          c.beginPath()
+                          c.moveTo(left, cy - h / 2)
+                          c.lineTo(right, cy)
+                          c.lineTo(left, cy + h / 2)
+                          c.closePath()
+                          c.fill()
+                          c.stroke()
+                        // c.globalAlpha = 1 - t
+                        // c.fillStyle = root.accentColor; c.strokeStyle = root.accentColor
+                        // const h = s*0.52, left = cx-s*0.12, right = cx+s*0.28
+                        // c.lineJoin = "round"; c.lineWidth = s*0.11
+                        // c.beginPath(); c.moveTo(left,cy-h/2); c.lineTo(right,cy); c.lineTo(left,cy+h/2); c.closePath()
+                        // c.fill(); c.stroke()
+                    }
+
+                    // Pause bars — cross-fade in
+                    if (t > 0) {
+                        c.globalAlpha = t
+                        c.fillStyle = root.accentColor
+                        const bw = s*0.165, bh = s*0.52, gap = s*0.095
+                        rrect(cx-gap/2-bw, cy-bh/2, bw, bh, bw/2); c.fill()
+                        rrect(cx+gap/2,    cy-bh/2, bw, bh, bw/2); c.fill()
+                    }
+                }
+                Connections {
+                    target: root
+                    function onAccentColorChanged() { playIcon.requestPaint() }
+                }
+                MouseArea {
+                    id: playMo; anchors.fill: parent; anchors.margins: -8
+                    enabled: root.player?.canTogglePlaying ?? false
+                    onClicked: root.player.togglePlaying()
+                }
+            }
+
+            Item { implicitWidth: 18 }
+
+            Canvas {
+                id: nextIcon
+                implicitWidth: 36; implicitHeight: 36
+                opacity: (root.player?.canGoNext ?? false) ? 1 : 0.22
+                Behavior on opacity { NumberAnimation { duration: 200 } }
+                onPaint: {
+                    const c = getContext("2d"); c.reset()
+                    const rrect = (x, y, w, h, r) => {
+                        c.beginPath(); c.moveTo(x+r,y)
+                        c.lineTo(x+w-r,y); c.arcTo(x+w,y,x+w,y+r,r)
+                        c.lineTo(x+w,y+h-r); c.arcTo(x+w,y+h,x+w-r,y+h,r)
+                        c.lineTo(x+r,y+h); c.arcTo(x,y+h,x,y+h-r,r)
+                        c.lineTo(x,y+r); c.arcTo(x,y,x+r,y,r); c.closePath()
+                    }
+                    const col = Qt.alpha(Theme.foreground, 0.88)
+                    c.fillStyle = col; c.strokeStyle = col
+                    const s = width, cx = s/2, cy = s/2
+                    const barX = cx+s*0.17, bw = s*0.14, bh = s*0.52
+                    const tl = cx-s*0.27, tr = barX-s*0.04, th = s*0.48
+                    c.lineJoin = "round"; c.lineWidth = s*0.10
+                    c.beginPath(); c.moveTo(tl,cy-th/2); c.lineTo(tr,cy); c.lineTo(tl,cy+th/2); c.closePath()
+                    c.fill(); c.stroke()
+                    rrect(barX, cy-bh/2, bw, bh, bw/2); c.fill()
+                }
+                MouseArea {
+                    id: nextMo; anchors.fill: parent; anchors.margins: -8
+                    enabled: root.player?.canGoNext ?? false
+                    onClicked: root.player.next()
+                }
+            }
+
+            Item { implicitWidth: 14 }
+
+            Text {
+                text: root.player?.loopState === MprisLoopState.Track ? "󰑘" : "󰑖"
+                font.family: Theme.nerdFont; font.pixelSize: 19
+                color: (root.player !== null && root.player.loopState !== MprisLoopState.None)
+                    ? root.accentColor
+                    : Qt.alpha(Theme.foreground, (root.player?.loopSupported ?? false) ? 0.48 : 0.18)
+                Behavior on color { ColorAnimation { duration: 250 } }
+                MouseArea {
+                    id: loopMo; anchors.fill: parent; anchors.margins: -10
+                    enabled: root.player?.loopSupported ?? false
+                    onClicked: {
+                        const s = root.player.loopState
+                        root.player.loopState = s === MprisLoopState.None     ? MprisLoopState.Playlist
+                                              : s === MprisLoopState.Playlist ? MprisLoopState.Track
+                                                                              : MprisLoopState.None
+                    }
                 }
             }
         }

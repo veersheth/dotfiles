@@ -8,10 +8,10 @@ import QtQuick
 
 QtObject {
     // Colors
-    readonly property color background: "#EE232323"   // #00000088
-    readonly property color surface:    "#ff262626"   // #262626ff
+    readonly property color background: "#ae000000"   // #00000088
+    readonly property color surface:    "#EE000000"   // #262626ff
     readonly property color border:     "#66ffffff"   // #ffffff22
-    readonly property color barBorder:  "#55ffffff"   // bottom border of the status bar
+    readonly property color barBorder:  "#22ffffff"   // bottom border of the status bar
     readonly property color foreground: "#ffffffff"   // #ffffffff
     readonly property color onAccent:   "#ff1a1a1a"   // dark text on accent fills
     readonly property color hover:      "#22ffffff"   // subtle hover wash
@@ -29,11 +29,13 @@ QtObject {
 
     // Metrics
     readonly property int barHeight:    34
-    readonly property int radius:       20    // pill radius + screen "melt" corner radius
+    readonly property int radius:       24    // large pill containers, dock card
+    readonly property int popupRadius:  32    // popup cards, floating labels
+    readonly property int itemRadius:   10    // list rows, interactive hover tiles
+    readonly property int smallRadius:  8     // small chips, action buttons, cells
     readonly property int borderWidth:  1
     readonly property int pillHeight:   28    // window class / clock pills
     readonly property int moduleSpacing: 0
-    readonly property int popupRadius:  26
 
     // Animation
     readonly property int animDuration: 200

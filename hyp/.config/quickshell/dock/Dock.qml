@@ -101,7 +101,7 @@ Variants {
             y: parent.height - root.cardH - 32
             width: tipText.implicitWidth + 16
             height: 24
-            radius: 12
+            radius: Theme.popupRadius
             color: Theme.surface
             border.width: Theme.borderWidth
             border.color: Theme.border
@@ -128,7 +128,7 @@ Variants {
             anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
             width:  root.cardW
             height: root.cardH
-            radius: 18
+            radius: Theme.radius
             color:  Theme.dockBackground
             border.color: Theme.border
             border.width: Theme.borderWidth
@@ -165,7 +165,7 @@ Variants {
                         Rectangle {
                             anchors.horizontalCenter: parent.horizontalCenter
                             y: icon.y - 2
-                            width: 46; height: 46; radius: 12
+                            width: 46; height: 46; radius: Theme.popupRadius
                             color: Theme.hover
                             opacity: slotMouse.containsMouse ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: 120 } }
@@ -184,7 +184,7 @@ Variants {
                         Rectangle {
                             anchors.horizontalCenter: parent.horizontalCenter
                             y: icon.y
-                            width: 42; height: 42; radius: 11
+                            width: 42; height: 42; radius: Theme.itemRadius
                             visible: slot.iconSrc === ""
                             color: Theme.surface
                             border.width: Theme.borderWidth
@@ -202,7 +202,7 @@ Variants {
                         // Running indicator dot
                         Rectangle {
                             anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
-                            width: 4; height: 4; radius: 2
+                            width: 4; height: 4; radius: height / 2
                             visible: slot.running
                             color: slot.toplevel?.activated ?? false
                                 ? Theme.foreground

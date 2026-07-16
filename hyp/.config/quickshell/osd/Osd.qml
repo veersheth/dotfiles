@@ -233,7 +233,7 @@ Scope {
         Rectangle {
             id: card
             anchors.fill: parent
-            radius: 14
+            radius: Theme.popupRadius
             color: Theme.surface
             border.color: Theme.border
             border.width: Theme.borderWidth
@@ -283,13 +283,13 @@ Scope {
                     verticalCenter: parent.verticalCenter
                 }
                 height: 6
-                radius: 3
+                radius: height / 2
                 color:  Theme.hover
 
                 Rectangle {
                     anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
                     width: Math.min(1, root.value) * parent.width
-                    radius: 3
+                    radius: height / 2
                     color:  root.muted ? Qt.alpha(Theme.foreground, 0.35) : Theme.blue
                     Behavior on width { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
                 }
