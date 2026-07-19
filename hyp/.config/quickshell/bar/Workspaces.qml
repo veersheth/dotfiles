@@ -10,9 +10,9 @@ Rectangle {
     implicitWidth: row.implicitWidth + 16
     implicitHeight: Theme.pillHeight
     radius: height / 2
-    color: Theme.surface
-    border.color: Theme.border
-    border.width: Theme.borderWidth
+    color: "transparent"
+    // border.color: Theme.border
+    // border.width: Theme.borderWidth
     Layout.alignment: Qt.AlignVCenter
 
     RowLayout {
@@ -44,7 +44,6 @@ Rectangle {
                         : wsMouse.containsMouse
                             ? Qt.alpha(Theme.foreground, 0.6)
                             : Qt.alpha(Theme.foreground, 0.3)
-                    Behavior on color { ColorAnimation { duration: 100 } }
                 }
 
                 MouseArea {

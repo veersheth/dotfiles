@@ -86,10 +86,7 @@ Variants {
                 Tray {}
                 Caffeine {}
                 NotificationBell {}
-                Volume {}
-                Brightness {}
-                BluetoothIndicator {}
-                WifiIndicator {}
+                QuickSettings {}
                 Clock {}
                 Battery {}
             }

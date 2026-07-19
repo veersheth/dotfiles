@@ -270,12 +270,12 @@ Item {
     BarPopup {
         id: picker
         anchorItem: root
-        contentWidth:  200
-        contentHeight: pcol.implicitHeight + 28
+        contentWidth:  Theme.listWidth
+        contentHeight: pcol.implicitHeight
 
-        ColumnLayout {
+        CommonList {
             id: pcol
-            anchors { top: parent.top; left: parent.left; right: parent.right; margins: 14 }
+            anchors { top: parent.top; left: parent.left; right: parent.right }
             spacing: 2
 
             // Active state header

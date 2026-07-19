@@ -9,9 +9,10 @@ import qs.common
 PanelWindow {
     id: root
 
-    default property alias content: contentItem.data
-    property real contentWidth: 200
+    default property alias content: paddedContent.data
+    property real contentWidth:  200
     property real contentHeight: 200
+    property int  contentPadding: 24
     property bool shown: false
     property Item anchorItem: null
     property double dismissedAt: 0
@@ -124,12 +125,16 @@ PanelWindow {
             id: contentItem
             anchors.fill: parent
             opacity: 0
+            Item {
+                id: paddedContent
+                anchors { fill: parent; margins: root.contentPadding }
+            }
         }
     }
 
     // ── Runtime springs ────────────────────────────────────────────────
-    SpringAnimation { id: morphW; target: card; property: "width";  spring: 4.5; damping: 0.38; epsilon: 0.4 }
-    SpringAnimation { id: morphH; target: card; property: "height"; spring: 3.0; damping: 0.34; epsilon: 0.4 }
+    SpringAnimation { id: morphW; target: card; property: "width";  spring: 6.5; damping: 0.42; epsilon: 0.4 }
+    SpringAnimation { id: morphH; target: card; property: "height"; spring: 4.5; damping: 0.38; epsilon: 0.4 }
 
     // ── Enter: pill → full (liquid blob physics) ───────────────────────
     // Width and x expand faster and bounce back once. Height is softer and
@@ -138,14 +143,14 @@ PanelWindow {
     // springs past the target (momentarily rounder) then settles.
     ParallelAnimation {
         id: enterAnim
-        SpringAnimation { target: card; property: "x";      to: 0;                  spring: 4.5; damping: 0.38; epsilon: 0.4 }
-        SpringAnimation { target: card; property: "width";  to: root.contentWidth;  spring: 4.5; damping: 0.38; epsilon: 0.4 }
-        SpringAnimation { target: card; property: "height"; to: root.contentHeight; spring: 3.0; damping: 0.34; epsilon: 0.4 }
-        SpringAnimation { target: card; property: "radius"; to: Theme.popupRadius;  spring: 2.0; damping: 0.44; epsilon: 0.1 }
+        SpringAnimation { target: card; property: "x";      to: 0;                  spring: 6.5; damping: 0.42; epsilon: 0.4 }
+        SpringAnimation { target: card; property: "width";  to: root.contentWidth;  spring: 6.5; damping: 0.42; epsilon: 0.4 }
+        SpringAnimation { target: card; property: "height"; to: root.contentHeight; spring: 4.5; damping: 0.38; epsilon: 0.4 }
+        SpringAnimation { target: card; property: "radius"; to: Theme.popupRadius;  spring: 3.0; damping: 0.48; epsilon: 0.1 }
         // Content fades in after the card shape is clearly established
         SequentialAnimation {
-            PauseAnimation  { duration: 160 }
-            NumberAnimation { target: contentItem; property: "opacity"; to: 1; duration: 240; easing.type: Easing.OutCubic }
+            PauseAnimation  { duration: 100 }
+            NumberAnimation { target: contentItem; property: "opacity"; to: 1; duration: 150; easing.type: Easing.OutCubic }
         }
         onFinished: {
             // Sync if content dimensions changed during the spring
@@ -158,14 +163,20 @@ PanelWindow {
     SequentialAnimation {
         id: exitAnim
         ParallelAnimation {
-            NumberAnimation { target: contentItem; property: "opacity"; to: 0;                              duration: 80;  easing.type: Easing.InCubic }
-            NumberAnimation { target: card; property: "x";      to: (root.contentWidth - root._pillW) / 2; duration: 240; easing.type: Easing.InBack; easing.overshoot: 0.35 }
-            NumberAnimation { target: card; property: "width";  to: root._pillW;                           duration: 240; easing.type: Easing.InBack; easing.overshoot: 0.35 }
-            NumberAnimation { target: card; property: "height"; to: root._pillH;                           duration: 220; easing.type: Easing.InBack; easing.overshoot: 0.35 }
-            NumberAnimation { target: card; property: "radius"; to: root._pillH / 2;                       duration: 200; easing.type: Easing.InCubic }
+            NumberAnimation { target: contentItem; property: "opacity"; to: 0;                              duration: 50;  easing.type: Easing.InCubic }
+            NumberAnimation { target: card; property: "x";      to: (root.contentWidth - root._pillW) / 2; duration: 160; easing.type: Easing.InBack; easing.overshoot: 0.35 }
+            NumberAnimation { target: card; property: "width";  to: root._pillW;                           duration: 160; easing.type: Easing.InBack; easing.overshoot: 0.35 }
+            NumberAnimation { target: card; property: "height"; to: root._pillH;                           duration: 150; easing.type: Easing.InBack; easing.overshoot: 0.35 }
+            NumberAnimation { target: card; property: "radius"; to: root._pillH / 2;                       duration: 130; easing.type: Easing.InCubic }
         }
-        PauseAnimation  { duration: 50 }
+        PauseAnimation  { duration: 30 }
         ScriptAction    { script: root.visible = false }
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.shown
+        onActivated: root.close()
     }
 
     HyprlandFocusGrab {

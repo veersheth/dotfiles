@@ -16,10 +16,11 @@ BarPopup {
     id: root
 
     property var menuHandle: null
-    property real trayContentWidth: 240   // width of the sibling tray popup
+    contentPadding: 12
+    property real trayContentWidth: 220 + 2 * contentPadding   // must match sibling tray popup contentWidth
 
-    contentWidth: col.implicitWidth + 28
-    contentHeight: col.implicitHeight + 28
+    contentWidth:  220 + 2 * contentPadding
+    contentHeight: col.implicitHeight + 2 * contentPadding
 
     // Don't steal focus from the tray popup; mouse clicks still reach us.
     grabFocus: false
@@ -40,6 +41,14 @@ BarPopup {
         return Math.max(4, Math.round(trayRight + 4));
     }
 
+    // Delay showing until DBus delivers the initial menu items, so the enter
+    // animation targets the correct height instead of morphing up from empty.
+    Timer {
+        id: showDelay
+        interval: 60
+        onTriggered: root.shown = true
+    }
+
     function openFor(item, menu) {
         if (shown) {
             if (anchorItem === item) {
@@ -56,7 +65,7 @@ BarPopup {
             return;
         anchorItem = item;
         menuHandle = menu;
-        shown = true;
+        showDelay.restart()
     }
 
     QsMenuOpener {
@@ -157,9 +166,9 @@ BarPopup {
         }
     }
 
-    ColumnLayout {
+    CommonList {
         id: col
-        anchors.centerIn: parent
+        anchors { top: parent.top; left: parent.left; right: parent.right }
         spacing: 1
 
         Repeater {

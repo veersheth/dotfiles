@@ -77,7 +77,7 @@ BarPopup {
 
     SystemClock {
         id: clock
-        precision: SystemClock.Seconds
+        precision: SystemClock.Minutes
     }
 
     ColumnLayout {
@@ -88,37 +88,6 @@ BarPopup {
         WheelHandler {
             target: null
             onWheel: event => root.addMonths(event.angleDelta.y < 0 ? 1 : -1)
-        }
-
-        // ── Large clock ───────────────────────────────────────────────
-        Item {
-            Layout.fillWidth: true
-            implicitHeight: bigTime.implicitHeight + 50
-
-            // AP must be in the same format string as hh
-            readonly property string full: Qt.formatDateTime(clock.date, "hh:mm:ss AP")
-
-            Row {
-                anchors.centerIn: parent
-                spacing: 6
-
-                Text {
-                    id: bigTime
-                    text: parent.parent.full.split(" ")[0]
-                    font.family: Theme.font
-                    font.pixelSize: 48
-                    font.weight: Font.DemiBold
-                    color: Theme.foreground
-                }
-                Text {
-                    anchors.baseline: bigTime.baseline
-                    text: parent.parent.full.split(" ")[1]
-                    font.family: Theme.font
-                    font.pixelSize: 18
-                    font.weight: Font.DemiBold
-                    color: Qt.alpha(Theme.foreground, 0.45)
-                }
-            }
         }
 
         // ── Header: « ‹ Month Year › » ────────────────────────────────

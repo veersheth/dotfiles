@@ -7,8 +7,9 @@ BarPopup {
 
     required property var player
 
-    contentWidth:  300
-    contentHeight: card.implicitHeight + 2
+    contentPadding: 0
+    contentWidth:  card.implicitWidth
+    contentHeight: card.implicitHeight
 
     onShownChanged: if (shown) card.syncPos()
     onPlayerChanged: if (!player) close()

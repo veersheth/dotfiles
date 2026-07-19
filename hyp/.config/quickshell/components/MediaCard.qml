@@ -197,40 +197,15 @@ Item {
             Layout.leftMargin: 18; Layout.rightMargin: 18; spacing: 6
             visible: root.length > 0
 
-            Item {
-                Layout.fillWidth: true; implicitHeight: 20
-                Rectangle {
-                    id: seekTrack
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width; height: 4; radius: 2
-                    color: Qt.alpha(Theme.foreground, 0.12)
-                    Rectangle {
-                        anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                        width: root.seekFrac * parent.width; radius: 2
-                        color: root.accentColor
-                        Behavior on color { ColorAnimation { duration: 400 } }
-                        Behavior on width {
-                            enabled: !root.seeking
-                            NumberAnimation { duration: 300; easing.type: Easing.Linear }
-                        }
-                    }
-                    Rectangle {
-                        x: Math.max(0, Math.min(seekTrack.width - width, root.seekFrac * seekTrack.width - width / 2))
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 14; height: 14; radius: 7; color: "white"; z: 1
-                        scale: seekArea.containsMouse || seekArea.pressed ? 1 : 0
-                        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.5 } }
-                    }
-                    MouseArea {
-                        id: seekArea
-                        anchors { fill: parent; margins: -8 }
-                        hoverEnabled: true
-                        enabled: root.player?.canSeek ?? false
-                        onPressed:         mouse => { root.seeking = true;  root.seekPreviewFrac = Math.max(0, Math.min(1, mouse.x / seekTrack.width)) }
-                        onPositionChanged: mouse => { if (pressed) root.seekPreviewFrac = Math.max(0, Math.min(1, mouse.x / seekTrack.width)) }
-                        onReleased:        mouse => { root.player.position = root.seekPreviewFrac * root.length; root.syncPos(); root.seeking = false }
-                    }
-                }
+            CommonSlider {
+                Layout.fillWidth: true
+                value:       root.seekFrac * root.length
+                maxValue:    Math.max(0.1, root.length)
+                fillColor:   root.accentColor
+                interactive: root.player?.canSeek ?? false
+                onPressed:   root.seeking = true
+                onMoved:   v => root.seekPreviewFrac = root.length > 0 ? v / root.length : 0
+                onReleased: v => { root.player.position = v; root.syncPos(); root.seeking = false }
             }
 
             RowLayout {
@@ -300,7 +275,7 @@ Item {
 
             Canvas {
                 id: playIcon
-                implicitWidth: 52; implicitHeight: 52
+                implicitWidth: 56; implicitHeight: 56
                 opacity: (root.player?.canTogglePlaying ?? false) ? 1 : 0.25
                 Behavior on opacity { NumberAnimation { duration: 150 } }
 
@@ -324,8 +299,8 @@ Item {
                     // Play triangle — cross-fades out
                     if (t < 1) {
                           c.globalAlpha = 1 - t
-                         c.fillStyle = root.accentColor
-                          c.strokeStyle = root.accentColor
+                         c.fillStyle = Qt.alpha(Theme.foreground, 0.88)
+                          c.strokeStyle = Qt.alpha(Theme.foreground, 0.88)
 
                           const offsetX = -s * 0.05 // move left
                           const h = s * 0.42
@@ -353,15 +328,11 @@ Item {
                     // Pause bars — cross-fade in
                     if (t > 0) {
                         c.globalAlpha = t
-                        c.fillStyle = root.accentColor
+                        c.fillStyle = Qt.alpha(Theme.foreground, 0.88)
                         const bw = s*0.165, bh = s*0.52, gap = s*0.095
                         rrect(cx-gap/2-bw, cy-bh/2, bw, bh, bw/2); c.fill()
                         rrect(cx+gap/2,    cy-bh/2, bw, bh, bw/2); c.fill()
                     }
-                }
-                Connections {
-                    target: root
-                    function onAccentColorChanged() { playIcon.requestPaint() }
                 }
                 MouseArea {
                     id: playMo; anchors.fill: parent; anchors.margins: -8

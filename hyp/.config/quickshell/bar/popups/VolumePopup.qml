@@ -8,8 +8,8 @@ import qs.components
 BarPopup {
     id: root
 
-    contentWidth:  300
-    contentHeight: 280
+    contentWidth:  Theme.listWidth + 2 * contentPadding
+    contentHeight: col.implicitHeight + 2 * contentPadding
 
     readonly property var  sink:   Pipewire.defaultAudioSink
     readonly property real volume: sink?.audio?.volume ?? 0
@@ -20,9 +20,19 @@ BarPopup {
 
     PwObjectTracker { objects: root.audioSinks }
 
+    signal escaped()
+    onEscaped: close()
+
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.shown
+        onActivated: root.escaped()
+    }
+
     // ── Layout ──────────────────────────────────────────────────────────
     ColumnLayout {
-        anchors { fill: parent; margins: 20 }
+        id: col
+        anchors { top: parent.top; left: parent.left; right: parent.right }
         spacing: 0
 
         Text {
@@ -59,57 +69,14 @@ BarPopup {
                 }
             }
 
-            // Volume track (0 – 150%; 100% marker)
-            Item {
+            CommonSlider {
                 Layout.fillWidth: true
-                height: 20
-
-                Rectangle {
-                    id: volTrack
-                    anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
-                    height: 4; radius: 2
-                    color: Qt.alpha(Theme.foreground, 0.12)
-
-                    // 100% tick
-                    Rectangle {
-                        x: parent.width * (1.0 / 1.5) - 1
-                        width: 2; height: parent.height * 2.5
-                        anchors.verticalCenter: parent.verticalCenter
-                        radius: 1
-                        color: Qt.alpha(Theme.foreground, 0.28)
-                    }
-
-                    Rectangle {
-                        width: Math.min(1, root.volume / 1.5) * parent.width
-                        height: parent.height; radius: 2
-                        color: root.muted        ? Qt.alpha(Theme.foreground, 0.28)
-                             : root.volume > 1.0 ? Theme.yellow
-                             : Theme.blue
-                        Behavior on width { NumberAnimation { duration: 60; easing.type: Easing.OutCubic } }
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                    }
-
-                    Rectangle {
-                        x: Math.max(0, Math.min(volTrack.width - width,
-                            (root.volume / 1.5) * volTrack.width - width / 2))
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 14; height: 14; radius: 7; color: "white"; z: 1
-                        scale: volArea.containsMouse || volArea.pressed ? 1 : 0
-                        Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.5 } }
-                    }
-
-                    MouseArea {
-                        id: volArea
-                        anchors { fill: parent; margins: -8 }
-                        hoverEnabled: true
-                        function set(mx) {
-                            if (!root.sink?.audio) return
-                            root.sink.audio.volume = Math.max(0, Math.min(1.5, (mx / volTrack.width) * 1.5))
-                        }
-                        onPressed:         ev => set(ev.x)
-                        onPositionChanged: ev => { if (pressed) set(ev.x) }
-                    }
-                }
+                value:     root.volume
+                maxValue:  1.5
+                tickAt:    1.0
+                fillColor: root.muted ? Qt.alpha(Theme.foreground, 0.28)
+                         : root.volume > 1.0 ? Theme.yellow : Theme.blue
+                onMoved: v => { if (root.sink?.audio) root.sink.audio.volume = v }
             }
 
             // Percentage
@@ -137,13 +104,14 @@ BarPopup {
 
         // ── Sink list ──────────────────────────────────────────────────
         Flickable {
-            Layout.fillWidth: true; Layout.fillHeight: true
+            Layout.fillWidth: true
+            Layout.preferredHeight: Math.max(34, Math.min(sinkCol.implicitHeight + 4, 150))
             contentHeight: sinkCol.implicitHeight
             clip: true; boundsBehavior: Flickable.StopAtBounds
 
-            ColumnLayout {
+            CommonList {
                 id: sinkCol
-                width: parent.width; spacing: 2
+                width: parent.width
 
                 Repeater {
                     model: root.audioSinks

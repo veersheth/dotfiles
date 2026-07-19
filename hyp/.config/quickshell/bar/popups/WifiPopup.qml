@@ -13,6 +13,8 @@ BarPopup {
 
     // fired after a successful connect so the bar indicator can refresh
     signal networkChanged()
+    signal escaped()
+    onEscaped: close()
 
     property var rawNets: []
     property var savedNames: []
@@ -37,8 +39,12 @@ BarPopup {
     readonly property bool noInternet:
         connectivity === "none" || connectivity === "limited" || connectivity === "portal"
 
-    contentWidth: 360
-    contentHeight: 380
+    contentWidth:  Theme.listWidth + 2 * contentPadding
+    contentHeight: col.implicitHeight + 2 * contentPadding
+
+    // Warm the NetworkManager scan cache at startup so the first cached scan
+    // on popup-open returns the full network list, avoiding a small→large morph.
+    Component.onCompleted: { rescanProc.running = true; savedProc.running = true }
 
     onShownChanged: {
         if (shown) {
@@ -157,17 +163,32 @@ BarPopup {
         onExited: savedProc.running = true
     }
 
+    // Escape: collapse the password field first; if none open, go back.
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.shown
+        onActivated: root.expandedSsid !== "" ? root.expandedSsid = "" : root.escaped()
+    }
+
     // ── UI ─────────────────────────────────────────────────────────────
     ColumnLayout {
         id: col
-        anchors { fill: parent; margins: 16 }
+        anchors { top: parent.top; left: parent.left; right: parent.right }
         spacing: 6
 
         // ── Header: Wi-Fi  subtitle  [⚙] [↺] [toggle] ─────────────────
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 8; Layout.rightMargin: 2
-            spacing: 8
+            Layout.leftMargin: 4; Layout.rightMargin: 2
+            spacing: 6
+
+            Rectangle {
+                Layout.alignment: Qt.AlignVCenter
+                width: 30; height: 30; radius: width / 2
+                color: wifiBackMo.containsMouse ? Theme.hover : "transparent"
+                Text { anchors.centerIn: parent; text: "󰅁"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Qt.alpha(Theme.foreground, 0.7) }
+                MouseArea { id: wifiBackMo; anchors.fill: parent; hoverEnabled: true; onClicked: root.escaped() }
+            }
 
             ColumnLayout {
                 spacing: 1
@@ -224,19 +245,18 @@ BarPopup {
         Flickable {
             Layout.fillWidth: true
             Layout.topMargin: 4
-            Layout.fillHeight: true
+            Layout.preferredHeight: Math.max(60, Math.min(netCol.implicitHeight + 16, 320))
             contentHeight: netCol.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds
 
-            Column {
+            CommonList {
                 id: netCol
                 width: parent.width
-                spacing: 2
 
                 Text {
                     visible: root.wifiEnabled && root.networks.length === 0
-                    width: parent.width
+                    Layout.fillWidth: true
                     leftPadding: 8; topPadding: 2
                     text: rescanProc.running ? "Scanning…" : "No networks found"
                     font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
@@ -245,7 +265,7 @@ BarPopup {
 
                 Text {
                     visible: root.error !== ""
-                    width: parent.width
+                    Layout.fillWidth: true
                     leftPadding: 8
                     text: root.error; wrapMode: Text.Wrap
                     font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
@@ -258,7 +278,7 @@ BarPopup {
                     delegate: Column {
                         id: netItem
                         required property var modelData
-                        width: netCol.width
+                        Layout.fillWidth: true
                         spacing: 4
 
                         Rectangle {

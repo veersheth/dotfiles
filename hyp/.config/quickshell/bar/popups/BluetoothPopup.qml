@@ -19,8 +19,11 @@ BarPopup {
 
     property string connectingAddress: ""
 
-    contentWidth: 300
-    contentHeight: 360
+    signal escaped()
+    onEscaped: close()
+
+    contentWidth:  Theme.listWidth + 2 * contentPadding
+    contentHeight: col.implicitHeight + 2 * contentPadding
 
     onShownChanged: {
         if (!shown) connectingAddress = "";
@@ -107,18 +110,32 @@ BarPopup {
         }
     }
 
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.shown
+        onActivated: root.escaped()
+    }
+
     // ── UI ──────────────────────────────────────────────────────────────
     ColumnLayout {
         id: col
-        anchors { fill: parent; margins: 16 }
+        anchors { top: parent.top; left: parent.left; right: parent.right }
         spacing: 4
 
         // ── Header: Bluetooth  [⚙] [↺] [toggle] ───────────────────────
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 8; Layout.rightMargin: 2
+            Layout.leftMargin: 4; Layout.rightMargin: 2
             Layout.bottomMargin: 4
-            spacing: 8
+            spacing: 6
+
+            Rectangle {
+                Layout.alignment: Qt.AlignVCenter
+                width: 30; height: 30; radius: width / 2
+                color: btBackMo.containsMouse ? Theme.hover : "transparent"
+                Text { anchors.centerIn: parent; text: "󰅁"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Qt.alpha(Theme.foreground, 0.7) }
+                MouseArea { id: btBackMo; anchors.fill: parent; hoverEnabled: true; onClicked: root.escaped() }
+            }
 
             ColumnLayout {
                 spacing: 1
@@ -173,12 +190,12 @@ BarPopup {
         // Scrollable device list
         Flickable {
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.preferredHeight: Math.max(60, Math.min(devContent.implicitHeight + 8, 300))
             contentHeight: devContent.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds
 
-            ColumnLayout {
+            CommonList {
                 id: devContent
                 width: parent.width
                 spacing: 4

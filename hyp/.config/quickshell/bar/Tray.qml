@@ -47,17 +47,18 @@ Item {
     BarPopup {
         id: trayPopup
         anchorItem: root
-        contentWidth:  240
-        contentHeight: trayCol.implicitHeight + 24
+        contentPadding: 12
+        contentWidth:  220 + 2 * contentPadding
+        contentHeight: trayCol.implicitHeight + 2 * contentPadding
         // Include trayMenu in the same grab so Hyprland delivers hover/pointer
         // events to trayMenu's surface while the grab is active.
         extraGrabWindow: trayMenu
         // Close the context menu whenever the tray popup closes.
         onShownChanged: if (!shown) trayMenu.close()
 
-        ColumnLayout {
+        CommonList {
             id: trayCol
-            anchors { top: parent.top; left: parent.left; right: parent.right; margins: 10 }
+            anchors { top: parent.top; left: parent.left; right: parent.right }
             spacing: 2
 
             Repeater {

@@ -142,20 +142,11 @@ Scope {
         target: root.battery
         enabled: root.battery?.isLaptopBattery ?? false
 
+        // Reset low-battery nudge flags when the charger is plugged in.
         function onStateChanged() {
-            const b = root.battery;
-            if (b.state === UPowerDeviceState.Charging) {
+            if (root.battery?.state === UPowerDeviceState.Charging) {
                 root.warned20 = false;
                 root.warned10 = false;
-                const t = b.timeToFull;
-                root.showMessage("󰂄", t > 0
-                    ? `Charging - ${root.fmtMins(t)} until full` : "Charging");
-            } else if (b.state === UPowerDeviceState.Discharging) {
-                const t = b.timeToEmpty;
-                root.showMessage(root.batteryIcon(b.percentage * 100), t > 0
-                    ? `On battery - ${root.fmtMins(t)} remaining` : "On battery");
-            } else if (b.state === UPowerDeviceState.FullyCharged) {
-                root.showMessage("󰂅", "Fully charged");
             }
         }
 
@@ -175,26 +166,6 @@ Scope {
                 Quickshell.execDetached(["notify-send", "-u", "normal", "-a", "Power",
                     "Battery low", `${Math.round(pct)}% remaining${left}`]);
             }
-        }
-    }
-
-    // manual triggers for previewing: qs ipc call osd charging|discharging|full
-    IpcHandler {
-        target: "osd"
-
-        function charging(): void {
-            const t = root.battery?.timeToFull ?? 0;
-            root.showMessage("󰂄", t > 0
-                ? `Charging - ${root.fmtMins(t)} until full` : "Charging");
-        }
-        function discharging(): void {
-            const b = root.battery;
-            const t = b?.timeToEmpty ?? 0;
-            root.showMessage(root.batteryIcon((b?.percentage ?? 0.5) * 100), t > 0
-                ? `On battery - ${root.fmtMins(t)} remaining` : "On battery");
-        }
-        function full(): void {
-            root.showMessage("󰂅", "Fully charged");
         }
     }
 

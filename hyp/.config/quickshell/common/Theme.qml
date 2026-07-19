@@ -8,7 +8,7 @@ import QtQuick
 
 QtObject {
     // Colors
-    readonly property color background: "#ae000000"   // #00000088
+    readonly property color background: "#33000000"   // #00000088
     readonly property color surface:    "#EE000000"   // #262626ff
     readonly property color border:     "#66ffffff"   // #ffffff22
     readonly property color barBorder:  "#22ffffff"   // bottom border of the status bar
@@ -38,7 +38,11 @@ QtObject {
     readonly property int moduleSpacing: 0
 
     // Animation
-    readonly property int animDuration: 200
+    readonly property int animDuration: 150
+
+    // Shared component widths — popups set contentWidth = {list,slider}Width + 2 * contentPadding
+    readonly property int listWidth:   300
+    readonly property int sliderWidth: 300
 
     // Dock
     readonly property int   dockHideDelay:  600           // grace period before auto-hide (ms)

@@ -86,7 +86,7 @@ PanelWindow {
         width: parent.width
         x: parent.width
         radius: Theme.popupRadius
-        color: Theme.background
+        color: Theme.surface
         border.color: Theme.border
         border.width: Theme.borderWidth
         clip: true

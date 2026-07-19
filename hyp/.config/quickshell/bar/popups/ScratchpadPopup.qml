@@ -71,8 +71,8 @@ BarPopup {
     Flickable {
         id: flick
         anchors {
-            fill: parent; margins: 20
-            bottomMargin: 20 + (root.shelf.length > 0 ? 88 : 0)
+            fill: parent
+            bottomMargin: root.shelf.length > 0 ? 88 : 0
         }
         contentHeight: edit.implicitHeight
         clip: true
@@ -116,7 +116,7 @@ BarPopup {
     }
 
     Text {
-        anchors { top: parent.top; left: parent.left; margins: 20 }
+        anchors { top: parent.top; left: parent.left }
         visible: edit.text === ""
         text: "Scratchpad... (drop files here)"
         font.family: Theme.font

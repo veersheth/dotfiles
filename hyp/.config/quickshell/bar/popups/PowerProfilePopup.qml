@@ -8,8 +8,8 @@ import qs.components
 BarPopup {
     id: root
 
-    contentWidth:  290
-    contentHeight: col.implicitHeight + 44
+    contentWidth:  Theme.listWidth + 2 * contentPadding
+    contentHeight: col.implicitHeight + 2 * contentPadding
 
     // ── System stats state ─────────────────────────────────────────────
     property real cpuUsage:    0
@@ -114,6 +114,10 @@ BarPopup {
         onTriggered: { cpuProc.running = true; memProc.running = true; hwProc.running = true }
     }
 
+    // Pre-fetch at startup so visible-conditional rows are stable before the popup opens,
+    // preventing a layout-shift morph animation immediately after the enter animation.
+    Component.onCompleted: { memProc.running = true; hwProc.running = true }
+
     onShownChanged: { if (!shown) root._cpuPrev = null }
 
     // ── Stat bar ───────────────────────────────────────────────────────
@@ -203,8 +207,7 @@ BarPopup {
     // ── Layout ─────────────────────────────────────────────────────────
     ColumnLayout {
         id: col
-        anchors.centerIn: parent
-        width: root.contentWidth - 40
+        anchors { top: parent.top; left: parent.left; right: parent.right }
         spacing: 6
 
         Text {
@@ -214,11 +217,16 @@ BarPopup {
             color: Qt.alpha(Theme.foreground, 0.55)
         }
 
-        ProfileRow { profile: PowerProfile.PowerSaver;   icon: "󰌪"; label: "Power Saver" }
-        ProfileRow { profile: PowerProfile.Balanced;     icon: "󰾅"; label: "Balanced" }
-        ProfileRow {
-            profile: PowerProfile.Performance; icon: "󰓅"; label: "Performance"
-            visible: PowerProfiles.hasPerformanceProfile
+        CommonList {
+            Layout.fillWidth: true
+            spacing: 2
+
+            ProfileRow { profile: PowerProfile.PowerSaver;   icon: "󰌪"; label: "Power Saver" }
+            ProfileRow { profile: PowerProfile.Balanced;     icon: "󰾅"; label: "Balanced" }
+            ProfileRow {
+                profile: PowerProfile.Performance; icon: "󰓅"; label: "Performance"
+                visible: PowerProfiles.hasPerformanceProfile
+            }
         }
 
         Rectangle {

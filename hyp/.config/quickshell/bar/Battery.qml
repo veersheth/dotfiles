@@ -51,6 +51,65 @@ Item {
         NumberAnimation { target: flash; property: "opacity"; to: 0.15; duration: 450; easing.type: Easing.InOutQuad }
     }
 
+    // ── Charging glow ──────────────────────────────────────────────────
+    Rectangle {
+        id: chargeGlow
+        anchors.fill: parent; radius: height / 2
+        color: Theme.blue
+        opacity: 0
+    }
+
+    // Gentle breathing while charging; started programmatically below.
+    SequentialAnimation {
+        id: chargingBreath
+        loops: Animation.Infinite
+        NumberAnimation { target: chargeGlow; property: "opacity"; to: 0.22; duration: 900; easing.type: Easing.InOutSine }
+        NumberAnimation { target: chargeGlow; property: "opacity"; to: 0.06; duration: 900; easing.type: Easing.InOutSine }
+    }
+
+    // Bright flash on plug-in, fades into the breathing level.
+    SequentialAnimation {
+        id: chargeConnectAnim
+        NumberAnimation { target: chargeGlow; property: "opacity"; to: 0.65; duration: 130; easing.type: Easing.OutCubic }
+        PauseAnimation  { duration: 80 }
+        NumberAnimation { target: chargeGlow; property: "opacity"; to: 0.10; duration: 550; easing.type: Easing.InCubic }
+        onFinished: if (root.charging) chargingBreath.restart()
+    }
+
+    // Smooth fade out when unplugged.
+    NumberAnimation {
+        id: chargeGlowOut
+        target: chargeGlow; property: "opacity"
+        to: 0; duration: 400; easing.type: Easing.InCubic
+    }
+
+    // Suppress the plug-in flash during startup while UPower initialises.
+    property bool _chargingReady: false
+    Timer {
+        interval: 1500; running: true
+        onTriggered: {
+            root._chargingReady = true
+            // Charger was already connected at startup — begin breathing quietly.
+            if (root.charging) chargingBreath.restart()
+        }
+    }
+
+    onChargingChanged: {
+        if (charging) {
+            chargeGlowOut.stop()
+            if (_chargingReady) {
+                chargingBreath.stop()
+                chargeConnectAnim.restart()
+            } else {
+                chargingBreath.restart()
+            }
+        } else {
+            chargeConnectAnim.stop()
+            chargingBreath.stop()
+            chargeGlowOut.restart()
+        }
+    }
+
     RowLayout {
         id: row
         anchors.centerIn: parent
