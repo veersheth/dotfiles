@@ -56,3 +56,4 @@ vim.keymap.set("v", ">", ">gv", { desc = "indent forw" })
 
 -- buffer keymaps
 vim.keymap.set("n", "<leader>l", "<C-^>", { desc = "toggle last buffer" })
+

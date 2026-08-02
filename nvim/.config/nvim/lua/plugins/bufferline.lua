@@ -21,13 +21,13 @@ require('bufferline').setup({
     always_show_bufferline = true,
   },
   highlights = {
-    buffer_selected = { bg = '#202020', fg = '#ffffff', bold = false, italic = false },
-    buffer_visible = { bg = 'none', fg = '#888888' },
-    background = { bg = 'none', fg = '#888888' },
-    fill = { bg = 'none' },
-    separator = { bg = 'none', fg = 'none' },
-    separator_selected = { bg = '#ffffff', fg = 'none' },
-    separator_visible = { bg = 'none', fg = 'none' },
+    -- buffer_selected = { bg = '#202020', fg = '#ffffff', bold = false, italic = false },
+    -- buffer_visible = { bg = '#000000', fg = '#888888' },
+    -- background = { bg = 'none', fg = 'none' },
+    -- fill = { bg = 'none' },
+    -- separator = { bg = 'none', fg = 'none' },
+    -- separator_selected = { bg = '#ffffff', fg = 'none' },
+    -- separator_visible = { bg = 'none', fg = 'none' },
   },
 })
 

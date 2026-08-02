@@ -42,6 +42,7 @@ require("plugins.image")
 require("plugins.bufferline")
 require("plugins.markdown")
 require("plugins.obsidian")
+require("plugins.lualine")
 
 require("color-theme")
 

@@ -24,4 +24,10 @@ require("obsidian").setup {
   },
 
   -- new_notes_location = "current_dir",
+
+  note_id_func = require("obsidian.builtin").title_id,
+
+  ui = {
+    external_link_icon = { char = "" },
+  },
 }
