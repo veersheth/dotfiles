@@ -50,6 +50,7 @@ Item {
         spacing: 7
 
         Item {
+            id: wifiZone
             width: Theme.iconSize + 2; height: Theme.iconSize + 2
             anchors.verticalCenter: parent.verticalCenter
             Text {
@@ -66,6 +67,7 @@ Item {
         }
 
         Item {
+            id: btZone
             width: Theme.iconSize + 2; height: Theme.iconSize + 2
             anchors.verticalCenter: parent.verticalCenter
             Text {
@@ -78,6 +80,7 @@ Item {
         }
 
         Item {
+            id: volZone
             visible: root.volSink !== null
             width: Theme.iconSize + 2; height: Theme.iconSize + 2
             anchors.verticalCenter: parent.verticalCenter
@@ -101,10 +104,62 @@ Item {
         Behavior on opacity { NumberAnimation { duration: 100 } }
     }
 
+    property int shownZone: 0
+
+    function tipZone() {
+        if (wifiZone.contains(wifiZone.mapFromItem(hitArea, hitArea.mouseX, hitArea.mouseY))) return 1
+        if (btZone.contains(btZone.mapFromItem(hitArea, hitArea.mouseX, hitArea.mouseY)))   return 2
+        if (volZone.visible && volZone.contains(volZone.mapFromItem(hitArea, hitArea.mouseX, hitArea.mouseY))) return 3
+        return 0
+    }
+
+    function updateTip() {
+        const z = root.tipZone()
+        if (z > 0) { root.shownZone = z; tip.show(root) }
+        else tip.hide()
+    }
+
     BarHitArea {
         id: hitArea
         hoverEnabled: true
-        onClicked: qsPopup.toggle()
+        onEntered:         root.updateTip()
+        onExited:          tip.hide()
+        onPositionChanged: root.updateTip()
+        onClicked: {
+            tip.hide()
+            if (!qsLoader.active) {
+                qsLoader.active = true
+            } else {
+                qsLoader.item.toggle()
+            }
+        }
+    }
+
+    BarTooltip {
+        id: tip
+        contentWidth:  tipText.implicitWidth + 24
+        contentHeight: tipText.implicitHeight + 14
+        Text {
+            id: tipText
+            anchors.centerIn: parent
+            text: {
+                const z = root.shownZone
+                if (z === 1) return root.wifiNoInternet
+                    ? `${root.ssid} · ${root.wifiConnectivity === "portal" ? "captive portal" : "no internet"}`
+                    : root.wifiConnected ? `${root.ssid} · ${root.wifiStrength}%` : "Not connected"
+                if (z === 2) return !root.btEnabled ? "Bluetooth off"
+                    : root.btConnected.length > 0 ? root.btConnected.map(d => d.name).join(" · ")
+                    : "No devices connected"
+                if (z === 3) return root.muted
+                    ? `Muted · ${Math.round(root.volume * 100)}%`
+                    : `${Math.round(root.volume * 100)}%`
+                return ""
+            }
+            font.family: Theme.font
+            font.pixelSize: Theme.fontSize - 1
+            font.weight: Font.Medium
+            color: Theme.foreground
+        }
     }
 
     // ── WiFi processes ────────────────────────────────────────────────────
@@ -148,57 +203,88 @@ Item {
     }
 
     Timer {
-        interval: 5000; running: true; repeat: true; triggeredOnStart: true
+        interval: 30000; running: true; repeat: true; triggeredOnStart: true
         onTriggered: { radioProc.running = true; wifiProc.running = true }
     }
 
-    // ── Popups ────────────────────────────────────────────────────────────
-    QuickSettingsPopup {
-        id: qsPopup
-        anchorItem: root
-
-        wifiEnabled:    root.wifiEnabled
-        wifiConnected:  root.wifiConnected
-        wifiStrength:   root.wifiStrength
-        ssid:           root.ssid
-        wifiNoInternet: root.wifiNoInternet
-
-        onWifiToggled: {
-            wifiToggleProc.command = ["nmcli", "radio", "wifi",
-                root.wifiEnabled ? "off" : "on"]
-            wifiToggleProc.running = true
+    // ── Popups (lazy-loaded on first open) ───────────────────────────────
+    Loader {
+        id: qsLoader
+        active: false
+        sourceComponent: Component { QuickSettingsPopup {} }
+        onLoaded: {
+            item.anchorItem    = root
+            item.wifiEnabled   = Qt.binding(() => root.wifiEnabled)
+            item.wifiConnected = Qt.binding(() => root.wifiConnected)
+            item.wifiStrength  = Qt.binding(() => root.wifiStrength)
+            item.ssid          = Qt.binding(() => root.ssid)
+            item.wifiNoInternet = Qt.binding(() => root.wifiNoInternet)
+            item.wifiToggled.connect(() => {
+                wifiToggleProc.command = ["nmcli", "radio", "wifi", root.wifiEnabled ? "off" : "on"]
+                wifiToggleProc.running = true
+            })
+            item.wifiDrillDown.connect(() => {
+                item.shown = false
+                wifiLoader.active = true
+                wifiLoader.item.shown = true
+            })
+            item.btDrillDown.connect(() => {
+                item.shown = false
+                btLoader.active = true
+                btLoader.item.shown = true
+            })
+            item.volumeDrillDown.connect(() => {
+                item.shown = false
+                audioOutLoader.active = true
+                audioOutLoader.item.shown = true
+            })
+            item.micDrillDown.connect(() => {
+                item.shown = false
+                audioInLoader.active = true
+                audioInLoader.item.shown = true
+            })
+            item.toggle()
         }
-
-        // Dismiss QS panel then open the detail popup immediately — the exit
-        // and enter spring animations overlap naturally from the same anchor.
-        onWifiDrillDown:   { qsPopup.shown = false; wifiPopup.shown   = true }
-        onBtDrillDown:     { qsPopup.shown = false; btPopup.shown     = true }
-        onVolumeDrillDown: { qsPopup.shown = false; audioOutPopup.shown = true }
-        onMicDrillDown:    { qsPopup.shown = false; audioInPopup.shown  = true }
     }
 
-    WifiPopup {
-        id: wifiPopup
-        anchorItem: root
-        onNetworkChanged: wifiProc.running = true
-        onEscaped: { wifiPopup.shown = false; qsPopup.shown = true }
+    Loader {
+        id: wifiLoader
+        active: false
+        sourceComponent: Component { WifiPopup {} }
+        onLoaded: {
+            item.anchorItem = root
+            item.networkChanged.connect(() => wifiProc.running = true)
+            item.escaped.connect(() => { item.shown = false; qsLoader.item.shown = true })
+        }
     }
 
-    BluetoothPopup {
-        id: btPopup
-        anchorItem: root
-        onEscaped: { btPopup.shown = false; qsPopup.shown = true }
+    Loader {
+        id: btLoader
+        active: false
+        sourceComponent: Component { BluetoothPopup {} }
+        onLoaded: {
+            item.anchorItem = root
+            item.escaped.connect(() => { item.shown = false; qsLoader.item.shown = true })
+        }
     }
 
-    AudioOutputPopup {
-        id: audioOutPopup
-        anchorItem: root
-        onEscaped: { audioOutPopup.shown = false; qsPopup.shown = true }
+    Loader {
+        id: audioOutLoader
+        active: false
+        sourceComponent: Component { AudioOutputPopup {} }
+        onLoaded: {
+            item.anchorItem = root
+            item.escaped.connect(() => { item.shown = false; qsLoader.item.shown = true })
+        }
     }
 
-    AudioInputPopup {
-        id: audioInPopup
-        anchorItem: root
-        onEscaped: { audioInPopup.shown = false; qsPopup.shown = true }
+    Loader {
+        id: audioInLoader
+        active: false
+        sourceComponent: Component { AudioInputPopup {} }
+        onLoaded: {
+            item.anchorItem = root
+            item.escaped.connect(() => { item.shown = false; qsLoader.item.shown = true })
+        }
     }
 }

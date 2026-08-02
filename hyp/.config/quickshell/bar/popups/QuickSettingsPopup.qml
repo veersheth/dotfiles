@@ -146,7 +146,7 @@ BarPopup {
     ColumnLayout {
         id: col
         anchors { top: parent.top; left: parent.left; right: parent.right }
-        spacing: 10
+        spacing: 16
 
         // ── WiFi pill (full-width row) ──────────────────────────────────
         Rectangle {
@@ -283,32 +283,37 @@ BarPopup {
 
         // ── Volume ────────────────────────────────────────────────────────
         ColumnLayout {
-            Layout.fillWidth: true; spacing: 8
+            Layout.fillWidth: true; spacing: 10
 
-            RowLayout {
-                Layout.fillWidth: true; spacing: 4
-                Text {
-                    text: "Volume"; font.family: Theme.font
-                    font.pixelSize: Theme.fontSize - 1; font.weight: Font.DemiBold
-                    color: Qt.alpha(Theme.foreground, 0.60)
-                }
-                Item { Layout.fillWidth: true }
-                Text {
-                    text: `${Math.round(root.volume * 100)}%`
-                    font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
-                    color: root.volume > 1.0 ? Theme.yellow : Qt.alpha(Theme.foreground, 0.50)
-                    Behavior on color { ColorAnimation { duration: 150 } }
-                }
-                Text {
-                    text: "󰅂"; font.family: Theme.nerdFont; font.pixelSize: 13
-                    color: Qt.alpha(Theme.foreground, volMoreMo.containsMouse ? 0.8 : 0.28)
-                    Behavior on color { ColorAnimation { duration: 80 } }
-                    MouseArea {
-                        id: volMoreMo
-                        anchors { fill: parent; margins: -8 }
-                        hoverEnabled: true
-                        onClicked: root.volumeDrillDown()
+            Item {
+                Layout.fillWidth: true
+                implicitHeight: volHdrRow.implicitHeight
+
+                RowLayout {
+                    id: volHdrRow
+                    anchors.fill: parent; spacing: 4
+
+                    Text {
+                        text: "Volume"; font.family: Theme.font
+                        font.pixelSize: Theme.fontSize - 1; font.weight: Font.DemiBold
+                        color: Qt.alpha(Theme.foreground, 0.60)
                     }
+                    Item { Layout.fillWidth: true }
+                    Text {
+                        text: `${Math.round(root.volume * 100)}%`
+                        font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
+                        color: root.volume > 1.0 ? Theme.yellow : Qt.alpha(Theme.foreground, 0.50)
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                    }
+                    Text {
+                        text: "󰅂"; font.family: Theme.nerdFont; font.pixelSize: 13
+                        color: Qt.alpha(Theme.foreground, volHdrMo.containsMouse ? 0.75 : 0.28)
+                        Behavior on color { ColorAnimation { duration: 80 } }
+                    }
+                }
+                MouseArea {
+                    id: volHdrMo; anchors.fill: parent; hoverEnabled: true
+                    onClicked: root.volumeDrillDown()
                 }
             }
 
@@ -342,38 +347,43 @@ BarPopup {
 
         // ── Microphone ────────────────────────────────────────────────────
         ColumnLayout {
-            Layout.fillWidth: true; spacing: 8
+            Layout.fillWidth: true; spacing: 10
 
-            RowLayout {
-                Layout.fillWidth: true; spacing: 4
-                Text {
-                    text: "Microphone"; font.family: Theme.font
-                    font.pixelSize: Theme.fontSize - 1; font.weight: Font.DemiBold
-                    color: Qt.alpha(Theme.foreground, 0.60)
-                }
-                Item { Layout.fillWidth: true }
-                Text {
-                    text: `${Math.round(root.micVolume * 100)}%`
-                    font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
-                    color: Qt.alpha(Theme.foreground, 0.50)
-                }
-                Text {
-                    text: "󰅂"; font.family: Theme.nerdFont; font.pixelSize: 13
-                    color: Qt.alpha(Theme.foreground, micMoreMo.containsMouse ? 0.8 : 0.28)
-                    Behavior on color { ColorAnimation { duration: 80 } }
-                    MouseArea {
-                        id: micMoreMo
-                        anchors { fill: parent; margins: -8 }
-                        hoverEnabled: true
-                        onClicked: root.micDrillDown()
+            Item {
+                Layout.fillWidth: true
+                implicitHeight: micHdrRow.implicitHeight
+
+                RowLayout {
+                    id: micHdrRow
+                    anchors.fill: parent; spacing: 4
+
+                    Text {
+                        text: "Microphone"; font.family: Theme.font
+                        font.pixelSize: Theme.fontSize - 1; font.weight: Font.DemiBold
+                        color: Qt.alpha(Theme.foreground, 0.60)
                     }
+                    Item { Layout.fillWidth: true }
+                    Text {
+                        text: `${Math.round(root.micVolume * 100)}%`
+                        font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
+                        color: Qt.alpha(Theme.foreground, 0.50)
+                    }
+                    Text {
+                        text: "󰅂"; font.family: Theme.nerdFont; font.pixelSize: 13
+                        color: Qt.alpha(Theme.foreground, micHdrMo.containsMouse ? 0.75 : 0.28)
+                        Behavior on color { ColorAnimation { duration: 80 } }
+                    }
+                }
+                MouseArea {
+                    id: micHdrMo; anchors.fill: parent; hoverEnabled: true
+                    onClicked: root.micDrillDown()
                 }
             }
 
             RowLayout {
                 Layout.fillWidth: true; spacing: 12
                 Text {
-                    text: root.micMuted ? "󰍬" : "󰍭"
+                    text: root.micMuted ? "󰍭" : "󰍬"
                     font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize + 1
                     color: root.micMuted ? Qt.alpha(Theme.foreground, 0.4) : Theme.foreground
                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -403,7 +413,7 @@ BarPopup {
 
         // ── Brightness ────────────────────────────────────────────────────
         ColumnLayout {
-            visible: root.hasDisplay; Layout.fillWidth: true; spacing: 8
+            visible: root.hasDisplay; Layout.fillWidth: true; spacing: 10
 
             RowLayout {
                 Layout.fillWidth: true; spacing: 4
@@ -437,7 +447,7 @@ BarPopup {
 
         // ── Keyboard backlight ────────────────────────────────────────────
         ColumnLayout {
-            visible: root.hasKbd; Layout.fillWidth: true; spacing: 8
+            visible: root.hasKbd; Layout.fillWidth: true; spacing: 10
 
             RowLayout {
                 Layout.fillWidth: true; spacing: 4

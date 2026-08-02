@@ -59,7 +59,27 @@ Item {
     BarHitArea {
         id: hitArea
         hoverEnabled: true
-        onClicked: btPopup.toggle()
+        onEntered: tip.show(root)
+        onExited:  tip.hide()
+        onClicked: { tip.hide(); btPopup.toggle() }
+    }
+
+    BarTooltip {
+        id: tip
+        contentWidth:  tipText.implicitWidth + 24
+        contentHeight: tipText.implicitHeight + 14
+
+        Text {
+            id: tipText
+            anchors.centerIn: parent
+            text: !root.enabled ? "Bluetooth off"
+                : root.connected ? root.connectedDevices.map(d => d.name).join(" · ")
+                : "No devices connected"
+            font.family: Theme.font
+            font.pixelSize: Theme.fontSize - 1
+            font.weight: Font.Medium
+            color: Theme.foreground
+        }
     }
 
     BluetoothPopup {

@@ -85,6 +85,11 @@ Scope {
         }
     }
 
+    Connections {
+        target: BarState
+        function onWallpaperPickerRequested() { zenityProc.running = true }
+    }
+
     Variants {
         model: Quickshell.screens
 
@@ -133,46 +138,36 @@ Scope {
             BarPopup {
                 id: desktopMenu
                 anchorItem: menuAnchor
-                contentWidth: entry.width + 20
-                contentHeight: entry.height + 20
+                contentWidth: 246
+                contentHeight: menuCol.implicitHeight + 32
 
-                Rectangle {
-                    id: entry
-                    anchors.centerIn: parent
-                    width: 210
-                    height: 34
-                    radius: 9
-                    color: entryMouse.containsMouse ? Theme.hover : "transparent"
+                Column {
+                    id: menuCol
+                    anchors { verticalCenter: parent.verticalCenter; left: parent.left; right: parent.right }
+                    spacing: 4
 
-                    Row {
-                        anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                        spacing: 9
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "󰸉"
-                            font.family: Theme.nerdFont
-                            font.pixelSize: Theme.iconSize
-                            color: Theme.foreground
+                    Rectangle {
+                        width: parent.width; height: 34; radius: 9
+                        color: wallMo.containsMouse ? Theme.hover : "transparent"
+                        Row {
+                            anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                            spacing: 9
+                            Text { anchors.verticalCenter: parent.verticalCenter; text: "󰸉"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Theme.foreground }
+                            Text { anchors.verticalCenter: parent.verticalCenter; text: "Change background…"; font.family: Theme.font; font.pixelSize: Theme.fontSize; font.weight: Font.Medium; color: Theme.foreground }
                         }
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "Change background…"
-                            font.family: Theme.font
-                            font.pixelSize: Theme.fontSize
-                            font.weight: Font.Medium
-                            color: Theme.foreground
-                        }
+                        MouseArea { id: wallMo; anchors.fill: parent; hoverEnabled: true; onClicked: { desktopMenu.close(); zenityProc.running = true } }
                     }
 
-                    MouseArea {
-                        id: entryMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            desktopMenu.close();
-                            zenityProc.running = true;
+                    Rectangle {
+                        width: parent.width; height: 34; radius: 9
+                        color: barPosMo.containsMouse ? Theme.hover : "transparent"
+                        Row {
+                            anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                            spacing: 9
+                            Text { anchors.verticalCenter: parent.verticalCenter; text: BarState.barBottom ? "󰹙" : "󰹘"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Theme.foreground }
+                            Text { anchors.verticalCenter: parent.verticalCenter; text: BarState.barBottom ? "Move bar to top" : "Move bar to bottom"; font.family: Theme.font; font.pixelSize: Theme.fontSize; font.weight: Font.Medium; color: Theme.foreground }
                         }
+                        MouseArea { id: barPosMo; anchors.fill: parent; hoverEnabled: true; onClicked: { desktopMenu.close(); BarState.setBottom(!BarState.barBottom) } }
                     }
                 }
             }

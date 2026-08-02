@@ -7,7 +7,7 @@ Rectangle {
     id: root
     property string monitorName: ""
 
-    implicitWidth: row.implicitWidth + 16
+    implicitWidth: row.implicitWidth + 20
     implicitHeight: Theme.pillHeight
     radius: height / 2
     color: "transparent"
@@ -15,10 +15,17 @@ Rectangle {
     // border.width: Theme.borderWidth
     Layout.alignment: Qt.AlignVCenter
 
+    Rectangle {
+        anchors.fill: parent; radius: height / 2
+        color: Theme.hover
+        opacity: pillMouse.containsMouse ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 100 } }
+    }
+
     RowLayout {
         id: row
         anchors.centerIn: parent
-        spacing: 2
+        spacing: Theme.moduleSpacing
 
         Repeater {
             model: Hyprland.workspaces
@@ -36,7 +43,7 @@ Rectangle {
                     id: label
                     anchors.centerIn: parent
                     text: parent.modelData.id
-                    font.family: Theme.font
+                    font.family: Theme.nerdFont
                     font.pixelSize: Theme.fontSize - 1
                     font.weight: parent.isFocused ? Font.SemiBold : Font.Normal
                     color: parent.isFocused
@@ -54,5 +61,15 @@ Rectangle {
                 }
             }
         }
+    }
+
+    MouseArea {
+        id: pillMouse
+        anchors.fill: parent
+        hoverEnabled: true
+        propagateComposedEvents: true
+        onClicked:   mouse => mouse.accepted = false
+        onPressed:   mouse => mouse.accepted = false
+        onReleased:  mouse => mouse.accepted = false
     }
 }

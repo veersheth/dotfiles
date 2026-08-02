@@ -6,6 +6,7 @@ import qs.notifications
 import qs.osd
 import qs.dock
 import qs.lock
+import qs.launcher
 
 ShellRoot {
     Bar {}
@@ -13,5 +14,6 @@ ShellRoot {
     NotificationPopups {}
     Osd {}
     Lock {}
+    Launcher {}
     // Dock {}
 }

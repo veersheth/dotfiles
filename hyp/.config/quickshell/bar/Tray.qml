@@ -28,7 +28,8 @@ Item {
     Text {
         id: chevron
         anchors.centerIn: parent
-        text: "󰅀"
+        // text: "󰅀"
+        text: ""
         font.family: Theme.nerdFont
         font.pixelSize: Theme.iconSize
         color: trayPopup.shown
@@ -40,7 +41,24 @@ Item {
     BarHitArea {
         id: hitArea
         hoverEnabled: true
-        onClicked: trayPopup.toggle()
+        onEntered: tip.show(root)
+        onExited:  tip.hide()
+        onClicked: { tip.hide(); trayPopup.toggle() }
+    }
+
+    BarTooltip {
+        id: tip
+        contentWidth:  tipText.implicitWidth + 24
+        contentHeight: tipText.implicitHeight + 14
+        Text {
+            id: tipText
+            anchors.centerIn: parent
+            text: "System tray"
+            font.family: Theme.font
+            font.pixelSize: Theme.fontSize - 1
+            font.weight: Font.Medium
+            color: Theme.foreground
+        }
     }
 
     // ── Tray popup ─────────────────────────────────────────────────────
@@ -72,8 +90,8 @@ Item {
                     implicitHeight: 36
 
                     RowLayout {
-                        anchors { fill: parent; margins: 4 }
-                        spacing: 4
+                        anchors.fill: parent
+                        spacing: 0
 
                         // ── Icon + name button ─────────────────────────
                         Rectangle {
@@ -84,7 +102,7 @@ Item {
                             Behavior on color { ColorAnimation { duration: 80 } }
 
                             RowLayout {
-                                anchors { fill: parent; leftMargin: 8; rightMargin: 6 }
+                                anchors { fill: parent; leftMargin: 8 }
                                 spacing: 10
 
                                 IconImage {
@@ -110,6 +128,16 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onEntered: {
+                                    if (trayRow.modelData.hasMenu) {
+                                        if (trayMenu.shown)
+                                            trayMenu.menuHandle = trayRow.modelData.menu
+                                        else
+                                            trayMenu.openFor(root, trayRow.modelData.menu)
+                                    } else {
+                                        trayMenu.close()
+                                    }
+                                }
                                 onClicked: mouse => {
                                     if (mouse.button === Qt.RightButton
                                             || trayRow.modelData.onlyMenu) {

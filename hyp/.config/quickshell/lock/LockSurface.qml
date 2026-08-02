@@ -7,30 +7,24 @@ import qs.common
 import qs.components
 import qs.wallpaper
 
-// The lock face: blurred wallpaper, clock, date, battery, password box.
 Item {
     id: root
-
     required property var ctx
 
-    // hidden source for the blur
     Image {
         id: wall
         anchors.fill: parent
-        source: WallpaperService.current.length > 0
-            ? "file://" + WallpaperService.current
-            : ""
+        source: WallpaperService.current.length > 0 ? "file://" + WallpaperService.current : ""
         fillMode: Image.PreserveAspectCrop
         visible: false
         asynchronous: true
     }
-
     MultiEffect {
         anchors.fill: parent
         source: wall
         blurEnabled: true
-        blurMax: 48
-        blur: 0.85
+        blurMax: 64
+        blur: 1.0
     }
     Rectangle {
         anchors.fill: parent
@@ -38,338 +32,74 @@ Item {
         opacity: 0.45
     }
 
-    // fade in on lock; also arm auth — surfaces only exist while the
-    // session is actually locked, so this is the reliable trigger
     opacity: 0
     Component.onCompleted: {
-        opacity = 1;
-        input.forceActiveFocus();
-        ctx.begin();
+        opacity = 1
+        input.forceActiveFocus()
+        ctx.begin()
     }
     Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
 
-    // ── Battery (top right, laptops only) ─────────────────────────────
+    // ── Battery ───────────────────────────────────────────────────────────
     Row {
-        anchors { top: parent.top; right: parent.right; margins: 28 }
-        spacing: 8
+        anchors { top: parent.top; right: parent.right; margins: 24 }
+        spacing: 6
         visible: UPower.displayDevice !== null && UPower.displayDevice.isLaptopBattery
 
-        readonly property var battery: UPower.displayDevice
-        readonly property real percent: (battery?.percentage ?? 0) * 100
-        readonly property bool charging:
-            battery !== null &&
-            (battery.state === UPowerDeviceState.Charging ||
-             battery.state === UPowerDeviceState.FullyCharged ||
-             battery.state === UPowerDeviceState.PendingCharge)
+        readonly property var   bat:      UPower.displayDevice
+        readonly property real  pct:      (bat?.percentage ?? 0) * 100
+        readonly property bool  charging: bat !== null && (
+            bat.state === UPowerDeviceState.Charging ||
+            bat.state === UPowerDeviceState.FullyCharged ||
+            bat.state === UPowerDeviceState.PendingCharge)
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
             text: {
-                if (parent.charging) return "󰂄";
-                const icons = ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"];
-                return icons[Math.min(9, Math.max(0, Math.floor(parent.percent / 10)))];
+                if (parent.charging) return "󰂄"
+                const icons = ["󰁺","󰁻","󰁼","󰁽","󰁾","󰁿","󰂀","󰂁","󰂂","󰁹"]
+                return icons[Math.min(9, Math.max(0, Math.floor(parent.pct / 10)))]
             }
             font.family: Theme.nerdFont
-            font.pixelSize: Theme.iconSize + 1
-            color: Qt.alpha(Theme.foreground, 0.8)
+            font.pixelSize: 15
+            color: Qt.rgba(1, 1, 1, 0.65)
         }
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            text: `${Math.round(parent.percent)}%`
+            text: `${Math.round(parent.pct)}%`
             font.family: Theme.font
-            font.pixelSize: Theme.fontSize
+            font.pixelSize: 13
             font.weight: Font.Medium
-            color: Qt.alpha(Theme.foreground, 0.8)
+            color: Qt.rgba(1, 1, 1, 0.65)
         }
     }
 
-    // ── Clock + date + password ────────────────────────────────────────
-    SystemClock {
-        id: clock
-        precision: SystemClock.Minutes
-    }
-
-    Column {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.verticalCenterOffset: -40
-        spacing: 10
-
-        // Padlock → tick morph, Face ID style: the shackle swings open,
-        // then the lock dissolves while a green tick draws itself in.
-        Item {
-            id: padlock
-
-            property real shackle: 0   // 0 closed → 1 swung open
-            property real morph:   0   // 0 padlock → 1 green tick
-
-            // true while pam_fprintd is prompting for a finger scan
-            readonly property bool fprintMode:
-                root.ctx.status.toLowerCase().includes("finger") && !root.ctx.succeeded
-
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: 34
-            height: 34
-
-            onShackleChanged: cv.requestPaint()
-            onMorphChanged:   cv.requestPaint()
-
-            // green circle behind the tick — grows in as morph progresses
-            Rectangle {
-                anchors.centerIn: parent
-                width: parent.width * 3.35
-                height: width
-                radius: width / 2
-                color: Theme.green
-                opacity: Math.max(0, padlock.morph - 0.2) / 0.8 * 0.25
-                scale: 0.4 + padlock.morph * 0.6
-                Behavior on scale { NumberAnimation { duration: 400; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
-            }
-
-            // fingerprint icon, crossfades with the padlock
-            Text {
-                anchors.centerIn: parent
-                text: "󰈷"
-                font.family: Theme.nerdFont
-                font.pixelSize: 28
-                color: Theme.foreground
-                opacity: padlock.fprintMode ? 0.85 : 0
-                Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.InOutCubic } }
-            }
-
-            Canvas {
-                id: cv
-                anchors.fill: parent
-                opacity: padlock.fprintMode ? 0 : 1
-                Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.InOutCubic } }
-
-                onPaint: {
-                    const ctx = getContext("2d");
-                    ctx.reset();
-                    ctx.lineWidth = 2.6;
-                    ctx.lineCap   = "round";
-                    ctx.lineJoin  = "round";
-
-                    const t = padlock.morph;
-
-                    // padlock, fading out as the morph progresses
-                    const lockAlpha = 0.85 * Math.max(0, 1 - t * 1.6);
-                    if (lockAlpha > 0.01) {
-                        ctx.globalAlpha = lockAlpha;
-                        ctx.strokeStyle = Theme.foreground;
-
-                        // body: rounded rect
-                        const x = 9, y = 15.5, bw = 16, bh = 12, r = 3.5;
-                        ctx.beginPath();
-                        ctx.moveTo(x + r, y);
-                        ctx.lineTo(x + bw - r, y); ctx.arcTo(x + bw, y, x + bw, y + r, r);
-                        ctx.lineTo(x + bw, y + bh - r); ctx.arcTo(x + bw, y + bh, x + bw - r, y + bh, r);
-                        ctx.lineTo(x + r, y + bh); ctx.arcTo(x, y + bh, x, y + bh - r, r);
-                        ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
-                        ctx.closePath();
-                        ctx.stroke();
-
-                        // shackle: arc that swings open around its left leg
-                        ctx.save();
-                        ctx.translate(11.5, 15.5);
-                        ctx.rotate(-padlock.shackle * 1.0);
-                        ctx.translate(-11.5, -15.5);
-                        ctx.beginPath();
-                        ctx.arc(17, 15.5, 5.5, Math.PI, 2 * Math.PI, false);
-                        ctx.stroke();
-                        ctx.restore();
-                    }
-
-                    // tick, drawing itself on in green
-                    if (t > 0.01) {
-                        const A = { x: 8,  y: 19 };
-                        const B = { x: 14, y: 25 };
-                        const C = { x: 26, y: 11 };
-                        const l1 = Math.hypot(B.x - A.x, B.y - A.y);
-                        const l2 = Math.hypot(C.x - B.x, C.y - B.y);
-                        const p  = t * (l1 + l2);
-
-                        ctx.globalAlpha = Math.min(1, t * 2);
-                        ctx.strokeStyle = Theme.green;
-                        ctx.beginPath();
-                        ctx.moveTo(A.x, A.y);
-                        if (p <= l1) {
-                            const k = p / l1;
-                            ctx.lineTo(A.x + (B.x - A.x) * k, A.y + (B.y - A.y) * k);
-                        } else {
-                            ctx.lineTo(B.x, B.y);
-                            const k = (p - l1) / l2;
-                            ctx.lineTo(B.x + (C.x - B.x) * k, B.y + (C.y - B.y) * k);
-                        }
-                        ctx.stroke();
-                    }
-                }
-            }
-
-            // shackle swings, then the morph runs while the icon breathes
-            SequentialAnimation {
-                id: unlockAnim
-                NumberAnimation { target: padlock; property: "shackle"; to: 1; duration: 180; easing.type: Easing.InOutQuad }
-                ParallelAnimation {
-                    NumberAnimation { target: padlock; property: "morph"; to: 1; duration: 400; easing.type: Easing.InOutCubic }
-                    SequentialAnimation {
-                        NumberAnimation { target: padlock; property: "scale"; to: 1.18; duration: 200; easing.type: Easing.OutQuad }
-                        NumberAnimation { target: padlock; property: "scale"; to: 1;    duration: 200; easing.type: Easing.OutQuad }
-                    }
-                }
-            }
-
-            Connections {
-                target: root.ctx
-                function onSucceededChanged() {
-                    if (root.ctx.succeeded) {
-                        unlockAnim.restart();
-                    } else {
-                        unlockAnim.stop();
-                        padlock.shackle = 0;
-                        padlock.morph = 0;
-                        padlock.scale = 1;
-                    }
-                }
-            }
-        }
-
-        Item { width: 1; height: 6 }
-
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 10
-
-            // AP must be in the same format string as hh or Qt ignores it
-            readonly property string fullTime: Qt.formatDateTime(clock.date, "hh:mm AP")
-
-            Text {
-                id: lockTime
-                text: parent.fullTime.split(" ")[0]
-                font.family: Theme.font
-                font.pixelSize: 92
-                font.weight: Font.DemiBold
-                color: Theme.foreground
-            }
-            Text {
-                anchors.baseline: lockTime.baseline
-                text: parent.fullTime.split(" ")[1]
-                font.family: Theme.font
-                font.pixelSize: 30
-                font.weight: Font.DemiBold
-                color: Qt.alpha(Theme.foreground, 0.6)
-            }
-        }
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: Qt.formatDateTime(clock.date, "dddd, MMMM d")
-            font.family: Theme.font
-            font.pixelSize: Theme.fontSize + 3
-            font.weight: Font.Medium
-            color: Qt.alpha(Theme.foreground, 0.7)
-        }
-
-        Item { width: 1; height: 34 }
-
-        // Password box
-        Rectangle {
-            id: box
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: 270
-            height: 44
-            radius: height / 2
-            color: Qt.rgba(1, 1, 1, 0.08)
-            border.width: Theme.borderWidth
-            border.color: root.ctx.status === "Incorrect password"
-                ? Qt.alpha(Theme.red, 0.7) : Theme.border
-
-            transform: Translate { id: shakeT }
-
-            TextInput {
-                id: input
-                anchors { fill: parent; leftMargin: 20; rightMargin: 20 }
-                verticalAlignment: TextInput.AlignVCenter
-                echoMode: TextInput.Password
-                passwordCharacter: "●"
-                font.family: Theme.font
-                font.pixelSize: Theme.fontSize
-                color: Theme.foreground
-                enabled: !root.ctx.authenticating && !root.ctx.succeeded
-                clip: true
-
-                onTextChanged: root.ctx.currentText = text
-                onAccepted: root.ctx.submit()
-
-                Connections {
-                    target: root.ctx
-                    function onCurrentTextChanged() {
-                        if (root.ctx.currentText === "") input.text = "";
-                    }
-                    function onFailed() { shake.restart() }
-                }
-            }
-
-            Text {
-                anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
-                visible: input.text === "" && !input.activeFocus
-                text: "password"
-                font.family: Theme.font
-                font.pixelSize: Theme.fontSize
-                color: Qt.alpha(Theme.foreground, 0.35)
-            }
-
-            SequentialAnimation {
-                id: shake
-                NumberAnimation { target: shakeT; property: "x"; to: -12; duration: 45 }
-                NumberAnimation { target: shakeT; property: "x"; to: 10;  duration: 45 }
-                NumberAnimation { target: shakeT; property: "x"; to: -6;  duration: 45 }
-                NumberAnimation { target: shakeT; property: "x"; to: 4;   duration: 45 }
-                NumberAnimation { target: shakeT; property: "x"; to: 0;   duration: 45 }
-            }
-        }
-
-        Item { width: 1; height: 4 }
-
-        // Status: fingerprint prompts, auth errors
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: 340
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.Wrap
-            text: root.ctx.authenticating ? "Authenticating…" : root.ctx.status
-            font.family: Theme.font
-            font.pixelSize: Theme.fontSize - 1
-            color: root.ctx.status === "Incorrect password"
-                ? Qt.alpha(Theme.red, 0.9) : Qt.alpha(Theme.foreground, 0.55)
-        }
-    }
-
-    // ── Lock screen media player ───────────────────────────────────────
+    // ── Media card (right) ────────────────────────────────────────────────
     Item {
-        id: lockMediaHost
+        id: mediaHost
 
-        // sticky player tracking
         property var _lastPlayer: null
         readonly property var player: {
-            const players = Mpris.players.values;
-            if (players.length === 0) return null;
+            const players = Mpris.players.values
+            if (players.length === 0) return null
             for (const p of players)
                 if (p.playbackState === MprisPlaybackState.Playing) {
-                    lockMediaHost._lastPlayer = p; return p;
+                    mediaHost._lastPlayer = p; return p
                 }
-            if (lockMediaHost._lastPlayer !== null)
+            if (mediaHost._lastPlayer !== null)
                 for (const p of players)
-                    if (p === lockMediaHost._lastPlayer) return p;
-            lockMediaHost._lastPlayer = players[0];
-            return players[0];
+                    if (p === mediaHost._lastPlayer) return p
+            mediaHost._lastPlayer = players[0]
+            return players[0]
         }
 
         anchors {
-            left: parent.left; leftMargin: parent.width * 0.08
+            right: parent.right
+            rightMargin: parent.width * 0.07
             verticalCenter: parent.verticalCenter
         }
         width: 300
-        height: card.implicitHeight
+        height: mediaCard.implicitHeight
 
         opacity: player !== null ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.InOutCubic } }
@@ -383,23 +113,216 @@ Item {
             border.color: Theme.border
         }
 
-        // accent glow ring
-        Rectangle {
-            anchors.centerIn: parent
-            width: parent.width + 40; height: parent.height + 40
-            radius: Theme.popupRadius + 20
-            color: "transparent"
-            border.width: 18
-            border.color: Qt.rgba(card.accentColor.r, card.accentColor.g, card.accentColor.b, 0.07)
-            z: -1
-            Behavior on border.color { ColorAnimation { duration: 500 } }
+        MediaCard {
+            id: mediaCard
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            player: mediaHost.player
+            active: mediaHost.visible
+        }
+    }
+
+    // ── Center column ─────────────────────────────────────────────────────
+    SystemClock { id: clock; precision: SystemClock.Minutes }
+
+    Column {
+        anchors.centerIn: parent
+        spacing: 0
+
+        // Time + AM/PM
+        Row {
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 8
+
+            Text {
+                id: timeText
+                text: Qt.formatDateTime(clock.date, "hh:mm AP").split(" ")[0]
+                font.family: Theme.nerdFont
+                font.pixelSize: 100
+                font.weight: Font.Bold
+                color: "white"
+            }
+            Text {
+                text: Qt.formatDateTime(clock.date, "AP")
+                font.family: Theme.font
+                font.pixelSize: 20
+                font.weight: Font.Light
+                color: Qt.rgba(1, 1, 1, 0.5)
+                anchors.bottom: timeText.bottom
+                bottomPadding: 14
+            }
         }
 
-        MediaCard {
-            id: card
-            anchors { left: parent.left; right: parent.right; top: parent.top }
-            player: lockMediaHost.player
-            active: lockMediaHost.visible
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: Qt.formatDateTime(clock.date, "dddd, MMMM d")
+            font.family: Theme.font
+            font.pixelSize: 16
+            color: Qt.rgba(1, 1, 1, 0.55)
         }
+
+        Item { width: 1; height: 52 }
+
+        // ── Password input + lock icon ─────────────────────────────────────
+        Row {
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 12
+
+            Rectangle {
+                id: inputBox
+                width: 260
+                height: 42
+                radius: height / 2
+                color: Qt.rgba(1, 1, 1, 0.1)
+                border.width: 1
+                border.color: root.ctx.status === "Incorrect password"
+                    ? Qt.rgba(1, 0.3, 0.3, 0.75)
+                    : Qt.rgba(1, 1, 1, 0.22)
+                Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                transform: Translate { id: shakeT }
+
+                TextInput {
+                    id: input
+                    anchors { fill: parent; leftMargin: 20; rightMargin: 20 }
+                    verticalAlignment: TextInput.AlignVCenter
+                    echoMode: TextInput.Password
+                    passwordCharacter: "●"
+                    font.family: Theme.font
+                    font.pixelSize: Theme.fontSize
+                    color: "white"
+                    enabled: !root.ctx.authenticating && !root.ctx.succeeded
+                    clip: true
+                    onTextChanged: root.ctx.currentText = text
+                    onAccepted:    root.ctx.submit()
+
+                    Connections {
+                        target: root.ctx
+                        function onCurrentTextChanged() {
+                            if (root.ctx.currentText === "") input.text = ""
+                        }
+                        function onFailed() { shake.restart() }
+                    }
+                }
+
+                SequentialAnimation {
+                    id: shake
+                    NumberAnimation { target: shakeT; property: "x"; to: -10; duration: 40 }
+                    NumberAnimation { target: shakeT; property: "x"; to:  10; duration: 40 }
+                    NumberAnimation { target: shakeT; property: "x"; to:  -6; duration: 40 }
+                    NumberAnimation { target: shakeT; property: "x"; to:   4; duration: 40 }
+                    NumberAnimation { target: shakeT; property: "x"; to:   0; duration: 40 }
+                }
+            }
+
+            Item {
+                id: padlock
+                width: 36; height: 42
+
+                property real shackle: 0
+                property real morph:   0
+
+                onShackleChanged: cv.requestPaint()
+                onMorphChanged:   cv.requestPaint()
+
+                Canvas {
+                    id: cv
+                    anchors.centerIn: parent
+                    width: 36; height: 36
+
+                    onPaint: {
+                        const ctx = getContext("2d")
+                        ctx.reset()
+                        ctx.lineWidth = 3.2
+                        ctx.lineCap  = "round"
+                        ctx.lineJoin = "round"
+
+                        const lockAlpha = Math.max(0, 1 - padlock.morph * 1.6)
+                        if (lockAlpha > 0.01) {
+                            ctx.globalAlpha = lockAlpha * 0.85
+                            ctx.strokeStyle = "white"
+                            const x = 8, y = 16, bw = 20, bh = 13, r = 3.5
+                            ctx.beginPath()
+                            ctx.moveTo(x + r, y)
+                            ctx.lineTo(x + bw - r, y); ctx.arcTo(x + bw, y, x + bw, y + r, r)
+                            ctx.lineTo(x + bw, y + bh - r); ctx.arcTo(x + bw, y + bh, x + bw - r, y + bh, r)
+                            ctx.lineTo(x + r, y + bh); ctx.arcTo(x, y + bh, x, y + bh - r, r)
+                            ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r)
+                            ctx.closePath()
+                            ctx.stroke()
+                            ctx.save()
+                            ctx.translate(12, 16)
+                            ctx.rotate(-padlock.shackle * 1.0)
+                            ctx.translate(-12, -16)
+                            ctx.beginPath()
+                            ctx.arc(18, 16, 6, Math.PI, 2 * Math.PI, false)
+                            ctx.stroke()
+                            ctx.restore()
+                        }
+
+                        if (padlock.morph > 0.01) {
+                            const A = { x: 7,  y: 20 }
+                            const B = { x: 14, y: 27 }
+                            const C = { x: 29, y: 10 }
+                            const l1 = Math.hypot(B.x - A.x, B.y - A.y)
+                            const l2 = Math.hypot(C.x - B.x, C.y - B.y)
+                            const p  = padlock.morph * (l1 + l2)
+                            ctx.globalAlpha = Math.min(1, padlock.morph * 2)
+                            ctx.strokeStyle = Theme.green
+                            ctx.beginPath()
+                            ctx.moveTo(A.x, A.y)
+                            if (p <= l1) {
+                                const k = p / l1
+                                ctx.lineTo(A.x + (B.x - A.x) * k, A.y + (B.y - A.y) * k)
+                            } else {
+                                ctx.lineTo(B.x, B.y)
+                                const k = (p - l1) / l2
+                                ctx.lineTo(B.x + (C.x - B.x) * k, B.y + (C.y - B.y) * k)
+                            }
+                            ctx.stroke()
+                        }
+                    }
+                }
+
+                SequentialAnimation {
+                    id: unlockAnim
+                    NumberAnimation { target: padlock; property: "shackle"; to: 1; duration: 180; easing.type: Easing.InOutQuad }
+                    ParallelAnimation {
+                        NumberAnimation { target: padlock; property: "morph"; to: 1; duration: 400; easing.type: Easing.InOutCubic }
+                        SequentialAnimation {
+                            NumberAnimation { target: padlock; property: "scale"; to: 1.2; duration: 200; easing.type: Easing.OutQuad }
+                            NumberAnimation { target: padlock; property: "scale"; to: 1.0; duration: 200; easing.type: Easing.OutQuad }
+                        }
+                    }
+                }
+
+                Connections {
+                    target: root.ctx
+                    function onSucceededChanged() {
+                        if (root.ctx.succeeded) {
+                            unlockAnim.restart()
+                        } else {
+                            unlockAnim.stop()
+                            padlock.shackle = 0
+                            padlock.morph   = 0
+                            padlock.scale   = 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Status message ────────────────────────────────────────────────────
+    Text {
+        anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter; bottomMargin: 40 }
+        text: root.ctx.authenticating ? "Authenticating…"
+            : root.ctx.status !== ""   ? root.ctx.status
+            : ""
+        font.family: Theme.font
+        font.pixelSize: Theme.fontSize - 1
+        color: root.ctx.status === "Incorrect password"
+            ? Qt.rgba(1, 0.4, 0.4, 0.85)
+            : Qt.rgba(1, 1, 1, 0.4)
+        Behavior on color { ColorAnimation { duration: 150 } }
     }
 }

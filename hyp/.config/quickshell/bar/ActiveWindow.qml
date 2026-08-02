@@ -3,7 +3,8 @@ import QtQuick
 import QtQuick.Layouts
 import qs.common
 
-RowLayout {
+Item {
+    id: root
     readonly property var active: ToplevelManager.activeToplevel
     readonly property string appClass: active?.appId ?? ""
     readonly property string displayName: {
@@ -14,24 +15,31 @@ RowLayout {
     }
 
     visible: appClass !== ""
-    spacing: 6
-    Layout.alignment: Qt.AlignVCenter
-    Layout.leftMargin: 10
+    implicitWidth: iconText.implicitWidth + 6 + Math.min(nameText.implicitWidth, 240) + 20
+    implicitHeight: Theme.pillHeight
 
-    Text {
-        text: ""
-        font.family: Theme.nerdFont
-        font.pixelSize: Theme.iconSize
-        color: Qt.alpha(Theme.foreground, 0.3)
+    Rectangle {
+        anchors.fill: parent; radius: height / 2
+        color: Theme.hover
+        opacity: awMouse.containsMouse ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 100 } }
     }
 
     Text {
-        Layout.maximumWidth: 260
+        id: nameText
+        anchors { left: iconText.right; verticalCenter: parent.verticalCenter }
+        width: Math.min(implicitWidth, 240)
         elide: Text.ElideRight
         text: displayName
         font.family: Theme.font
         font.pixelSize: Theme.fontSize
         font.weight: Font.Medium
         color: Qt.alpha(Theme.foreground, 0.4)
+    }
+
+    MouseArea {
+        id: awMouse
+        anchors.fill: parent
+        hoverEnabled: true
     }
 }

@@ -37,8 +37,7 @@ Item {
     readonly property bool playing:
         player !== null && player.playbackState === MprisPlaybackState.Playing
 
-    // always visible — shows "No media" when no player
-    visible: true
+    visible: player !== null && (playing || (player.trackTitle ?? "").length > 0)
     implicitWidth: row.implicitWidth + 20
     implicitHeight: Theme.pillHeight
 
@@ -86,11 +85,34 @@ Item {
         id: hitArea
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+        onEntered: tip.show(root)
+        onExited:  tip.hide()
         onClicked: mouse => {
+            tip.hide()
             if (mouse.button === Qt.LeftButton)
                 mediaControls.toggle();
             else if (mouse.button === Qt.MiddleButton && root.player?.canGoNext)
                 root.player.next();
+        }
+    }
+
+    BarTooltip {
+        id: tip
+        contentWidth:  tipText.implicitWidth + 24
+        contentHeight: tipText.implicitHeight + 14
+        Text {
+            id: tipText
+            anchors.centerIn: parent
+            text: {
+                if (!root.player) return "No media"
+                const album = root.player.trackAlbum
+                if (album) return album
+                return root.playing ? "Playing" : "Paused"
+            }
+            font.family: Theme.font
+            font.pixelSize: Theme.fontSize - 1
+            font.weight: Font.Medium
+            color: Theme.foreground
         }
     }
 

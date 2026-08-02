@@ -34,6 +34,14 @@ Item {
         Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
     }
 
+    // green backdrop when charging
+    Rectangle {
+        anchors.fill: parent; radius: height / 2
+        color: Qt.alpha(Theme.green, 0.65)
+        opacity: root.charging ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.animDuration } }
+    }
+
     // flashing red backdrop when critical
     Rectangle {
         id: flash
@@ -49,65 +57,6 @@ Item {
         onStopped: flash.opacity = 0
         NumberAnimation { target: flash; property: "opacity"; to: 0.9;  duration: 450; easing.type: Easing.InOutQuad }
         NumberAnimation { target: flash; property: "opacity"; to: 0.15; duration: 450; easing.type: Easing.InOutQuad }
-    }
-
-    // ── Charging glow ──────────────────────────────────────────────────
-    Rectangle {
-        id: chargeGlow
-        anchors.fill: parent; radius: height / 2
-        color: Theme.blue
-        opacity: 0
-    }
-
-    // Gentle breathing while charging; started programmatically below.
-    SequentialAnimation {
-        id: chargingBreath
-        loops: Animation.Infinite
-        NumberAnimation { target: chargeGlow; property: "opacity"; to: 0.22; duration: 900; easing.type: Easing.InOutSine }
-        NumberAnimation { target: chargeGlow; property: "opacity"; to: 0.06; duration: 900; easing.type: Easing.InOutSine }
-    }
-
-    // Bright flash on plug-in, fades into the breathing level.
-    SequentialAnimation {
-        id: chargeConnectAnim
-        NumberAnimation { target: chargeGlow; property: "opacity"; to: 0.65; duration: 130; easing.type: Easing.OutCubic }
-        PauseAnimation  { duration: 80 }
-        NumberAnimation { target: chargeGlow; property: "opacity"; to: 0.10; duration: 550; easing.type: Easing.InCubic }
-        onFinished: if (root.charging) chargingBreath.restart()
-    }
-
-    // Smooth fade out when unplugged.
-    NumberAnimation {
-        id: chargeGlowOut
-        target: chargeGlow; property: "opacity"
-        to: 0; duration: 400; easing.type: Easing.InCubic
-    }
-
-    // Suppress the plug-in flash during startup while UPower initialises.
-    property bool _chargingReady: false
-    Timer {
-        interval: 1500; running: true
-        onTriggered: {
-            root._chargingReady = true
-            // Charger was already connected at startup — begin breathing quietly.
-            if (root.charging) chargingBreath.restart()
-        }
-    }
-
-    onChargingChanged: {
-        if (charging) {
-            chargeGlowOut.stop()
-            if (_chargingReady) {
-                chargingBreath.stop()
-                chargeConnectAnim.restart()
-            } else {
-                chargingBreath.restart()
-            }
-        } else {
-            chargeConnectAnim.stop()
-            chargingBreath.stop()
-            chargeGlowOut.restart()
-        }
     }
 
     RowLayout {
@@ -149,7 +98,31 @@ Item {
     BarHitArea {
         id: hitArea
         hoverEnabled: true
-        onClicked: powerMenu.toggle()
+        onEntered: tip.show(root)
+        onExited:  tip.hide()
+        onClicked: { tip.hide(); powerMenu.toggle() }
+    }
+
+    BarTooltip {
+        id: tip
+        contentWidth:  tipText.implicitWidth + 24
+        contentHeight: tipText.implicitHeight + 14
+        Text {
+            id: tipText
+            anchors.centerIn: parent
+            text: {
+                const pct = `${Math.round(root.percent)}%`
+                if (root.critical)          return `${pct} · Critical`
+                if (root.percent >= 99 && root.charging) return "Fully charged"
+                if (root.charging)          return `${pct} · Charging`
+                if (root.perfMode)          return `${pct} · Performance mode`
+                return `${pct} · On battery`
+            }
+            font.family: Theme.font
+            font.pixelSize: Theme.fontSize - 1
+            font.weight: Font.Medium
+            color: Theme.foreground
+        }
     }
 
     PowerProfilePopup {

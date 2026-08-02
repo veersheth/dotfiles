@@ -46,14 +46,47 @@ Item {
     BarHitArea {
         id: hitArea
         hoverEnabled: true
+        onEntered: tip.show(root)
+        onExited:  tip.hide()
         onClicked: {
-            NotificationService.dismiss();
-            centerPopup.toggle();
+            tip.hide()
+            NotificationService.dismiss()
+            if (!centerLoader.active) {
+                centerLoader.active = true
+            } else {
+                centerLoader.item.toggle()
+            }
         }
     }
 
-    NotificationCenterPopup {
-        id: centerPopup
-        anchorItem: root
+    BarTooltip {
+        id: tip
+        contentWidth:  tipText.implicitWidth + 24
+        contentHeight: tipText.implicitHeight + 14
+        Text {
+            id: tipText
+            anchors.centerIn: parent
+            text: NotificationService.dnd
+                ? "Do not disturb"
+                : root.count > 0
+                    ? `${root.count} notification${root.count === 1 ? "" : "s"}`
+                    : "No notifications"
+            font.family: Theme.font
+            font.pixelSize: Theme.fontSize - 1
+            font.weight: Font.Medium
+            color: Theme.foreground
+        }
+    }
+
+    Loader {
+        id: centerLoader
+        active: false
+        sourceComponent: Component {
+            NotificationCenterPopup {}
+        }
+        onLoaded: {
+            item.anchorItem = root
+            item.toggle()
+        }
     }
 }

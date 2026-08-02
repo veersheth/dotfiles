@@ -15,10 +15,10 @@ BarPopup {
     readonly property real volume: sink?.audio?.volume ?? 0
     readonly property bool muted:  sink?.audio?.muted  ?? false
 
-    // Hardware sinks only — exclude application streams
-    readonly property var audioSinks: Pipewire.nodes.values.filter(n => n.isSink && !n.isStream)
+    readonly property var audioSinks:   Pipewire.nodes.values.filter(n => n.isSink && !n.isStream)
+    readonly property var audioStreams: Pipewire.nodes.values.filter(n => n.isStream)
 
-    PwObjectTracker { objects: root.audioSinks }
+    PwObjectTracker { objects: [...root.audioSinks, ...root.audioStreams] }
 
     signal escaped()
     onEscaped: close()
@@ -35,6 +35,7 @@ BarPopup {
         anchors { top: parent.top; left: parent.left; right: parent.right }
         spacing: 0
 
+        // ── Master volume ──────────────────────────────────────────────
         Text {
             Layout.bottomMargin: 12
             text: "Volume"
@@ -42,12 +43,10 @@ BarPopup {
             color: Qt.alpha(Theme.foreground, 0.55)
         }
 
-        // ── Slider row ─────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
             spacing: 12
 
-            // Mute toggle
             Rectangle {
                 width: 32; height: 32; radius: width / 2
                 color: muteMo.containsMouse ? Theme.hover : "transparent"
@@ -79,7 +78,6 @@ BarPopup {
                 onMoved: v => { if (root.sink?.audio) root.sink.audio.volume = v }
             }
 
-            // Percentage
             Text {
                 text: `${Math.round(root.volume * 100)}%`
                 font.family: Theme.font; font.pixelSize: Theme.fontSize - 1; font.weight: Font.Medium
@@ -89,7 +87,132 @@ BarPopup {
             }
         }
 
-        // ── Divider ────────────────────────────────────────────────────
+        // ── App streams ────────────────────────────────────────────────
+        Rectangle {
+            visible: root.audioStreams.length > 0
+            Layout.fillWidth: true; Layout.topMargin: 16; Layout.bottomMargin: 14
+            height: 1; color: Qt.alpha(Theme.foreground, 0.08)
+        }
+
+        Text {
+            visible: root.audioStreams.length > 0
+            Layout.bottomMargin: 10
+            text: "Apps"
+            font.family: Theme.font; font.pixelSize: Theme.fontSize - 3; font.weight: Font.DemiBold
+            color: Qt.alpha(Theme.foreground, 0.55)
+        }
+
+        CommonList {
+            visible: root.audioStreams.length > 0
+            Layout.fillWidth: true
+            spacing: 10
+
+            Repeater {
+                model: root.audioStreams
+
+                ColumnLayout {
+                    id: streamItem
+                    required property var modelData
+
+                    readonly property real  sVol:   modelData.audio?.volume ?? 0
+                    readonly property bool  sMuted: modelData.audio?.muted  ?? false
+                    readonly property string iconSrc: {
+                        const n = streamItem.modelData.name?.toLowerCase() ?? ""
+                        const p = Quickshell.iconPath(n, true)
+                        return p !== "" ? p : Quickshell.iconPath(n)
+                    }
+
+                    Layout.fillWidth: true
+                    spacing: 5
+
+                    // Name row
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        IconImage {
+                            implicitSize: 16
+                            Layout.alignment: Qt.AlignVCenter
+                            source: streamItem.iconSrc
+                            visible: streamItem.iconSrc !== ""
+                        }
+
+                        Text {
+                            visible: streamItem.iconSrc === ""
+                            text: "󰓃"
+                            font.family: Theme.nerdFont
+                            font.pixelSize: 14
+                            color: Qt.alpha(Theme.foreground, 0.45)
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            text: streamItem.modelData.description || streamItem.modelData.name
+                            font.family: Theme.font
+                            font.pixelSize: Theme.fontSize - 1
+                            font.weight: Font.Medium
+                            color: streamItem.sMuted
+                                ? Qt.alpha(Theme.foreground, 0.4)
+                                : Theme.foreground
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
+
+                        Rectangle {
+                            width: 26; height: 26; radius: width / 2
+                            color: sMuteMo.containsMouse ? Theme.hover : "transparent"
+                            Behavior on color { ColorAnimation { duration: 80 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: streamItem.sMuted ? "󰝟" : "󰕾"
+                                font.family: Theme.nerdFont
+                                font.pixelSize: Theme.iconSize - 2
+                                color: streamItem.sMuted
+                                    ? Qt.alpha(Theme.foreground, 0.35)
+                                    : Qt.alpha(Theme.foreground, 0.65)
+                                Behavior on color { ColorAnimation { duration: 100 } }
+                            }
+
+                            MouseArea {
+                                id: sMuteMo; anchors.fill: parent; hoverEnabled: true
+                                onClicked: if (streamItem.modelData.audio)
+                                    streamItem.modelData.audio.muted = !streamItem.sMuted
+                            }
+                        }
+                    }
+
+                    // Slider row
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: 24
+                        spacing: 8
+
+                        CommonSlider {
+                            Layout.fillWidth: true
+                            value:    streamItem.sVol
+                            maxValue: 1.0
+                            fillColor: streamItem.sMuted
+                                ? Qt.alpha(Theme.foreground, 0.18)
+                                : Theme.blue
+                            onMoved: v => { if (streamItem.modelData.audio)
+                                streamItem.modelData.audio.volume = v }
+                        }
+
+                        Text {
+                            text: `${Math.round(streamItem.sVol * 100)}%`
+                            font.family: Theme.font
+                            font.pixelSize: Theme.fontSize - 2
+                            color: Qt.alpha(Theme.foreground, 0.5)
+                            Layout.preferredWidth: 36
+                            horizontalAlignment: Text.AlignRight
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── Output devices ─────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true; Layout.topMargin: 16; Layout.bottomMargin: 12
             height: 1; color: Qt.alpha(Theme.foreground, 0.08)
@@ -102,7 +225,6 @@ BarPopup {
             color: Qt.alpha(Theme.foreground, 0.55)
         }
 
-        // ── Sink list ──────────────────────────────────────────────────
         Flickable {
             Layout.fillWidth: true
             Layout.preferredHeight: Math.max(34, Math.min(sinkCol.implicitHeight + 4, 150))
@@ -123,8 +245,8 @@ BarPopup {
 
                         Layout.fillWidth: true
                         implicitHeight: 34; radius: Theme.itemRadius
-                        color: active              ? Qt.alpha(Theme.blue, 0.18)
-                             : sinkMo.containsMouse ? Theme.hover
+                        color: active               ? Qt.alpha(Theme.blue, 0.18)
+                             : sinkMo.containsMouse  ? Theme.hover
                              : "transparent"
                         Behavior on color { ColorAnimation { duration: 80 } }
 

@@ -17,6 +17,7 @@ PanelWindow {
     property Item anchorItem: null
     property bool shown: false
     property double dismissedAt: 0
+    property bool clearing: false
 
     readonly property var notifs: [...NotificationService.notifications.values].reverse()
 
@@ -38,8 +39,8 @@ PanelWindow {
     WlrLayershell.namespace: "quickshell:popup"
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-    WlrLayershell.margins.top:    Theme.barHeight + 8
-    WlrLayershell.margins.bottom: 8
+    WlrLayershell.margins.top:    BarState.barBottom ? 8 : Theme.barHeight + 8
+    WlrLayershell.margins.bottom: BarState.barBottom ? Theme.barHeight + 8 : 8
     WlrLayershell.margins.right:  8
 
     implicitWidth: 380
@@ -76,6 +77,16 @@ PanelWindow {
         onCleared: {
             root.dismissedAt = Date.now()
             root.shown = false
+        }
+    }
+
+    // Fires after the cascade animation, then actually clears
+    Timer {
+        id: clearDelay
+        interval: Math.min(root.notifs.length, 7) * 50 + 260
+        onTriggered: {
+            NotificationService.clearAll()
+            root.clearing = false
         }
     }
 
@@ -138,7 +149,6 @@ PanelWindow {
                 Rectangle {
                     implicitWidth: 28; implicitHeight: 28; radius: width / 2
                     color: clearMouse.containsMouse ? Theme.hover : "transparent"
-                    visible: root.notifs.length > 0
                     Text {
                         anchors.centerIn: parent
                         text: "󰎟"
@@ -150,7 +160,11 @@ PanelWindow {
                         id: clearMouse
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: NotificationService.clearAll()
+                        onClicked: {
+                            root.clearing = true
+                            list.positionViewAtBeginning()
+                            clearDelay.restart()
+                        }
                     }
                 }
             }
@@ -190,22 +204,64 @@ PanelWindow {
                 boundsBehavior: Flickable.StopAtBounds
 
                 delegate: Rectangle {
+                    id: notifCard
                     required property var modelData
+                    required property int index
 
+                    property bool dismissing: false
                     readonly property bool critical: modelData.urgency === NotificationUrgency.Critical
 
                     width: list.width - 28
                     height: row.implicitHeight + 36
                     radius: Theme.popupRadius
-                    color: itemMouse.containsMouse ? Theme.hoverStrong : Theme.background
+                    color: Theme.background
                     border.width: Theme.borderWidth
                     border.color: critical ? Qt.alpha(Theme.red, 0.6) : Theme.border
+
+                    states: [
+                        State {
+                            name: "dismissing"
+                            when: notifCard.dismissing
+                            PropertyChanges { target: notifCard; opacity: 0; x: 48; height: 0 }
+                        },
+                        State {
+                            name: "clearing"
+                            when: root.clearing
+                            PropertyChanges { target: notifCard; opacity: 0; x: 48 }
+                        }
+                    ]
+                    transitions: [
+                        Transition {
+                            from: ""; to: "dismissing"
+                            SequentialAnimation {
+                                ParallelAnimation {
+                                    NumberAnimation { property: "opacity"; duration: 180; easing.type: Easing.InCubic }
+                                    NumberAnimation { property: "x";       duration: 220; easing.type: Easing.InCubic }
+                                    NumberAnimation { property: "height";  duration: 220; easing.type: Easing.InCubic }
+                                }
+                                ScriptAction { script: notifCard.modelData.dismiss() }
+                            }
+                        },
+                        Transition {
+                            from: ""; to: "clearing"
+                            SequentialAnimation {
+                                PauseAnimation { duration: Math.min(notifCard.index, 6) * 50 }
+                                ParallelAnimation {
+                                    NumberAnimation { property: "opacity"; duration: 220; easing.type: Easing.InCubic }
+                                    NumberAnimation { property: "x";       duration: 220; easing.type: Easing.InCubic }
+                                }
+                            }
+                        }
+                    ]
 
                     MouseArea {
                         id: itemMouse
                         anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: parent.modelData.dismiss()
+                        hoverEnabled: false
+                        onClicked: {
+                            if (!notifCard.dismissing && !root.clearing)
+                                notifCard.dismissing = true
+                        }
                     }
 
                     RowLayout {

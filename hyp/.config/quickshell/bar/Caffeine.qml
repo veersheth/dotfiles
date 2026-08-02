@@ -271,7 +271,7 @@ Item {
         id: picker
         anchorItem: root
         contentWidth:  Theme.listWidth
-        contentHeight: pcol.implicitHeight
+        contentHeight: pcol.implicitHeight + picker.contentPadding * 2
 
         CommonList {
             id: pcol

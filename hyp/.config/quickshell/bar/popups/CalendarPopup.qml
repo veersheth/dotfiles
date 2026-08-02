@@ -85,18 +85,13 @@ BarPopup {
         anchors.centerIn: parent
         spacing: 10
 
-        WheelHandler {
-            target: null
-            onWheel: event => root.addMonths(event.angleDelta.y < 0 ? 1 : -1)
-        }
-
-        // ── Header: « ‹ Month Year › » ────────────────────────────────
+        // ── Header: ⇑ ↑ Month Year ↓ ⇓ ────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
             spacing: 2
 
-            NavButton { label: "«"; onActivated: root.addMonths(-12) }
-            NavButton { label: "‹"; onActivated: root.addMonths(-1) }
+            NavButton { label: "<<"; onActivated: root.addMonths(-12) }
+            NavButton { label: "<"; onActivated: root.addMonths(-1) }
 
             Rectangle {
                 Layout.fillWidth: true
@@ -121,8 +116,8 @@ BarPopup {
                 }
             }
 
-            NavButton { label: "›"; onActivated: root.addMonths(1) }
-            NavButton { label: "»"; onActivated: root.addMonths(12) }
+            NavButton { label: ">"; onActivated: root.addMonths(1) }
+            NavButton { label: ">>"; onActivated: root.addMonths(12) }
         }
 
         // ── Day-of-week labels ────────────────────────────────────────
@@ -145,15 +140,18 @@ BarPopup {
         }
 
         // ── Vertically scrolling month strip ──────────────────────────
-        ListView {
+        Item {
+            Layout.preferredWidth: 7 * root.cellW + 6 * 2
+            Layout.preferredHeight: 6 * root.cellH + 5 * 2
+
+            ListView {
             id: monthList
 
             readonly property int baseIndex: root.minYear * 12
 
-            Layout.preferredWidth: 7 * root.cellW + 6 * 2
-            Layout.preferredHeight: 6 * root.cellH + 5 * 2
+            anchors.fill: parent
             clip: true
-            interactive: false   // wheel + buttons drive it via currentIndex
+            interactive: false
             model: (root.maxYear - root.minYear + 1) * 12
 
             currentIndex: root.year * 12 + root.month - baseIndex
@@ -219,6 +217,25 @@ BarPopup {
                                 hoverEnabled: true
                                 onClicked: root.selectedMs = parent.day.getTime()
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+            // Transparent overlay: catches wheel/touchpad events above the
+            // ListView so Flickable can't intercept them. Plain Item — no
+            // MouseArea — so day clicks still pass through.
+            Item {
+                anchors.fill: parent
+                WheelHandler {
+                    target: null
+                    property real accum: 0
+                    onWheel: event => {
+                        accum += event.angleDelta.y
+                        if (Math.abs(accum) >= 120) {
+                            root.addMonths(accum < 0 ? 1 : -1)
+                            accum = 0
                         }
                     }
                 }

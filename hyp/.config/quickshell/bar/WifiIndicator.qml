@@ -71,11 +71,34 @@ Item {
         id: hitArea
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onEntered: tip.show(root)
+        onExited:  tip.hide()
         onClicked: mouse => {
+            tip.hide();
             if (mouse.button === Qt.RightButton)
                 Quickshell.execDetached(["hypr-settings", "--wifi"]);
             else
                 networks.toggle();
+        }
+    }
+
+    BarTooltip {
+        id: tip
+        contentWidth:  tipText.implicitWidth + 24
+        contentHeight: tipText.implicitHeight + 14
+
+        Text {
+            id: tipText
+            anchors.centerIn: parent
+            text: root.connected
+                ? (root.noInternet
+                    ? `${root.ssid} · ${root.connectivity === "portal" ? "captive portal" : "no internet"}`
+                    : `${root.ssid} · ${root.strength}%`)
+                : "Not connected"
+            font.family: Theme.font
+            font.pixelSize: Theme.fontSize - 1
+            font.weight: Font.Medium
+            color: root.noInternet ? Theme.yellow : Theme.foreground
         }
     }
 

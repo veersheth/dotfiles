@@ -43,11 +43,45 @@ Item {
     BarHitArea {
         id: hitArea
         hoverEnabled: true
-        onClicked: volPopup.toggle()
+        onEntered: tip.show(root)
+        onExited:  tip.hide()
+        onClicked: {
+            tip.hide()
+            if (!volLoader.active) {
+                volLoader.active = true
+            } else {
+                volLoader.item.toggle()
+            }
+        }
     }
 
-    VolumePopup {
-        id: volPopup
-        anchorItem: root
+    BarTooltip {
+        id: tip
+        contentWidth:  tipText.implicitWidth + 24
+        contentHeight: tipText.implicitHeight + 14
+
+        Text {
+            id: tipText
+            anchors.centerIn: parent
+            text: root.muted
+                ? `Muted · ${Math.round(root.volume * 100)}%`
+                : `${Math.round(root.volume * 100)}%`
+            font.family: Theme.font
+            font.pixelSize: Theme.fontSize - 1
+            font.weight: Font.Medium
+            color: root.muted ? Qt.alpha(Theme.foreground, 0.55) : Theme.foreground
+        }
+    }
+
+    Loader {
+        id: volLoader
+        active: false
+        sourceComponent: Component {
+            VolumePopup {}
+        }
+        onLoaded: {
+            item.anchorItem = root
+            item.toggle()
+        }
     }
 }
