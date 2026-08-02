@@ -1,1 +1,1 @@
-hl.monitor({ output = "eDP-1", mode = "2256x1504@60", position = "1x0", scale = 1.3 })
+hl.monitor({ output = "desc:BOE 0x0BCA", mode = "2256x1504@60", position = "2521x3001", scale = 1.3 })

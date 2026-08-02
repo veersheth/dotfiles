@@ -15,6 +15,7 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("hypridle")
   hl.exec_cmd("systemctl --user start hyprpolkitagent")
   hl.exec_cmd("systemd-run --user --scope kdeconnect-indicator")
+  hl.exec_cmd("sleep 1; ~/.config/hypr/scripts/startup.sh")
 end)
 
 hl.env("XCURSOR_THEME", "Bibata-Modern-Classic")
@@ -30,13 +31,13 @@ hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 hl.config({
   general = {
     gaps_in          = 1,
-    gaps_out         = 2,
+    gaps_out         = 0,
 
     border_size      = 1,
 
     col              = {
-      active_border   = "rgba(200, 200, 200, 0.5)",
-      inactive_border = "rgba(200, 200, 200, 0.2)",
+      active_border   = "rgba(200, 200, 200, 1)",
+      inactive_border = "rgba(100, 100, 100, 1)",
     },
 
     resize_on_border = true,
@@ -45,11 +46,11 @@ hl.config({
   },
 
   decoration = {
-    rounding         = 12,
+    rounding         = 4,
     rounding_power   = 2,
 
     active_opacity   = 1.0,
-    inactive_opacity = 0.95,
+    inactive_opacity = 0.90,
 
     shadow           = {
       enabled        = false,
@@ -61,9 +62,9 @@ hl.config({
 
     blur             = {
       enabled  = true,
-      size     = 4,
-      passes   = 2,
-      vibrancy = 3,
+      size     = 3,
+      passes   = 3,
+      vibrancy = 0,
       special  = true,
     },
   },
@@ -97,7 +98,7 @@ hl.animation({ leaf = "workspaces", enabled = true, speed = 1.5, bezier = "easeO
 hl.animation({ leaf = "workspacesIn", enabled = true, speed = 1.5, bezier = "easeOutQuint", style = "slidefade 1%" })
 hl.animation({ leaf = "workspacesOut", enabled = true, speed = 1.5, bezier = "easeOutQuint", style = "slidefade 1%" })
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 3, bezier = "easeOutQuint", style = "slidefade 1%" })
-hl.animation({ leaf = "zoomFactor", enabled = false, speed = 7, bezier = "quick" })
+hl.animation({ leaf = "zoomFactor", enabled = true, speed = 4, bezier = "easeInOutCubic" })
 
 -- -- "Smart gaps" / "No gaps when only"
 -- -- uncomment all if you wish to use that.
@@ -123,6 +124,7 @@ hl.config({
   },
   master = {
     new_status = "master",
+    mfact = 0.5
   },
 })
 
@@ -168,15 +170,11 @@ hl.config({
   },
 })
 
-hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
-
-hl.gesture({ fingers = 4, direction = "pinch", action = "cursorZoom", zoom_level = 1, mode = "live" })
-
 -- Example per-device config
 -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Devices/ for more
 hl.device({
   name        = "usb-optical-mouse-",
-  sensitivity = -0.2,
+  sensitivity = -0.5,
   scroll_factor = 5,
 })
 
@@ -192,7 +190,7 @@ hl.device({
 
 hl.bind("SUPER + comma", hl.dsp.exec_cmd("hypr-settings")) -- settings
 
-hl.bind("SUPER + Return", hl.dsp.exec_cmd("ghostty")) -- terminal
+hl.bind("SUPER + Return", hl.dsp.exec_cmd("kitty")) -- terminal
 
 hl.bind("SUPER + Q", hl.dsp.window.close())
 
@@ -215,13 +213,60 @@ hl.bind("Print",       hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh reg
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh annotate"))
 hl.bind("SUPER + Print", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh output"))
 
--- Quarry
+
+
+
+
+
+
+
+
+
+
+hl.gesture({
+    fingers = 4,
+    direction = "pinchin",
+    action = "cursor_zoom",
+    zoom_level = 2,
+    mode = "mult"
+})
+
+hl.gesture({
+    fingers = 4,
+    direction = "pinchout",
+    action = "cursor_zoom",
+    zoom_level = 0.5,
+    mode = "mult"
+})
+
+
+-- hl.bind("SUPER + Equal", hl.dsp.exec_cmd("notify-send 'hello'"))
+-- hl.bind("SUPER + Minus", hl.dsp.exec_cmd("notify-send 'hello'"))
+--
+-- the framework key / media key
+
+hl.bind("XF86AudioMedia", hl.dsp.exec_cmd("notify-send 'hello'"))
+hl.bind("SUPER + XF86AudioMedia", hl.dsp.exec_cmd("~/.config/hypr/scripts/gaming-mode.sh"))
+
+
+-- quarry
 
 hl.bind("ALT + Space", hl.dsp.exec_cmd("/home/veer/code/quarry/src-tauri/target/release/quarry-toggle"))
 
 hl.bind("SUPER + V", hl.dsp.exec_cmd("/home/veer/code/quarry/src-tauri/target/release/quarry --with 'cp '"))
 
 hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("/home/veer/code/quarry/src-tauri/target/release/quarry-toggle"), { release = true })
+
+
+-- Gestures 
+
+hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
+
+-- hl.gesture({ fingers = 4, direction = "pinch", action = "cursorZoom", zoom_level = 1, mode = "live" })
+
+
+
+
 
 ----------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------
@@ -259,11 +304,17 @@ for i = 1, 10 do
   hl.bind("SUPER + SHIFT + " .. key, hl.dsp.window.move({ workspace = i }))
 end
 
+hl.bind("SUPER + Tab", function() hl.dispatch(hl.dsp.focus({ workspace = "e+1" })) end)
+hl.bind("SUPER + SHIFT + Tab", function() hl.dispatch(hl.dsp.focus({ workspace = "e-1" })) end)
+hl.bind("SUPER + CTRL + Tab", hl.dsp.focus({ workspace = "empty" }))
+
 -- special workspace
 hl.bind("SUPER + Grave", hl.dsp.workspace.toggle_special("magic"))
 hl.bind("SUPER + SHIFT + Grave", hl.dsp.window.move({ workspace = "special:magic" }))
 hl.workspace_rule({ workspace = "special:magic", gaps_out = 38, gaps_in = 4 })
 
+-- hl.workspace_rule({ workspace = "10", layout = "float" })
+--
 -- m/shift+m as named shortcuts for workspace 6
 hl.bind("SUPER + M", hl.dsp.focus({ workspace = 6 }))
 hl.bind("SUPER + SHIFT + M", hl.dsp.window.move({ workspace = 6 }))
@@ -273,6 +324,10 @@ hl.bind("SUPER + SHIFT + E", hl.dsp.window.move({ workspace = 4 }))
 
 -- Alt+Tab to toggle back to last active workspace
 hl.bind("ALT + Tab", hl.dsp.focus({ workspace = "previous" }))
+
+-- Focus monitor (mirrors window cycle J/K, scoped up to monitor level)
+hl.bind("SUPER + CTRL + J", hl.dsp.focus({ monitor = "+1" }))
+hl.bind("SUPER + CTRL + K", hl.dsp.focus({ monitor = "-1" }))
 
 hl.bind("SUPER + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind("SUPER + mouse_up", hl.dsp.focus({ workspace = "e-1" }))
@@ -289,8 +344,8 @@ hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("~/.config/hypr/scripts/volume-n
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd("~/.config/hypr/scripts/mute-notify.sh @DEFAULT_AUDIO_SINK@"), { locked = true, repeating = true })
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("~/.config/hypr/scripts/mute-notify.sh @DEFAULT_AUDIO_SOURCE@"), { locked = true, repeating = true })
 
-hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("~/.config/hypr/scripts/brightness-notify.sh   --instant 6%+"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("~/.config/hypr/scripts/brightness-notify.sh --instant 6%-"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("~/.config/hypr/scripts/brightness-notify.sh    6%+"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("~/.config/hypr/scripts/brightness-notify.sh  6%-"), { locked = true, repeating = true })
 
 -- Requires playerctl
 hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })
@@ -353,6 +408,7 @@ hl.window_rule({
   float       = true,
   pin         = true,
   no_anim     = true,
+  rounding   = 16
   -- animation   = "gnomed",
   -- dim_around   = true
 })
@@ -362,12 +418,14 @@ hl.window_rule({
   match = { class = ".*LiveCaptions.*" },
   float = true,
   pin   = true,
+  rounding   = 16
 })
 
 hl.window_rule({
   name  = "preview",
   match = { class = ".*NautilusPreviewer.*" },
   float = true,
+  rounding   = 16
 })
 
 hl.window_rule({
@@ -375,7 +433,14 @@ hl.window_rule({
   match = { class = ".*satty.*" },
   float = true,
   pin   = true,
+  rounding   = 16
 })
+
+-- hl.window_rule({
+--   name  = "obsidian",
+--   match = { class = "obsidian" },
+--   transparency = 0.1
+-- })
 
 -- change monitor to high resolution, the last argument is the scale factor
 hl.monitor({ output = "", mode = "highres", position = "auto", scale = "2" })
@@ -383,7 +448,8 @@ hl.monitor({ output = "", mode = "highres", position = "auto", scale = "2" })
 hl.config({
   xwayland = {
     force_zero_scaling = true
-  }
+  },
+
 })
 -- toolkit-specific scale
 hl.env("GDK_SCALE", "2")
