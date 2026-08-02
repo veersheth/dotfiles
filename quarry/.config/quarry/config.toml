@@ -1,3 +1,5 @@
+timer_sound = "beep"
+
 [triggers]
 camera = "^cam$"
 bookmarks = '^bk\s+(.*)$'
@@ -17,14 +19,14 @@ note = "^note$"
 ai = '^ \s*(.*)$'
 time = '^time\s(.*)$'
 settings = '^set\s*(.*)$'
-timer = '^timer\s*(.*)$'
-screenshots = '^ss\s*(.*)$'
-shortcuts = '^q\s*(.*)$'
-scripts = '^s \s*(.*)$'
+timer = '^timer (.*)$'
+screenshots = '^ss (.*)$'
+shortcuts = '^q (.*)$'
+scripts = '^s (.*)$'
 
 [theme]
-background_color = "rgba(10, 10, 10, 1)"
-background_opacity = 1.0
+background_color = "rgba(26, 26, 26, 1.00)"
+background_opacity = 1
 font_size = 15
 font_color = "rgba(255, 255, 255, 1)"
 font_family = "Inter"
@@ -33,12 +35,12 @@ border_radius = 10
 border_color = "rgba(255,255,255,0.35)"
 border_thickness = 0
 item_border_radius = 16
-active_bg_color = "rgba(40, 40, 40, 1)"
-active_border_color = "rgba(255,255,255,0.0)"
+active_bg_color = "rgba(50, 50, 50, 1)"
+active_border_color = "rgba(255,255,255,0.1)"
 
 [window]
-width = 900
-height = 550
+width = 850
+height = 600
 
 [[web_searches]]
 name = "Google"

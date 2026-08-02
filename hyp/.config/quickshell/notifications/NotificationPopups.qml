@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import QtQuick
 import qs.common
 import qs.notifications
@@ -11,6 +12,8 @@ Scope {
     Connections {
         target: NotificationService
         function onPopupNotification(notif) {
+            // Suppress popups while any client is fullscreen on the focused monitor
+            if (Hyprland.focusedClient?.fullscreen) return
             cardComponent.createObject(stack, { notif });
         }
     }

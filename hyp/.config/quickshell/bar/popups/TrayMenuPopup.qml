@@ -9,40 +9,17 @@ import qs.components
 // Custom-rendered tray menu: reads a tray item's DBus menu through
 // QsMenuOpener and draws it in the shared popup card. One instance serves
 // every tray icon; openFor() re-anchors it. Submenus expand inline.
-//
-// Designed to float beside the tray popup without closing it.
-// grabFocus:false keeps the tray popup's focus grab alive.
 BarPopup {
     id: root
 
     property var menuHandle: null
     contentPadding: 12
-    property real trayContentWidth: 220 + 2 * contentPadding   // must match sibling tray popup contentWidth
 
     contentWidth:  220 + 2 * contentPadding
     contentHeight: col.implicitHeight + 2 * contentPadding
 
-    // Don't steal focus from the tray popup; mouse clicks still reach us.
-    grabFocus: false
-    // keyboardFocus: None prevents the compositor from giving us keyboard
-    // focus, which would clear the tray popup's HyprlandFocusGrab and
-    // cause both windows to immediately collapse.
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-
-    // Position to the RIGHT of the tray popup.
-    // trayContentWidth / 2 is the half-width of the sibling tray popup
-    // (no extra flare padding in the new rectangle-based BarPopup).
-    WlrLayershell.margins.left: {
-        if (!anchorItem) return 0;
-        const track     = anchorItem.x;
-        const mid       = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x;
-        const sx        = screen?.x ?? 0;
-        const trayRight = (mid - sx) + trayContentWidth / 2;
-        return Math.max(4, Math.round(trayRight + 4));
-    }
-
-    // Delay showing until DBus delivers the initial menu items, so the enter
-    // animation targets the correct height instead of morphing up from empty.
+    // Delay showing until DBus delivers the initial menu items so the popup
+    // opens at the correct height rather than an empty card.
     Timer {
         id: showDelay
         interval: 60

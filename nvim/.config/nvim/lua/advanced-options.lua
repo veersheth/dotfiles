@@ -11,14 +11,14 @@ end, { desc = "typst preview" })
 --
 -- State is buffer-local (keyed by bufnr) so each buffer remembers its own
 -- on/off status independently -- this matters once it's auto-enabled per
--- filetype, since you don't want toggling it off in one markdown buffer to
+-- filetype, since you don't want toggling it off in one markdown buffer to    
 -- affect another, or get clobbered when autocmds re-fire.
 writing_mode_state = {}
 
 local function set_writing_mode(bufnr, enabled)
   writing_mode_state[bufnr] = enabled
   if enabled then
-    vim.opt_local.textwidth = 84
+    vim.opt_local.textwidth = 80
     vim.opt_local.formatoptions:append("t")
     vim.opt_local.linebreak = true
     vim.opt_local.wrap = true

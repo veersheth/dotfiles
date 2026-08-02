@@ -7,16 +7,11 @@
 {
   imports =
     [ # Include the results of the hardware scan.
-      <nixos-hardware/framework/13-inch/7040-amd>
       ./hardware-configuration.nix
     ];
 
-  nix.nixPath = [
-    "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixpkgs-unstable"
-    "nixos-config=/home/veer/dotfiles/nixos/configuration.nix"
-  ];
-
   nix.gc = { automatic = true; dates = "weekly"; options = "--delete-older-than 7d"; };
+  nix.settings.auto-optimise-store = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # Bootloader.
@@ -70,8 +65,12 @@
   # GNOME
   services.xserver.enable = true;
   # Enable the GNOME Desktop Environment.
-  services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
+  services.displayManager.gdm.enable = true;
+  services.desktopManager.gnome.enable = true;
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+  };
 
   # # COSMIC
   # services.xserver.enable = true; 
@@ -88,6 +87,12 @@
   #   };
   # };
   # services.displayManager.defaultSession = "xfce";
+
+  # services.displayManager.sddm = {
+  #   enable = true;
+  #   wayland.enable = true;
+  # };
+  # services.desktopManager.plasma6.enable = true;
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -124,17 +129,19 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       # GUI 
+      tigervnc
+      packet
+      gnome-power-manager
       gimp-with-plugins
-      steam lutris wine winetricks
+      steam lutris wine winetricks mangohud
       blender
       spotify spotatui
       sioyek mupdf
       tor-browser
       obsidian
       mpv
-      kitty alacritty
+      kitty
       vscode android-studio
-      brave 
       livecaptions
       obs-studio
       onlyoffice-desktopeditors
@@ -148,7 +155,7 @@
       imagemagick
       luajitPackages.magick
       sshfs
-      typst texlive.combined.scheme-full
+      typst texliveFull
       pnpm nodejs_22
       docker_25
       btop powertop
@@ -169,7 +176,6 @@
       gnomeExtensions.just-perfection 
       gnomeExtensions.caffeine
       gnomeExtensions.appindicator
-      #
     ];
   };
 
@@ -183,6 +189,8 @@
       inter
       helvetica-neue-lt-std
       nerd-fonts.jetbrains-mono
+      maple-mono.NL-CN
+
       nerd-fonts.iosevka
       
       noto-fonts-color-emoji
@@ -193,7 +201,6 @@
       defaultFonts = {
         monospace = [ "JetBrainsMono Nerd Font" ];
         sansSerif = [ "Inter" ];
-        # sansSerif = [ "Inter" ];
       };
     };
   };
@@ -207,7 +214,10 @@
 
     firefox = { enable = true; };
 
-    steam = { enable = true; };
+    steam = { 
+      enable = true;
+      gamescopeSession.enable = true;
+    };
     gamemode = { enable = true; };
 
     zsh = { enable = true; };
@@ -224,11 +234,13 @@
       withUWSM = true;
       xwayland.enable = true;
     };
+    dconf.enable = true;
 
-    kdeconnect = {
-      enable = true;
-      package = pkgs.kdePackages.kdeconnect-kde;
-    };
+    # kdeconnect = {
+    #   enable = true;
+    #   package = pkgs.kdePackages.kdeconnect-kde;
+    # };
+
   };
 
   # Allow unfree packages
@@ -266,26 +278,29 @@
     rustup cargo rustc clippy
     bibata-cursors
     framework-tool
+    tesseract # ocr
 
 
     # hyprland
-    hyprland hypridle hyprpicker hyprsunset hyprpolkitagent 
-    hyprshot cliphist satty
+    hyprland hypridle hyprpicker hyprsunset hyprshot cliphist satty
+    quickshell qt5.qtgraphicaleffects
 
-    hyprlock 
-
-    quickshell
-    qt5.qtgraphicaleffects
   ];
 
   environment.etc."keyd/default.conf" = {
     source = files/keyd/default.conf;
   };
 
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+  };
+
   environment.variables = {
     XCURSOR_THEME = "Bibata-Modern-Classic";
     XCURSOR_SIZE = "24";
   };
+
+  services.power-profiles-daemon.enable = true;
 
   services = {
     # timesyncd.enable = true;
@@ -294,9 +309,9 @@
     fprintd.enable = true;
     flatpak.enable = true;
     logind = {
-      powerKey = "suspend";
-      lidSwitch = "suspend";
-      lidSwitchExternalPower = "suspend"; 
+      settings.Login.powerKey = "suspend";
+      settings.Login.lidSwitch = "suspend";
+      settings.Login.lidSwitchExternalPower = "suspend"; 
     };
     upower = {
       enable = true;

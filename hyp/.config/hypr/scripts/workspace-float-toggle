@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Toggle floating for all windows on the active workspace.
+# If any window is tiled → float them all.
+# If all are already floating → tile them all.
+
+ws_id=$(hyprctl -j activeworkspace | jq '.id')
+clients=$(hyprctl -j clients | jq --argjson ws "$ws_id" '[.[] | select(.workspace.id == $ws)]')
+
+has_tiled=$(echo "$clients" | jq '[.[] | select(.floating == false)] | length')
+
+if [ "$has_tiled" -gt 0 ]; then
+    echo "$clients" | jq -r '.[] | select(.floating == false) | .address' | while read -r addr; do
+        hyprctl dispatch togglefloating "address:$addr"
+    done
+else
+    echo "$clients" | jq -r '.[] | select(.floating == true) | .address' | while read -r addr; do
+        hyprctl dispatch togglefloating "address:$addr"
+    done
+fi

@@ -75,7 +75,7 @@ else
             # 1. find -L follows symlinks
             find -L "${SEARCH_DIRS[@]}" \
                 -mindepth 1 \
-                -maxdepth 2 \
+                -maxdepth 1 \
                 -type d \
                 2>/dev/null \
                 | sed "s|^$HOME/||" # 2. Strip HOME directly from the find output

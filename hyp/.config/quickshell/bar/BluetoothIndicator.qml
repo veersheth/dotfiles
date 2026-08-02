@@ -18,7 +18,7 @@ Item {
     readonly property bool connected: connectedDevices.length > 0
 
     Layout.alignment: Qt.AlignVCenter
-    implicitWidth: Math.max(row.implicitWidth + 10, 33)
+    implicitWidth: row.implicitWidth + 20
     implicitHeight: Theme.pillHeight
 
     Row {

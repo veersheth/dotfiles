@@ -39,6 +39,7 @@ BarPopup {
     readonly property bool noInternet:
         connectivity === "none" || connectivity === "limited" || connectivity === "portal"
 
+    handleEscape: false   // two-stage Escape handled by our own Shortcut below
     contentWidth:  Theme.listWidth + 2 * contentPadding
     contentHeight: col.implicitHeight + 2 * contentPadding
 
@@ -163,11 +164,15 @@ BarPopup {
         onExited: savedProc.running = true
     }
 
-    // Escape: collapse the password field first; if none open, go back.
+    // Escape: collapse the password field first; if none open, close.
+    // Override BarPopup's built-in Escape so the two-stage behaviour works.
     Shortcut {
         sequence: "Escape"
         enabled: root.shown
-        onActivated: root.expandedSsid !== "" ? root.expandedSsid = "" : root.escaped()
+        onActivated: {
+            if (root.expandedSsid !== "") root.expandedSsid = ""
+            else root.close()
+        }
     }
 
     // ── UI ─────────────────────────────────────────────────────────────

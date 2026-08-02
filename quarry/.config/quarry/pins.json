@@ -4,6 +4,10 @@
       {
         "name": "Mumbai, IN",
         "payload": "Mumbai, IN"
+      },
+      {
+        "name": "Sydney, AU",
+        "payload": "Sydney, AU"
       }
     ],
     "emojis": [

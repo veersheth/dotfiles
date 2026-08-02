@@ -17,7 +17,7 @@ Rectangle {
     width:  parent ? parent.width : 340
     height: layout.implicitHeight + 36
     radius: Theme.popupRadius
-    color:  Theme.background
+    color:  Theme.surface
     border.width: Theme.borderWidth
     border.color: critical ? Qt.alpha(Theme.red, 0.6) : Theme.border
 

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+STATE="/run/user/$(id -u)/gaming.state"
+
+cleanup() {
+    qs ipc call flash triggerWith "#ffffff" 900
+    hyprctl reload
+    powerprofilesctl set balanced 2>/dev/null || true
+    rm -f "$STATE"
+}
+
+if [ -f "$STATE" ]; then
+    cleanup
+else
+    trap cleanup EXIT # run cleanup on exit
+
+    touch "$STATE"
+
+    # Optimize Hyprland settings
+    hyprctl keyword animations:enabled false
+    hyprctl keyword decoration:blur:enabled false
+    hyprctl keyword decoration:shadow:enabled false
+    hyprctl keyword decoration:rounding 0
+
+    powerprofilesctl set performance 2>/dev/null || true
+
+    # 940×627
+    # 1128 752
+
+    qs ipc call flash triggerWith "#233b82" 500 & \
+      gamescope -f -w 1128 -h 752 -W 2256 -H 1504 -F fsr --expose-wayland -e -r 60 --borderless --force-grab-cursor -- steam
+fi

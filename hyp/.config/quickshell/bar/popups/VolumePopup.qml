@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Services.Pipewire
+import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 import qs.common
@@ -15,10 +16,15 @@ BarPopup {
     readonly property real volume: sink?.audio?.volume ?? 0
     readonly property bool muted:  sink?.audio?.muted  ?? false
 
-    readonly property var audioSinks:   Pipewire.nodes.values.filter(n => n.isSink && !n.isStream)
+    readonly property var  source:      Pipewire.defaultAudioSource
+    readonly property real inputVolume: source?.audio?.volume ?? 0
+    readonly property bool inputMuted:  source?.audio?.muted  ?? false
+
+    readonly property var audioSinks:   Pipewire.nodes.values.filter(n => n.isSink   && !n.isStream)
+    readonly property var audioSources: Pipewire.nodes.values.filter(n => n.isSource && !n.isStream)
     readonly property var audioStreams: Pipewire.nodes.values.filter(n => n.isStream)
 
-    PwObjectTracker { objects: [...root.audioSinks, ...root.audioStreams] }
+    PwObjectTracker { objects: [...root.audioSinks, ...root.audioSources, ...root.audioStreams, root.source].filter(x => x !== null) }
 
     signal escaped()
     onEscaped: close()
@@ -285,6 +291,138 @@ BarPopup {
                     text: "No output devices found"
                     font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
                     color: Qt.alpha(Theme.foreground, 0.45)
+                }
+            }
+        }
+
+        // ── Microphone input ───────────────────────────────────────────
+        Rectangle {
+            Layout.fillWidth: true; Layout.topMargin: 16; Layout.bottomMargin: 14
+            height: 1; color: Qt.alpha(Theme.foreground, 0.08)
+        }
+
+        Text {
+            Layout.bottomMargin: 12
+            text: "Microphone"
+            font.family: Theme.font; font.pixelSize: Theme.fontSize - 3; font.weight: Font.DemiBold
+            color: Qt.alpha(Theme.foreground, 0.55)
+        }
+
+        RowLayout {
+            visible: root.source !== null
+            Layout.fillWidth: true
+            spacing: 12
+
+            Rectangle {
+                width: 32; height: 32; radius: width / 2
+                color: inMuteMo.containsMouse ? Theme.hover : "transparent"
+                Behavior on color { ColorAnimation { duration: 80 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: root.inputMuted ? "󰍭" : "󰍬"
+                    font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize + 1
+                    color: root.inputMuted ? Qt.alpha(Theme.foreground, 0.4) : Theme.foreground
+                    Behavior on color { ColorAnimation { duration: 100 } }
+                }
+                MouseArea {
+                    id: inMuteMo; anchors.fill: parent; hoverEnabled: true
+                    onClicked: if (root.source?.audio) root.source.audio.muted = !root.inputMuted
+                }
+            }
+
+            CommonSlider {
+                Layout.fillWidth: true
+                value:     root.inputVolume
+                maxValue:  1.0
+                fillColor: root.inputMuted ? Qt.alpha(Theme.foreground, 0.28) : Theme.green
+                onMoved: v => { if (root.source?.audio) root.source.audio.volume = v }
+            }
+
+            Text {
+                text: `${Math.round(root.inputVolume * 100)}%`
+                font.family: Theme.font; font.pixelSize: Theme.fontSize - 1; font.weight: Font.Medium
+                color: Qt.alpha(Theme.foreground, 0.70)
+                Layout.preferredWidth: 44; horizontalAlignment: Text.AlignRight
+            }
+        }
+
+        Text {
+            visible: root.source === null
+            Layout.fillWidth: true; topPadding: 2; leftPadding: 4
+            text: "No input device"
+            font.family: Theme.font; font.pixelSize: Theme.fontSize - 2
+            color: Qt.alpha(Theme.foreground, 0.45)
+        }
+
+        // ── Input devices ──────────────────────────────────────────────
+        Rectangle {
+            visible: root.audioSources.length > 0
+            Layout.fillWidth: true; Layout.topMargin: 14; Layout.bottomMargin: 10
+            height: 1; color: Qt.alpha(Theme.foreground, 0.08)
+        }
+
+        Text {
+            visible: root.audioSources.length > 0
+            Layout.bottomMargin: 6
+            text: "Input"
+            font.family: Theme.font; font.pixelSize: Theme.fontSize - 3; font.weight: Font.DemiBold
+            color: Qt.alpha(Theme.foreground, 0.55)
+        }
+
+        Flickable {
+            visible: root.audioSources.length > 0
+            Layout.fillWidth: true
+            Layout.preferredHeight: Math.max(34, Math.min(srcCol.implicitHeight + 4, 120))
+            contentHeight: srcCol.implicitHeight
+            clip: true; boundsBehavior: Flickable.StopAtBounds
+
+            CommonList {
+                id: srcCol
+                width: parent.width
+
+                Repeater {
+                    model: root.audioSources
+
+                    delegate: Rectangle {
+                        id: srcRow
+                        required property var modelData
+                        readonly property bool active: Pipewire.defaultAudioSource?.id === modelData.id
+
+                        Layout.fillWidth: true
+                        implicitHeight: 34; radius: Theme.itemRadius
+                        color: active              ? Qt.alpha(Theme.green, 0.15)
+                             : srcMo.containsMouse ? Theme.hover
+                             : "transparent"
+                        Behavior on color { ColorAnimation { duration: 80 } }
+
+                        RowLayout {
+                            anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                            spacing: 10
+
+                            Text {
+                                text: "󰄬"
+                                font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize - 2
+                                color: Theme.green
+                                opacity: srcRow.active ? 1 : 0
+                                Behavior on opacity { NumberAnimation { duration: 120 } }
+                                Layout.preferredWidth: 14
+                            }
+
+                            Text {
+                                Layout.fillWidth: true; elide: Text.ElideRight
+                                text: modelData.description || modelData.name
+                                font.family: Theme.font; font.pixelSize: Theme.fontSize - 1
+                                font.weight: srcRow.active ? Font.DemiBold : Font.Medium
+                                color: Theme.foreground
+                            }
+                        }
+
+                        MouseArea {
+                            id: srcMo; anchors.fill: parent; hoverEnabled: true
+                            onClicked: Pipewire.preferredDefaultAudioSource = srcRow.modelData
+                        }
+                    }
                 }
             }
         }

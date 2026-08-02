@@ -42,7 +42,7 @@ Rectangle {
                 Text {
                     id: label
                     anchors.centerIn: parent
-                    text: parent.modelData.id
+                    text: parent.modelData.name
                     font.family: Theme.nerdFont
                     font.pixelSize: Theme.fontSize - 1
                     font.weight: parent.isFocused ? Font.SemiBold : Font.Normal

@@ -8,7 +8,7 @@ set -uo pipefail
 REMOTE_USER="z5494316"
 REMOTE_HOST="cse.unsw.edu.au"
 REMOTE_PATH="cse"                    # relative to remote $HOME -> ~/cse
-LOCAL_MOUNT="${HOME}/cse-sync"
+LOCAL_MOUNT="${HOME}/cse"
 SSH_TARGET="${REMOTE_USER}@${REMOTE_HOST}"
 LOG_TAG="[unsw]"
 
@@ -245,7 +245,7 @@ main() {
     local cmd="${1:-}"
 
     case "$cmd" in
-        ssh)
+        ssh|"")
             cmd_ssh
             ;;
         mount)
@@ -260,7 +260,7 @@ main() {
         key-setup)
             cmd_key_setup
             ;;
-        -h|--help|"")
+        -h|--help)
             usage
             exit 0
             ;;

@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
 import qs.common
@@ -25,8 +26,8 @@ BarPopup {
     readonly property int minYear: 1900
     readonly property int maxYear: 2100
 
-    contentWidth: col.implicitWidth + 44
-    contentHeight: col.implicitHeight + 44
+    contentWidth: mainRow.implicitWidth + 44
+    contentHeight: mainRow.implicitHeight + 44
 
     onShownChanged: if (shown) goToday()
 
@@ -75,14 +76,32 @@ BarPopup {
         }
     }
 
-    SystemClock {
-        id: clock
-        precision: SystemClock.Minutes
+    // ── Media player tracking ────────────────────────────────────────────
+    QtObject {
+        id: mediaHost
+        property var _lastPlayer: null
+        readonly property var player: {
+            const players = Mpris.players.values
+            if (players.length === 0) return null
+            for (const p of players)
+                if (p.playbackState === MprisPlaybackState.Playing) {
+                    _lastPlayer = p; return p
+                }
+            if (_lastPlayer !== null)
+                for (const p of players)
+                    if (p === _lastPlayer) return p
+            if (players.length > 0) { _lastPlayer = players[0]; return players[0] }
+            return null
+        }
     }
 
-    ColumnLayout {
-        id: col
+    RowLayout {
+        id: mainRow
         anchors.centerIn: parent
+        spacing: 40
+
+        ColumnLayout {
+        id: col
         spacing: 10
 
         // ── Header: ⇑ ↑ Month Year ↓ ⇓ ────────────────────────────────
@@ -90,8 +109,8 @@ BarPopup {
             Layout.fillWidth: true
             spacing: 2
 
-            NavButton { label: "<<"; onActivated: root.addMonths(-12) }
-            NavButton { label: "<"; onActivated: root.addMonths(-1) }
+            NavButton { label: "󰄿"; onActivated: root.addMonths(-12) }
+            NavButton { label: ""; onActivated: root.addMonths(-1) }
 
             Rectangle {
                 Layout.fillWidth: true
@@ -116,8 +135,9 @@ BarPopup {
                 }
             }
 
-            NavButton { label: ">"; onActivated: root.addMonths(1) }
-            NavButton { label: ">>"; onActivated: root.addMonths(12) }
+            NavButton { label: ""; onActivated: root.addMonths(1) }
+            NavButton { label: "󰄼"; onActivated: root.addMonths(12) }
+
         }
 
         // ── Day-of-week labels ────────────────────────────────────────
@@ -241,5 +261,49 @@ BarPopup {
                 }
             }
         }
-    }
+        // ── Analog clock + digital time ───────────────────────────────
+        ColumnLayout {
+            Layout.alignment: Qt.AlignHCenter
+            spacing: 6
+
+            AnalogClock {
+                implicitWidth:  220
+                implicitHeight: 220
+                Layout.alignment: Qt.AlignHCenter
+                running: root.shown
+            }
+
+        }
+
+    }   // ColumnLayout col
+
+        // ── Media ────────────────────────────────────────────────────
+        // Slides in when a player is present; collapses + fades when gone.
+        Item {
+            id: mediaSection
+            readonly property bool hasPlayer: mediaHost.player !== null
+
+            // Animated width so the popup resizes smoothly
+            property real _w: hasPlayer ? 300 : 0
+            Behavior on _w { NumberAnimation { duration: 280; easing.type: Easing.InOutCubic } }
+
+            Layout.preferredWidth: _w
+            Layout.preferredHeight: mediaCard.implicitHeight
+            Layout.alignment: Qt.AlignVCenter
+            clip: true
+            visible: _w > 0
+
+            MediaCard {
+                id: mediaCard
+                x: 16           // indent past the divider
+                width: 284
+                player: mediaHost.player
+                active: root.shown && mediaHost.hasPlayer
+
+                opacity: mediaSection.hasPlayer ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 180 } }
+            }
+        }
+
+    }   // RowLayout mainRow
 }

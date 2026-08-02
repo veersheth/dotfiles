@@ -4,16 +4,18 @@ import qs.bar
 import qs.wallpaper
 import qs.notifications
 import qs.osd
-import qs.dock
 import qs.lock
 import qs.launcher
+import qs.polkit
+import qs.flash
 
 ShellRoot {
-    Bar {}
     Desktop {}
+    Bar {}
     NotificationPopups {}
     Osd {}
     Lock {}
     Launcher {}
-    // Dock {}
+    PolkitAuth {}
+    Flash {}
 }

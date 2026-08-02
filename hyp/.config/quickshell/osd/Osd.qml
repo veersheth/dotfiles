@@ -11,17 +11,21 @@ import qs.common
 Scope {
     id: root
 
-    property string icon:  ""
-    property real   value: 0
-    property bool   muted: false
-    property string message: ""
-    property bool   shown: false
+    property string icon:       ""
+    property real   value:      0
+    property bool   muted:      false
+    property string message:    ""
+    property bool   critical:   false   // red border + persists until charger connects
+    property bool   persistent: false   // stays visible until dismissed externally
+    property bool   shown:      false
 
     property bool ready: false
     Timer { interval: 1200; running: true; onTriggered: root.ready = true }
 
     function show(icon, value, muted) {
         if (!ready) return;
+        root.critical   = false;
+        root.persistent = false;
         root.message = "";
         root.icon  = icon;
         root.value = value;
@@ -30,22 +34,42 @@ Scope {
         hideTimer.restart();
     }
 
-    // text mode ("Charging — 2 h until full"); replaces the meter row
     function showMessage(icon, msg) {
         if (!ready) return;
+        root.critical   = false;
+        root.persistent = false;
         root.message = msg;
-        root.icon  = icon;
-        root.muted = false;
+        root.icon    = icon;
+        root.muted   = false;
         iconPop.restart();
         shown = true;
         hideTimer.restart();
+    }
+
+    // Persistent red-bordered OSD — stays until dismiss() is called.
+    function showCritical(icon, msg) {
+        if (!ready) return;
+        root.critical   = true;
+        root.persistent = true;
+        root.message = msg;
+        root.icon    = icon;
+        root.muted   = false;
+        iconPop.restart();
+        shown = true;
+        hideTimer.stop();   // don't auto-hide
+    }
+
+    function dismiss() {
+        root.persistent = false;
+        root.critical   = false;
+        root.shown      = false;
     }
 
     // messages need longer to be read than a glanceable meter
     Timer {
         id: hideTimer
         interval: root.message !== "" ? 2600 : 1600
-        onTriggered: root.shown = false
+        onTriggered: if (!root.persistent) root.shown = false
     }
 
     // ── Volume ────────────────────────────────────────────────────────
@@ -94,13 +118,14 @@ Scope {
         }
     }
 
+    // Only watch for keyboard-backlight changes automatically.
+    // Display brightness OSD is triggered exclusively via IPC (see below).
     Process {
-        running: root.backlightDev !== "" || root.kbdDev !== ""
-        command: ["udevadm", "monitor", "-u", "-s", "backlight", "-s", "leds"]
+        running: root.kbdDev !== ""
+        command: ["udevadm", "monitor", "-u", "-s", "leds"]
         stdout: SplitParser {
             onRead: line => {
                 if (line.includes("kbd_backlight")) readKbd.running = true;
-                else if (line.includes("backlight")) readBacklight.running = true;
             }
         }
     }
@@ -110,10 +135,17 @@ Scope {
         command: ["cat", `/sys/class/backlight/${root.backlightDev}/brightness`]
         stdout: StdioCollector {
             onStreamFinished: {
+                if (!text.trim() || !root.backlightDev) return;
                 const pct = (parseInt(text) || 0) / root.backlightMax;
                 root.show(pct < 0.34 ? "󰃞" : pct < 0.67 ? "󰃟" : "󰃠", pct);
             }
         }
+    }
+
+    // qs ipc call osd brightness   →  show current brightness level
+    IpcHandler {
+        target: "osd"
+        function brightness(): void { readBacklight.running = true }
     }
 
     Process {
@@ -129,42 +161,32 @@ Scope {
     property bool warned20: false
     property bool warned10: false
 
-    function fmtMins(s) {
-        const m = Math.round(s / 60);
-        return m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`;
-    }
-    function batteryIcon(pct) {
-        const icons = ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"];
-        return icons[Math.min(9, Math.max(0, Math.floor(pct / 10)))];
-    }
-
     Connections {
         target: root.battery
         enabled: root.battery?.isLaptopBattery ?? false
 
-        // Reset low-battery nudge flags when the charger is plugged in.
         function onStateChanged() {
-            if (root.battery?.state === UPowerDeviceState.Charging) {
+            const b = root.battery;
+            if (!b) return;
+            if (b.state === UPowerDeviceState.Charging ||
+                b.state === UPowerDeviceState.FullyCharged) {
                 root.warned20 = false;
                 root.warned10 = false;
             }
         }
 
-        // one nudge per threshold per discharge cycle; flags reset on plug-in
+        // One flash per threshold per discharge cycle; flags reset on plug-in.
         function onPercentageChanged() {
             const b = root.battery;
             if (b.state !== UPowerDeviceState.Discharging) return;
-            const pct  = b.percentage * 100;
-            const left = b.timeToEmpty > 0 ? ` - about ${root.fmtMins(b.timeToEmpty)} left` : "";
+            const pct = b.percentage * 100;
             if (pct <= 10 && !root.warned10) {
                 root.warned10 = true;
                 root.warned20 = true;
-                Quickshell.execDetached(["notify-send", "-u", "critical", "-a", "Power",
-                    "Battery critical", `${Math.round(pct)}% remaining${left}`]);
+                FlashService.trigger(Theme.red, 2000);
             } else if (pct <= 20 && !root.warned20) {
                 root.warned20 = true;
-                Quickshell.execDetached(["notify-send", "-u", "normal", "-a", "Power",
-                    "Battery low", `${Math.round(pct)}% remaining${left}`]);
+                FlashService.trigger(Theme.red, 2000);
             }
         }
     }
@@ -205,11 +227,16 @@ Scope {
             id: card
             anchors.fill: parent
             radius: Theme.popupRadius
-            color: Theme.surface
-            border.color: Theme.border
-            border.width: Theme.borderWidth
+            color: root.critical ? Qt.rgba(
+                Theme.red.r * 0.18, Theme.red.g * 0.18, Theme.red.b * 0.18, 0.96)
+                : Theme.surface
+            border.color: root.critical ? Qt.alpha(Theme.red, 0.7) : Theme.border
+            border.width: root.critical ? 2 : Theme.borderWidth
             opacity: 0
             clip: true
+
+            Behavior on color        { ColorAnimation { duration: 200 } }
+            Behavior on border.color { ColorAnimation { duration: 200 } }
 
             Text {
                 id: osdIcon
@@ -217,7 +244,10 @@ Scope {
                 text:           root.icon
                 font.family:    Theme.nerdFont
                 font.pixelSize: 20
-                color: root.muted ? Qt.alpha(Theme.foreground, 0.4) : Theme.foreground
+                color: root.critical ? Theme.red
+                     : root.muted   ? Qt.alpha(Theme.foreground, 0.4)
+                     : Theme.foreground
+                Behavior on color { ColorAnimation { duration: 200 } }
             }
 
             NumberAnimation {
@@ -242,7 +272,8 @@ Scope {
                 font.family: Theme.font
                 font.pixelSize: Theme.fontSize - 1
                 font.weight: Font.Medium
-                color: Theme.foreground
+                color: root.critical ? Theme.red : Theme.foreground
+                Behavior on color { ColorAnimation { duration: 200 } }
             }
 
             Rectangle {

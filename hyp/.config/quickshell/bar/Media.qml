@@ -120,5 +120,12 @@ Item {
         id: mediaControls
         anchorItem: root
         player: root.player
+        onRequestFullscreen: fullscreen.open()
+    }
+
+    MediaFullscreen {
+        id: fullscreen
+        player: root.player
+        screen: root.Window.window?.screen ?? null
     }
 }

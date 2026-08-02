@@ -21,12 +21,22 @@ PanelWindow {
     // Optional second window (e.g. a context menu) to include in the same
     // focus grab so hover events reach it while the grab is active.
     property var extraGrabWindow: null
+    // Set false in a child popup that manages Escape itself (e.g. two-stage).
+    property bool handleEscape: true
+    // Left-align the popup's left edge with the anchor instead of centering.
+    property bool alignLeft: false
 
-    // Seed pill the morph expands from / collapses into
-    readonly property real _pillW: 96
-    readonly property real _pillH: Theme.pillHeight
-    // y the card rests at before opening (bottom bar: near bottom of window)
-    readonly property real _cardStartY: BarState.barBottom ? root.contentHeight - root._pillH : 0
+    // Scale origin X in card-local px — anchor centre projected onto the card.
+    // This makes the popup grow exactly from the button that opened it.
+    readonly property real _originX: {
+        if (!anchorItem || !screen) return contentWidth / 2;
+        const ax = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x - screen.x;
+        return Math.max(0, Math.min(contentWidth, Math.round(ax) - WlrLayershell.margins.left));
+    }
+    readonly property real _originY: BarState.barBottom ? contentHeight : 0
+
+    // Unified scale driven by animations so we only need one NumberAnimation.
+    property real _scale: 0
 
     function toggle() {
         if (shown) { shown = false; return; }
@@ -34,20 +44,6 @@ PanelWindow {
         shown = true;
     }
     function close() { shown = false; }
-
-    // ── Runtime morph on content resize ───────────────────────────────
-    // When dimensions change while the popup is stable, spring the card
-    // to the new size with the same liquid feel as the open animation.
-    onContentWidthChanged: {
-        if (shown && !enterAnim.running && !exitAnim.running) {
-            morphW.to = contentWidth; morphW.restart()
-        }
-    }
-    onContentHeightChanged: {
-        if (shown && !enterAnim.running && !exitAnim.running) {
-            morphH.to = contentHeight; morphH.restart()
-        }
-    }
 
     screen: anchorItem?.Window.window?.screen ?? null
     anchors.top:    !BarState.barBottom
@@ -65,61 +61,45 @@ PanelWindow {
     WlrLayershell.margins.bottom: BarState.barBottom ? Theme.barHeight + 4 : 0
     WlrLayershell.margins.left: {
         if (!anchorItem) return 0;
-        const mid  = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x;
-        const sx   = screen?.x ?? 0;
-        const sw   = screen?.width ?? 9999;
+        const sx = screen?.x ?? 0;
+        const sw = screen?.width ?? 9999;
+        if (root.alignLeft) {
+            const left = anchorItem.mapToGlobal(0, 0).x;
+            return Math.max(0, Math.min(Math.round(left - sx), sw - contentWidth - 2));
+        }
+        const mid   = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x;
         const ideal = Math.round(mid - sx - contentWidth / 2);
-        // clamp so the popup never bleeds past the right screen edge (+2 for border surface)
         return Math.max(0, Math.min(ideal, sw - contentWidth - 2));
     }
 
-    // +2 on each axis so border antialiased edges are never flush with the
-    // window boundary (compositor clips the very edge, hiding the border).
     implicitWidth:  contentWidth  + 2
     implicitHeight: contentHeight + 2
 
     onShownChanged: {
         if (shown) {
-            exitAnim.stop()
-            morphW.stop(); morphH.stop()
-            // Snap card to seed pill and make window visible
-            card.x      = (root.contentWidth  - root._pillW) / 2
-            card.y      = root._cardStartY
-            card.width  = root._pillW
-            card.height = root._pillH
-            card.radius = root._pillH / 2
-            contentItem.opacity = 0
-            visible = true
-            enterTimer.restart()
-        } else {
-            enterTimer.stop()
-            enterAnim.stop()
-            morphW.stop(); morphH.stop()
-            exitAnim.restart()
-        }
-    }
-
-    Timer {
-        id: enterTimer
-        interval: 0
-        onTriggered: {
-            // Re-snap pill — layout may have settled during the event-loop tick
-            card.x      = (root.contentWidth  - root._pillW) / 2
-            card.y      = root._cardStartY
-            card.width  = root._pillW
-            card.height = root._pillH
-            card.radius = root._pillH / 2
+            root._scale = 0
+            visible     = true
             enterAnim.restart()
+        } else {
+            enterAnim.stop()
+            exitAnim.restart()
         }
     }
 
     Rectangle {
         id: card
-
         x: 0; y: 0
-        width: root.contentWidth
+        width:  root.contentWidth
         height: root.contentHeight
         radius: Theme.popupRadius
+        opacity: 1
+
+        transform: Scale {
+            xScale:   root._scale
+            yScale:   root._scale
+            origin.x: root._originX
+            origin.y: root._originY
+        }
 
         color: Theme.surface
         border.color: Theme.border
@@ -129,7 +109,6 @@ PanelWindow {
         Item {
             id: contentItem
             anchors.fill: parent
-            opacity: 0
             Item {
                 id: paddedContent
                 anchors { fill: parent; margins: root.contentPadding }
@@ -137,52 +116,31 @@ PanelWindow {
         }
     }
 
-    // ── Runtime springs ────────────────────────────────────────────────
-    SpringAnimation { id: morphW; target: card; property: "width";  spring: 8.0; damping: 0.44; epsilon: 0.4 }
-    SpringAnimation { id: morphH; target: card; property: "height"; spring: 6.0; damping: 0.40; epsilon: 0.4 }
-
-    // ── Enter: pill → full (liquid blob physics) ───────────────────────
-    // Width and x expand faster and bounce back once. Height is softer and
-    // lags behind with more overshoot, so the shape momentarily goes wider
-    // than it is tall before settling — a fluid blob bloom. Radius also
-    // springs past the target (momentarily rounder) then settles.
-    ParallelAnimation {
+    // ── Enter: spring pop — cubic-bezier(0.34, 1.56, 0.64, 1) ───────────
+    // The y > 1 control point gives Apple's characteristic micro-overshoot.
+    NumberAnimation {
         id: enterAnim
-        SpringAnimation { target: card; property: "x";      to: 0;                  spring: 8.0; damping: 0.44; epsilon: 0.4 }
-        SpringAnimation { target: card; property: "y";      to: 0;                  spring: 6.0; damping: 0.40; epsilon: 0.4 }
-        SpringAnimation { target: card; property: "width";  to: root.contentWidth;  spring: 8.0; damping: 0.44; epsilon: 0.4 }
-        SpringAnimation { target: card; property: "height"; to: root.contentHeight; spring: 6.0; damping: 0.40; epsilon: 0.4 }
-        SpringAnimation { target: card; property: "radius"; to: Theme.popupRadius;  spring: 4.0; damping: 0.50; epsilon: 0.1 }
-        // Content fades in after the card shape is clearly established
-        SequentialAnimation {
-            PauseAnimation  { duration: 80 }
-            NumberAnimation { target: contentItem; property: "opacity"; to: 1; duration: 120; easing.type: Easing.OutCubic }
-        }
-        onFinished: {
-            // Sync if content dimensions changed during the spring
-            if (Math.abs(card.width  - root.contentWidth)  > 0.5) { morphW.to = root.contentWidth;  morphW.restart() }
-            if (Math.abs(card.height - root.contentHeight) > 0.5) { morphH.to = root.contentHeight; morphH.restart() }
-        }
+        target: root; property: "_scale"
+        to: 1.0; duration: 340
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: [0.34, 1.2, 0.64, 1.0, 1.0, 1.0]
     }
 
-    // ── Exit: full → pill → gone (fast, snappy) ───────────────────────
+    // ── Exit: fast collapse — cubic-bezier(0.32, 0, 0.67, 0) ────────────
     SequentialAnimation {
         id: exitAnim
-        ParallelAnimation {
-            NumberAnimation { target: contentItem; property: "opacity"; to: 0;                              duration: 40;  easing.type: Easing.InCubic }
-            NumberAnimation { target: card; property: "x";      to: (root.contentWidth - root._pillW) / 2; duration: 130; easing.type: Easing.InBack; easing.overshoot: 0.35 }
-            NumberAnimation { target: card; property: "y";      to: root._cardStartY;                      duration: 120; easing.type: Easing.InBack; easing.overshoot: 0.35 }
-            NumberAnimation { target: card; property: "width";  to: root._pillW;                           duration: 130; easing.type: Easing.InBack; easing.overshoot: 0.35 }
-            NumberAnimation { target: card; property: "height"; to: root._pillH;                           duration: 120; easing.type: Easing.InBack; easing.overshoot: 0.35 }
-            NumberAnimation { target: card; property: "radius"; to: root._pillH / 2;                       duration: 100; easing.type: Easing.InCubic }
+        NumberAnimation {
+            target: root; property: "_scale"
+            to: 0; duration: 160
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: [0.32, 0.0, 0.67, 0.0, 1.0, 1.0]
         }
-        PauseAnimation  { duration: 20 }
-        ScriptAction    { script: root.visible = false }
+        ScriptAction { script: root.visible = false }
     }
 
     Shortcut {
         sequence: "Escape"
-        enabled: root.shown
+        enabled: root.shown && root.handleEscape
         onActivated: root.close()
     }
 

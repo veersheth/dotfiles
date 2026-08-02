@@ -11,6 +11,7 @@ Item {
     id: root
     required property var ctx
 
+    // ── Background ────────────────────────────────────────────────────────
     Image {
         id: wall
         anchors.fill: parent
@@ -29,9 +30,10 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: "black"
-        opacity: 0.45
+        opacity: 0.5
     }
 
+    // ── Fade-in ───────────────────────────────────────────────────────────
     opacity: 0
     Component.onCompleted: {
         opacity = 1
@@ -40,7 +42,7 @@ Item {
     }
     Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
 
-    // ── Battery ───────────────────────────────────────────────────────────
+    // ── Battery (top-right) ───────────────────────────────────────────────
     Row {
         anchors { top: parent.top; right: parent.right; margins: 24 }
         spacing: 6
@@ -60,21 +62,18 @@ Item {
                 const icons = ["󰁺","󰁻","󰁼","󰁽","󰁾","󰁿","󰂀","󰂁","󰂂","󰁹"]
                 return icons[Math.min(9, Math.max(0, Math.floor(parent.pct / 10)))]
             }
-            font.family: Theme.nerdFont
-            font.pixelSize: 15
+            font.family: Theme.nerdFont; font.pixelSize: 15
             color: Qt.rgba(1, 1, 1, 0.65)
         }
         Text {
             anchors.verticalCenter: parent.verticalCenter
             text: `${Math.round(parent.pct)}%`
-            font.family: Theme.font
-            font.pixelSize: 13
-            font.weight: Font.Medium
+            font.family: Theme.font; font.pixelSize: 13; font.weight: Font.Medium
             color: Qt.rgba(1, 1, 1, 0.65)
         }
     }
 
-    // ── Media card (right) ────────────────────────────────────────────────
+    // ── Media card ────────────────────────────────────────────────────────
     Item {
         id: mediaHost
 
@@ -124,25 +123,37 @@ Item {
     // ── Center column ─────────────────────────────────────────────────────
     SystemClock { id: clock; precision: SystemClock.Minutes }
 
+    // Snaps to real system time on wake so a frozen QTimer doesn't
+    // leave the lock screen clock stuck after sleep.
+    property date _displayDate: clock.date
+    Connections {
+        target: clock
+        function onDateChanged() { root._displayDate = clock.date }
+    }
+    Connections {
+        target: SleepWatcher
+        function onWoke() { root._displayDate = new Date() }
+    }
+
     Column {
         anchors.centerIn: parent
         spacing: 0
 
-        // Time + AM/PM
+        // Time
         Row {
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 8
 
             Text {
                 id: timeText
-                text: Qt.formatDateTime(clock.date, "hh:mm AP").split(" ")[0]
-                font.family: Theme.nerdFont
+                text: Qt.formatDateTime(root._displayDate, "hh:mm AP").split(" ")[0]
+                font.family: Theme.font
                 font.pixelSize: 100
                 font.weight: Font.Bold
                 color: "white"
             }
             Text {
-                text: Qt.formatDateTime(clock.date, "AP")
+                text: Qt.formatDateTime(root._displayDate, "AP")
                 font.family: Theme.font
                 font.pixelSize: 20
                 font.weight: Font.Light
@@ -152,25 +163,24 @@ Item {
             }
         }
 
+        // Date
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: Qt.formatDateTime(clock.date, "dddd, MMMM d")
-            font.family: Theme.font
-            font.pixelSize: 16
+            text: Qt.formatDateTime(root._displayDate, "dddd, MMMM d")
+            font.family: Theme.font; font.pixelSize: 16
             color: Qt.rgba(1, 1, 1, 0.55)
         }
 
         Item { width: 1; height: 52 }
 
-        // ── Password input + lock icon ─────────────────────────────────────
+        // Input + fingerprint
         Row {
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 12
 
             Rectangle {
                 id: inputBox
-                width: 260
-                height: 42
+                width: 260; height: 42
                 radius: height / 2
                 color: Qt.rgba(1, 1, 1, 0.1)
                 border.width: 1
@@ -187,8 +197,7 @@ Item {
                     verticalAlignment: TextInput.AlignVCenter
                     echoMode: TextInput.Password
                     passwordCharacter: "●"
-                    font.family: Theme.font
-                    font.pixelSize: Theme.fontSize
+                    font.family: Theme.font; font.pixelSize: Theme.fontSize
                     color: "white"
                     enabled: !root.ctx.authenticating && !root.ctx.succeeded
                     clip: true
@@ -214,98 +223,30 @@ Item {
                 }
             }
 
-            Item {
-                id: padlock
-                width: 36; height: 42
-
-                property real shackle: 0
-                property real morph:   0
-
-                onShackleChanged: cv.requestPaint()
-                onMorphChanged:   cv.requestPaint()
-
-                Canvas {
-                    id: cv
-                    anchors.centerIn: parent
-                    width: 36; height: 36
-
-                    onPaint: {
-                        const ctx = getContext("2d")
-                        ctx.reset()
-                        ctx.lineWidth = 3.2
-                        ctx.lineCap  = "round"
-                        ctx.lineJoin = "round"
-
-                        const lockAlpha = Math.max(0, 1 - padlock.morph * 1.6)
-                        if (lockAlpha > 0.01) {
-                            ctx.globalAlpha = lockAlpha * 0.85
-                            ctx.strokeStyle = "white"
-                            const x = 8, y = 16, bw = 20, bh = 13, r = 3.5
-                            ctx.beginPath()
-                            ctx.moveTo(x + r, y)
-                            ctx.lineTo(x + bw - r, y); ctx.arcTo(x + bw, y, x + bw, y + r, r)
-                            ctx.lineTo(x + bw, y + bh - r); ctx.arcTo(x + bw, y + bh, x + bw - r, y + bh, r)
-                            ctx.lineTo(x + r, y + bh); ctx.arcTo(x, y + bh, x, y + bh - r, r)
-                            ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r)
-                            ctx.closePath()
-                            ctx.stroke()
-                            ctx.save()
-                            ctx.translate(12, 16)
-                            ctx.rotate(-padlock.shackle * 1.0)
-                            ctx.translate(-12, -16)
-                            ctx.beginPath()
-                            ctx.arc(18, 16, 6, Math.PI, 2 * Math.PI, false)
-                            ctx.stroke()
-                            ctx.restore()
-                        }
-
-                        if (padlock.morph > 0.01) {
-                            const A = { x: 7,  y: 20 }
-                            const B = { x: 14, y: 27 }
-                            const C = { x: 29, y: 10 }
-                            const l1 = Math.hypot(B.x - A.x, B.y - A.y)
-                            const l2 = Math.hypot(C.x - B.x, C.y - B.y)
-                            const p  = padlock.morph * (l1 + l2)
-                            ctx.globalAlpha = Math.min(1, padlock.morph * 2)
-                            ctx.strokeStyle = Theme.green
-                            ctx.beginPath()
-                            ctx.moveTo(A.x, A.y)
-                            if (p <= l1) {
-                                const k = p / l1
-                                ctx.lineTo(A.x + (B.x - A.x) * k, A.y + (B.y - A.y) * k)
-                            } else {
-                                ctx.lineTo(B.x, B.y)
-                                const k = (p - l1) / l2
-                                ctx.lineTo(B.x + (C.x - B.x) * k, B.y + (C.y - B.y) * k)
-                            }
-                            ctx.stroke()
-                        }
-                    }
-                }
-
-                SequentialAnimation {
-                    id: unlockAnim
-                    NumberAnimation { target: padlock; property: "shackle"; to: 1; duration: 180; easing.type: Easing.InOutQuad }
-                    ParallelAnimation {
-                        NumberAnimation { target: padlock; property: "morph"; to: 1; duration: 400; easing.type: Easing.InOutCubic }
-                        SequentialAnimation {
-                            NumberAnimation { target: padlock; property: "scale"; to: 1.2; duration: 200; easing.type: Easing.OutQuad }
-                            NumberAnimation { target: padlock; property: "scale"; to: 1.0; duration: 200; easing.type: Easing.OutQuad }
-                        }
-                    }
-                }
+            FingerprintIcon {
+                id: fpIcon
+                width: 32; height: 32
+                anchors.verticalCenter: parent.verticalCenter
+                scanning:  !root.ctx.authenticating && !root.ctx.succeeded
+                iconColor: root.ctx.status === "Incorrect password"
+                    ? Theme.red : Qt.rgba(1, 1, 1, 0.85)
 
                 Connections {
                     target: root.ctx
                     function onSucceededChanged() {
                         if (root.ctx.succeeded) {
-                            unlockAnim.restart()
+                            fpIcon.revertAnim.stop()
+                            fpIcon.unlockAnim.restart()
                         } else {
-                            unlockAnim.stop()
-                            padlock.shackle = 0
-                            padlock.morph   = 0
-                            padlock.scale   = 1
+                            fpIcon.unlockAnim.stop()
+                            fpIcon.morph = 0
+                            fpIcon.scale = 1
                         }
+                    }
+                    function onFailed() {
+                        fpIcon.unlockAnim.stop()
+                        fpIcon.revertAnim.restart()
+                        shake.restart()
                     }
                 }
             }
@@ -318,8 +259,7 @@ Item {
         text: root.ctx.authenticating ? "Authenticating…"
             : root.ctx.status !== ""   ? root.ctx.status
             : ""
-        font.family: Theme.font
-        font.pixelSize: Theme.fontSize - 1
+        font.family: Theme.font; font.pixelSize: Theme.fontSize - 1
         color: root.ctx.status === "Incorrect password"
             ? Qt.rgba(1, 0.4, 0.4, 0.85)
             : Qt.rgba(1, 1, 1, 0.4)

@@ -2,29 +2,29 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Widgets
 import QtQuick
+import QtQuick.Controls
 import qs.common
 import qs.components
 
-// Pull-down scratchpad — click an empty stretch of the bar to toggle it,
-// Esc or another bar click to close; clicking elsewhere leaves it open.
-// Notes autosave to ~/.local/state/quickshell/scratchpad.txt. Files and
-// images dragged in land on a shelf strip: click to open, drag out to any
-// app, right-click to remove.
 BarPopup {
     id: root
 
-    property bool loadedOk: false
+    readonly property int shelfW: 190
+
+    property bool loadedOk:    false
     property bool shelfLoaded: false
-    property var shelf: []   // array of URL strings
+    property var  shelf:       []
 
     dismissOnFocusLoss: true
+    alignLeft:          true
 
-    contentWidth: 960
-    contentHeight: 340 + (shelf.length > 0 ? 88 : 0)
+    contentWidth:   980
+    contentHeight:  360
+    contentPadding: 20
 
     onShownChanged: {
         if (shown) edit.forceActiveFocus();
-        else if (loadedOk) file.setText(edit.text);   // flush on close
+        else if (loadedOk) file.setText(edit.text);
     }
 
     function addUrl(u) {
@@ -37,42 +37,41 @@ BarPopup {
         if (shelfLoaded) shelfFile.setText(JSON.stringify(shelf));
     }
     function isImage(u) { return /\.(png|jpe?g|webp|gif|svg|bmp|avif)$/i.test(u); }
+    function fileIcon(u) {
+        const ext = u.split(".").pop().toLowerCase();
+        if (/^(png|jpe?g|webp|gif|svg|bmp|avif)$/.test(ext)) return { icon: "󰈟", color: Theme.blue };
+        if (ext === "pdf")  return { icon: "󰈦", color: "#e06c75" };
+        if (/^(mp4|mkv|mov|avi|webm)$/.test(ext)) return { icon: "󰈫", color: "#c678dd" };
+        if (/^(mp3|flac|wav|ogg|m4a)$/.test(ext)) return { icon: "󰈣", color: Theme.green };
+        if (/^(zip|tar|gz|xz|7z|rar)$/.test(ext)) return { icon: "󰿺", color: Theme.yellow };
+        if (/^(txt|md|rst)$/.test(ext))            return { icon: "󰈙", color: Qt.alpha(Theme.foreground, 0.7) };
+        return { icon: "󰈔", color: Qt.alpha(Theme.foreground, 0.55) };
+    }
 
+    // ── Persistence ────────────────────────────────────────────────────
     FileView {
         id: file
         path: `${Quickshell.env("HOME")}/.local/state/quickshell/scratchpad.txt`
-        printErrors: false
-        atomicWrites: true
-        onLoaded: {
-            edit.text = text();
-            root.loadedOk = true;
-        }
+        printErrors: false; atomicWrites: true
+        onLoaded:     { edit.text = text(); root.loadedOk = true; }
         onLoadFailed: root.loadedOk = true
     }
     FileView {
         id: shelfFile
         path: `${Quickshell.env("HOME")}/.local/state/quickshell/scratchpad-shelf.json`
-        printErrors: false
-        atomicWrites: true
-        onLoaded: {
-            try { root.shelf = JSON.parse(text()); } catch (e) {}
-            root.shelfLoaded = true;
-        }
+        printErrors: false; atomicWrites: true
+        onLoaded:     { try { root.shelf = JSON.parse(text()); } catch (e) {} root.shelfLoaded = true; }
         onLoadFailed: root.shelfLoaded = true
     }
+    Timer { id: saveDebounce; interval: 800; onTriggered: file.setText(edit.text) }
 
-    Timer {
-        id: saveDebounce
-        interval: 800
-        onTriggered: file.setText(edit.text)
-    }
-
-    // ── Notes ──────────────────────────────────────────────────────────
+    // ── Text area ──────────────────────────────────────────────────────
     Flickable {
         id: flick
         anchors {
-            fill: parent
-            bottomMargin: root.shelf.length > 0 ? 88 : 0
+            top: parent.top; bottom: parent.bottom
+            left: parent.left
+            right: shelfPanel.visible ? shelfPanel.left : parent.right
         }
         contentHeight: edit.implicitHeight
         clip: true
@@ -80,156 +79,198 @@ BarPopup {
 
         TextEdit {
             id: edit
-            width: flick.width
+            width: flick.width - 14
             textFormat: TextEdit.PlainText
             wrapMode: TextEdit.Wrap
             color: Theme.foreground
             font.family: Theme.font
             font.pixelSize: Theme.fontSize
             selectByMouse: true
-            selectionColor: Qt.alpha(Theme.blue, 0.4)
+            selectionColor: Qt.alpha(Theme.blue, 0.32)
 
             onTextChanged: if (root.loadedOk) saveDebounce.restart()
             Keys.onEscapePressed: root.close()
-
-            // readline-style ctrl-w: delete back through spaces, then the word
             Keys.onPressed: event => {
-                if (event.key === Qt.Key_W && event.modifiers & Qt.ControlModifier) {
-                    const pos = cursorPosition;
-                    let i = pos;
+                if (event.key === Qt.Key_W && (event.modifiers & Qt.ControlModifier)) {
+                    const pos = cursorPosition; let i = pos;
                     while (i > 0 && /\s/.test(text.charAt(i - 1))) i--;
                     while (i > 0 && !/\s/.test(text.charAt(i - 1))) i--;
-                    remove(i, pos);
-                    event.accepted = true;
+                    remove(i, pos); event.accepted = true;
                 }
             }
-
-            // keep the cursor in view while typing
             onCursorRectangleChanged: {
                 const r = cursorRectangle;
-                if (r.y < flick.contentY)
-                    flick.contentY = r.y;
+                if (r.y < flick.contentY) flick.contentY = r.y;
                 else if (r.y + r.height > flick.contentY + flick.height)
                     flick.contentY = r.y + r.height - flick.height;
             }
         }
-    }
 
-    Text {
-        anchors { top: parent.top; left: parent.left }
-        visible: edit.text === ""
-        text: "Scratchpad... (drop files here)"
-        font.family: Theme.font
-        font.pixelSize: Theme.fontSize
-        color: Qt.alpha(Theme.foreground, 0.35)
-    }
-
-    // ── Shelf: dropped files ───────────────────────────────────────────
-    Rectangle {
-        anchors { left: parent.left; right: parent.right; bottom: shelfList.top }
-        anchors.bottomMargin: 8
-        anchors.leftMargin: 16; anchors.rightMargin: 16
-        visible: root.shelf.length > 0
-        height: Theme.borderWidth
-        color: Theme.border
-    }
-
-    ListView {
-        id: shelfList
-        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-        anchors.margins: 14
-        height: 74
-        visible: root.shelf.length > 0
-        orientation: ListView.Horizontal
-        spacing: 12
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-        model: root.shelf
-
-        delegate: Item {
-            id: chip
-
-            required property string modelData
-
-            width: 64
-            height: 74
-
-            Rectangle {
-                id: thumb
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: 52; height: 52
-                radius: Theme.itemRadius
-                color: Theme.surface
-                border.width: Theme.borderWidth
-                border.color: hover.hovered ? Theme.blue : Theme.border
-
-                // drag back out into other apps as a real file drop
-                Drag.dragType: Drag.Automatic
-                Drag.supportedActions: Qt.CopyAction
-                Drag.mimeData: ({ "text/uri-list": chip.modelData })
-
-                ClippingRectangle {
-                    anchors.fill: parent
-                    anchors.margins: Theme.borderWidth
-                    radius: Theme.itemRadius
-                    color: "transparent"
-                    visible: root.isImage(chip.modelData)
-
-                    Image {
-                        anchors.fill: parent
-                        source: chip.modelData
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
-                    }
-                }
-                Text {
-                    anchors.centerIn: parent
-                    visible: !root.isImage(chip.modelData)
-                    text: "󰈔"
-                    font.family: Theme.nerdFont
-                    font.pixelSize: 20
-                    color: Qt.alpha(Theme.foreground, 0.7)
-                }
-
-                HoverHandler { id: hover }
-                TapHandler {
-                    acceptedButtons: Qt.LeftButton
-                    onTapped: Quickshell.execDetached(["xdg-open", chip.modelData])
-                }
-                TapHandler {
-                    acceptedButtons: Qt.RightButton
-                    onTapped: root.removeUrl(chip.modelData)
-                }
-                DragHandler {
-                    onActiveChanged: {
-                        if (active) {
-                            thumb.grabToImage(res => {
-                                thumb.Drag.imageSource = res.url;
-                                thumb.Drag.active = true;
-                            });
-                        } else {
-                            thumb.Drag.active = false;
-                        }
-                    }
-                }
-            }
-
-            Text {
-                anchors { top: thumb.bottom; topMargin: 4; horizontalCenter: parent.horizontalCenter }
-                width: parent.width
-                horizontalAlignment: Text.AlignHCenter
-                elide: Text.ElideMiddle
-                text: decodeURIComponent(chip.modelData.split("/").pop())
-                font.family: Theme.font
-                font.pixelSize: Theme.fontSize - 4
-                color: Qt.alpha(Theme.foreground, 0.55)
+        ScrollBar.vertical: ScrollBar {
+            id: vbar; policy: ScrollBar.AsNeeded; minimumSize: 0.06
+            background: Item { implicitWidth: 14 }
+            contentItem: Rectangle {
+                implicitWidth: 3; radius: 1.5; color: Theme.foreground
+                opacity: vbar.active ? (vbar.pressed ? 0.55 : 0.28) : 0
+                Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
             }
         }
     }
 
-    // ── Drop target (topmost; transparent to normal mouse input) ──────
+    // ── Empty-state hint ───────────────────────────────────────────────
+    Column {
+        anchors { horizontalCenter: flick.horizontalCenter; verticalCenter: flick.verticalCenter }
+        visible: edit.text === ""
+        spacing: 10
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "󰠮"; font.family: Theme.nerdFont; font.pixelSize: 32
+            color: Qt.alpha(Theme.foreground, 0.18)
+        }
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "Start typing or drop files…"
+            font.family: Theme.font; font.pixelSize: Theme.fontSize; font.weight: Font.Medium
+            color: Qt.alpha(Theme.foreground, 0.22)
+        }
+    }
+
+    // ── Right shelf panel ──────────────────────────────────────────────
+    Item {
+        id: shelfPanel
+        anchors { top: parent.top; bottom: parent.bottom; right: parent.right }
+        width: root.shelfW
+        visible: root.shelf.length > 0
+
+        Rectangle {
+            anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+            width: 1; color: Qt.alpha(Theme.border, 0.5)
+        }
+
+        ListView {
+            id: shelfList
+            anchors { fill: parent; leftMargin: 1; topMargin: 2; bottomMargin: 2 }
+            orientation: ListView.Vertical
+            spacing: 2
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            model: root.shelf
+
+            delegate: Item {
+                id: chip
+                required property string modelData
+                required property int    index
+                width: shelfList.width
+                height: 48
+
+                // Hover for the whole row
+                MouseArea {
+                    id: rowMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    // left-click opens only if not clicking the remove button
+                    onClicked: mouse => {
+                        if (mouse.x < parent.width - 36)
+                            Quickshell.execDetached(["xdg-open", chip.modelData])
+                    }
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: rowMa.containsMouse ? Theme.hover : "transparent"
+                    radius: Theme.itemRadius
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                }
+
+                // Thumbnail
+                Rectangle {
+                    id: thumb
+                    anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                    width: 32; height: 32
+                    radius: Theme.smallRadius
+                    color: Qt.alpha(root.fileIcon(chip.modelData).color, 0.12)
+                    border.width: Theme.borderWidth
+                    border.color: Qt.alpha(root.fileIcon(chip.modelData).color, 0.35)
+
+                    Drag.dragType: Drag.Automatic
+                    Drag.supportedActions: Qt.CopyAction
+                    Drag.mimeData: ({ "text/uri-list": chip.modelData })
+
+                    ClippingRectangle {
+                        anchors.fill: parent; anchors.margins: Theme.borderWidth
+                        radius: Theme.smallRadius; color: "transparent"
+                        visible: root.isImage(chip.modelData)
+                        Image {
+                            anchors.fill: parent; source: chip.modelData
+                            fillMode: Image.PreserveAspectCrop; asynchronous: true
+                        }
+                    }
+                    Text {
+                        anchors.centerIn: parent
+                        visible: !root.isImage(chip.modelData)
+                        text: root.fileIcon(chip.modelData).icon
+                        font.family: Theme.nerdFont; font.pixelSize: 16
+                        color: root.fileIcon(chip.modelData).color
+                    }
+
+                    DragHandler {
+                        onActiveChanged: {
+                            if (active) {
+                                thumb.grabToImage(res => {
+                                    thumb.Drag.imageSource = res.url;
+                                    thumb.Drag.active = true;
+                                });
+                            } else { thumb.Drag.active = false; }
+                        }
+                    }
+                }
+
+                // Filename
+                Text {
+                    anchors {
+                        left: thumb.right; leftMargin: 10
+                        right: removeBtn.left; rightMargin: 4
+                        verticalCenter: parent.verticalCenter
+                    }
+                    text: decodeURIComponent(chip.modelData.split("/").pop())
+                    font.family: Theme.font; font.pixelSize: Theme.fontSize
+                    color: Theme.foreground
+                    elide: Text.ElideMiddle
+                    maximumLineCount: 2
+                    wrapMode: Text.WrapAnywhere
+                }
+
+                // ✕ remove button
+                Rectangle {
+                    id: removeBtn
+                    anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+                    width: 20; height: 20; radius: 10
+                    visible: rowMa.containsMouse
+                    color: removeMa.containsMouse ? Theme.red : Qt.alpha(Theme.foreground, 0.12)
+                    Behavior on color { ColorAnimation { duration: 110 } }
+
+                    Text {
+                        anchors.centerIn: parent; text: "✕"
+                        font.pixelSize: 9; font.weight: Font.Bold
+                        color: removeMa.containsMouse ? "white" : Qt.alpha(Theme.foreground, 0.7)
+                        Behavior on color { ColorAnimation { duration: 110 } }
+                    }
+
+                    MouseArea {
+                        id: removeMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: root.removeUrl(chip.modelData)
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Drop target (receives files dragged in) ────────────────────────
     DropArea {
         anchors.fill: parent
+        z: 10
         onDropped: drop => {
             if (drop.hasUrls) {
                 for (const u of drop.urls) root.addUrl(u.toString());

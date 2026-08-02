@@ -73,10 +73,11 @@ gsettings set org.gnome.desktop.interface enable-animations true
 gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings \
 "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', \
   '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', \
+  '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', \
   '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/', \
   '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/', \
-  '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', \
-  '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/']"
+  '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/', \
+  '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/']"
 
 # browser super b
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ name 'Browser'
@@ -90,7 +91,7 @@ gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/or
 
 # super enter term
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ name 'Terminal'
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ command 'alacritty'
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ command 'kitty'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/ binding '<Super>Return'
 
 # super v clipboard
@@ -102,4 +103,9 @@ gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/or
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ name 'Night Light Toggle'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ command 'bash -c '\''v=$(gsettings get org.gnome.settings-daemon.plugins.color night-light-enabled); if [ "$v" = "true" ]; then gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled false; else gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true; fi'\'''
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/ binding '<Super>n'
+
+# gaming mode
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/ name 'Game mode'
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/ command "/home/veer/scripts/gamemode.sh"
+gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/ binding '<Super><Shift>g'
 

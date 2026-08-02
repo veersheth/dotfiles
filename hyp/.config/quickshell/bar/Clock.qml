@@ -5,7 +5,7 @@ import qs.common
 import qs.components
 import qs.bar.popups
 
-Pill {
+Item {
     id: root
 
     implicitWidth: lbl.implicitWidth + 20
@@ -16,10 +16,22 @@ Pill {
         precision: SystemClock.Minutes
     }
 
+    // Tracks clock.date normally; immediately snaps to real time on wake
+    // so a frozen post-sleep QTimer doesn't leave the clock stuck.
+    property date _displayDate: clock.date
+    Connections {
+        target: clock
+        function onDateChanged() { root._displayDate = clock.date }
+    }
+    Connections {
+        target: SleepWatcher
+        function onWoke() { root._displayDate = new Date() }
+    }
+
     Text {
         id: lbl
         anchors.centerIn: parent
-        text: Qt.formatDateTime(clock.date, "ddd MMM dd  hh:mm AP")
+        text: Qt.formatDateTime(root._displayDate, "ddd MMM dd  hh:mm AP")
         font.family: Theme.font
         font.pixelSize: Theme.fontSize
         font.weight: Font.Medium

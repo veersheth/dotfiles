@@ -16,7 +16,7 @@ Item {
     readonly property bool muted:  sink?.audio?.muted  ?? false
 
     Layout.alignment: Qt.AlignVCenter
-    implicitWidth:  volIcon.implicitWidth + 16
+    implicitWidth:  Theme.iconSlot
     implicitHeight: Theme.pillHeight
     visible: sink !== null
 
@@ -29,7 +29,7 @@ Item {
             : "󰕾"
         font.family:    Theme.nerdFont
         font.pixelSize: Theme.iconSize
-        color: root.muted ? Qt.alpha(Theme.foreground, 0.45) : Theme.foreground
+        color: root.muted ? Qt.alpha(Theme.red, 0.95) : Theme.foreground
         Behavior on color { ColorAnimation { duration: Theme.animDuration } }
     }
 
