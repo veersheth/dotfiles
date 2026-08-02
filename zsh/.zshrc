@@ -8,7 +8,9 @@ git_branch() {
 }
 
 NEWLINE=$'\n'
-PS1="${NEWLINE} %{$fg[yellow]%}%~%{$fg[red]%}\$(git_branch) %{$reset_color%}${NEWLINE} \$%b "
+PS1="${NEWLINE} %{$fg[magenta]%}%~%{$fg[red]%}\$(git_branch)%{$reset_color%}${NEWLINE} \$%b "
+
+RPROMPT='%{$fg[cyan]%}%D{%I:%M:%S %p}%{$reset_color%}'
 
 HISTFILE=~/.zsh_history
 HISTSIZE=1500

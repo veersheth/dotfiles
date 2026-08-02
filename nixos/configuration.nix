@@ -17,6 +17,7 @@
   ];
 
   nix.gc = { automatic = true; dates = "weekly"; options = "--delete-older-than 7d"; };
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
@@ -66,12 +67,27 @@
     LC_TIME = "en_AU.UTF-8";
   };
 
-  # Enable the X11 windowing system.
+  # GNOME
   services.xserver.enable = true;
-
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
   services.xserver.desktopManager.gnome.enable = true;
+
+  # # COSMIC
+  # services.xserver.enable = true; 
+  # services.displayManager.cosmic-greeter.enable = true;
+  # services.desktopManager.cosmic.enable = true;
+  # services.system76-scheduler.enable = true;
+
+  # # XFCE
+  # services.xserver = {
+  #   enable = true;
+  #   desktopManager = {
+  #     xterm.enable = false;
+  #     xfce.enable = true;
+  #   };
+  # };
+  # services.displayManager.defaultSession = "xfce";
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -108,25 +124,22 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       # GUI 
-      syncthingtray
+      gimp-with-plugins
       steam lutris wine winetricks
-      ladybird
       blender
-      gimp2
-      spotify spotify-qt
+      spotify spotatui
       sioyek mupdf
       tor-browser
       obsidian
       mpv
-      ghostty alacritty
+      kitty alacritty
       vscode android-studio
       brave 
       livecaptions
       obs-studio
-      gnome-extension-manager
-      teams-for-linux
       onlyoffice-desktopeditors
-      packet
+      keepass
+
 
       # CLI
       marp-cli
@@ -136,14 +149,15 @@
       luajitPackages.magick
       sshfs
       typst texlive.combined.scheme-full
-      pnpm_9 nodejs_22
+      pnpm nodejs_22
       docker_25
       btop powertop
       bun
       claude-code
 
 
-      # GNOME 
+      # # GNOME 
+      gnome-tweaks
       gnomeExtensions.media-controls
       gnomeExtensions.rounded-window-corners-reborn
       gnomeExtensions.user-themes
@@ -155,7 +169,7 @@
       gnomeExtensions.just-perfection 
       gnomeExtensions.caffeine
       gnomeExtensions.appindicator
-
+      #
     ];
   };
 
@@ -185,11 +199,6 @@
   };
 
 
-  xdg.terminal-exec = {
-    enable = true;
-    settings.default = ["ghostty.desktop"];
-  };
-
   programs = {
     appimage = { enable = true; binfmt = true; package = pkgs.appimage-run.override { extraPkgs = pkgs: [ pkgs.libthai ]; }; };
 
@@ -199,6 +208,7 @@
     firefox = { enable = true; };
 
     steam = { enable = true; };
+    gamemode = { enable = true; };
 
     zsh = { enable = true; };
 
@@ -253,7 +263,6 @@
     fzf
     fd
     ripgrep
-    gnome-tweaks
     rustup cargo rustc clippy
     bibata-cursors
     framework-tool
