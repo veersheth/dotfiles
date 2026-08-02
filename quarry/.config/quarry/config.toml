@@ -14,7 +14,7 @@ apps = '^app\s+(.*)$'
 url = '^(https?://\S+|(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(?:[:/]\S*)?)$'
 currency = '^fx\s+(.*)$'
 note = "^note$"
-ai = '^ \s+(.*)$'
+ai = '^ \s*(.*)$'
 time = '^time\s(.*)$'
 settings = '^set\s*(.*)$'
 timer = '^timer\s*(.*)$'
@@ -59,6 +59,11 @@ url = "https://github.com/search?q={}"
 name = "Nix Packages"
 trigger = '^nxp\s+(.*)$'
 url = "https://search.nixos.org/packages?query={}"
+
+[[web_searches]]
+name = "Google Scholar"
+trigger = '^gsc\s+(.*)$'
+url = "https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q={}"
 
 [default_search]
 web_searches = [

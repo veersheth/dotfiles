@@ -23,6 +23,26 @@
     {
       "name": "myunsw",
       "url": "https://my.unsw.edu.au"
+    },
+    {
+      "name": "syncthing",
+      "url": "http://localhost:8384/"
+    },
+    {
+      "name": "unsw-moodle",
+      "url": "https://moodle.telt.unsw.edu.au"
+    },
+    {
+      "name": "ms-teams",
+      "url": "https://teams.microsoft.com"
+    },
+    {
+      "name": "onedrive",
+      "url": "https://onedrive.com"
+    },
+    {
+      "name": "gemini",
+      "url": "https://gemini.google.com"
     }
   ]
 }
