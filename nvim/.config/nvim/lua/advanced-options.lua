@@ -18,7 +18,7 @@ writing_mode_state = {}
 local function set_writing_mode(bufnr, enabled)
   writing_mode_state[bufnr] = enabled
   if enabled then
-    vim.opt_local.textwidth = 84
+    vim.opt_local.textwidth = 91
     vim.opt_local.formatoptions:append("t")
     vim.opt_local.linebreak = true
     vim.opt_local.wrap = true

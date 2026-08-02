@@ -71,7 +71,7 @@
   services.xserver.enable = true;
   # Enable the GNOME Desktop Environment.
   services.xserver.displayManager.gdm.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
+  services.desktopManager.gnome.enable = true;
 
   # # COSMIC
   # services.xserver.enable = true; 
@@ -88,6 +88,12 @@
   #   };
   # };
   # services.displayManager.defaultSession = "xfce";
+
+  # services.displayManager.sddm = {
+  #   enable = true;
+  #   wayland.enable = true;
+  # };
+  # services.desktopManager.plasma6.enable = true;
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -124,15 +130,17 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       # GUI 
+      packet
+      gnome-power-manager
       gimp-with-plugins
-      steam lutris wine winetricks
+      steam lutris wine winetricks mangohud
       blender
       spotify spotatui
       sioyek mupdf
       tor-browser
       obsidian
       mpv
-      kitty alacritty
+      kitty
       vscode android-studio
       brave 
       livecaptions
@@ -169,7 +177,6 @@
       gnomeExtensions.just-perfection 
       gnomeExtensions.caffeine
       gnomeExtensions.appindicator
-      #
     ];
   };
 
@@ -193,7 +200,6 @@
       defaultFonts = {
         monospace = [ "JetBrainsMono Nerd Font" ];
         sansSerif = [ "Inter" ];
-        # sansSerif = [ "Inter" ];
       };
     };
   };
@@ -207,7 +213,10 @@
 
     firefox = { enable = true; };
 
-    steam = { enable = true; };
+    steam = { 
+      enable = true;
+      gamescopeSession.enable = true;
+    };
     gamemode = { enable = true; };
 
     zsh = { enable = true; };
@@ -269,17 +278,17 @@
 
 
     # hyprland
-    hyprland hypridle hyprpicker hyprsunset hyprpolkitagent 
-    hyprshot cliphist satty
+    hyprland hypridle hyprpicker hyprsunset hyprshot cliphist satty
+    quickshell qt5.qtgraphicaleffects
 
-    hyprlock 
-
-    quickshell
-    qt5.qtgraphicaleffects
   ];
 
   environment.etc."keyd/default.conf" = {
     source = files/keyd/default.conf;
+  };
+
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
   };
 
   environment.variables = {
@@ -294,9 +303,9 @@
     fprintd.enable = true;
     flatpak.enable = true;
     logind = {
-      powerKey = "suspend";
-      lidSwitch = "suspend";
-      lidSwitchExternalPower = "suspend"; 
+      settings.Login.powerKey = "suspend";
+      settings.Login.lidSwitch = "suspend";
+      settings.Login.lidSwitchExternalPower = "suspend"; 
     };
     upower = {
       enable = true;

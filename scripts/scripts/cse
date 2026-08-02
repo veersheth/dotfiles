@@ -245,7 +245,7 @@ main() {
     local cmd="${1:-}"
 
     case "$cmd" in
-        ssh)
+        ssh|"")
             cmd_ssh
             ;;
         mount)
@@ -260,7 +260,7 @@ main() {
         key-setup)
             cmd_key_setup
             ;;
-        -h|--help|"")
+        -h|--help)
             usage
             exit 0
             ;;

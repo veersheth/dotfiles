@@ -37,8 +37,8 @@ active_bg_color = "rgba(40, 40, 40, 1)"
 active_border_color = "rgba(255,255,255,0.0)"
 
 [window]
-width = 800
-height = 550
+width = 900
+height = 650
 
 [[web_searches]]
 name = "Google"

@@ -142,6 +142,8 @@ Variants {
               RowLayout {
                   anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; bottom: parent.bottom }
                   spacing: Theme.moduleSpacing
+
+                  Clock { Layout.fillHeight: true }
               }
 
               // RIGHT
@@ -151,15 +153,11 @@ Variants {
 
                   Media { Layout.fillHeight: true }
 
-                  Tray { Layout.fillHeight: true }
-
                   Caffeine { Layout.fillHeight: true }
 
                   NotificationBell { Layout.fillHeight: true }
 
                   QuickSettings { Layout.fillHeight: true }
-
-                  Clock { Layout.fillHeight: true }
 
                   Battery { Layout.fillHeight: true }
               }

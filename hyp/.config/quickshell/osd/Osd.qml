@@ -11,17 +11,21 @@ import qs.common
 Scope {
     id: root
 
-    property string icon:  ""
-    property real   value: 0
-    property bool   muted: false
-    property string message: ""
-    property bool   shown: false
+    property string icon:       ""
+    property real   value:      0
+    property bool   muted:      false
+    property string message:    ""
+    property bool   critical:   false   // red border + persists until charger connects
+    property bool   persistent: false   // stays visible until dismissed externally
+    property bool   shown:      false
 
     property bool ready: false
     Timer { interval: 1200; running: true; onTriggered: root.ready = true }
 
     function show(icon, value, muted) {
         if (!ready) return;
+        root.critical   = false;
+        root.persistent = false;
         root.message = "";
         root.icon  = icon;
         root.value = value;
@@ -30,22 +34,42 @@ Scope {
         hideTimer.restart();
     }
 
-    // text mode ("Charging — 2 h until full"); replaces the meter row
     function showMessage(icon, msg) {
         if (!ready) return;
+        root.critical   = false;
+        root.persistent = false;
         root.message = msg;
-        root.icon  = icon;
-        root.muted = false;
+        root.icon    = icon;
+        root.muted   = false;
         iconPop.restart();
         shown = true;
         hideTimer.restart();
+    }
+
+    // Persistent red-bordered OSD — stays until dismiss() is called.
+    function showCritical(icon, msg) {
+        if (!ready) return;
+        root.critical   = true;
+        root.persistent = true;
+        root.message = msg;
+        root.icon    = icon;
+        root.muted   = false;
+        iconPop.restart();
+        shown = true;
+        hideTimer.stop();   // don't auto-hide
+    }
+
+    function dismiss() {
+        root.persistent = false;
+        root.critical   = false;
+        root.shown      = false;
     }
 
     // messages need longer to be read than a glanceable meter
     Timer {
         id: hideTimer
         interval: root.message !== "" ? 2600 : 1600
-        onTriggered: root.shown = false
+        onTriggered: if (!root.persistent) root.shown = false
     }
 
     // ── Volume ────────────────────────────────────────────────────────
@@ -142,29 +166,31 @@ Scope {
         target: root.battery
         enabled: root.battery?.isLaptopBattery ?? false
 
-        // Reset low-battery nudge flags when the charger is plugged in.
         function onStateChanged() {
-            if (root.battery?.state === UPowerDeviceState.Charging) {
+            const b = root.battery;
+            if (!b) return;
+            if (b.state === UPowerDeviceState.Charging ||
+                b.state === UPowerDeviceState.FullyCharged) {
                 root.warned20 = false;
                 root.warned10 = false;
+                // Dismiss persistent critical OSD when charger is plugged in
+                if (root.persistent) root.dismiss();
             }
         }
 
-        // one nudge per threshold per discharge cycle; flags reset on plug-in
+        // One nudge per threshold per discharge cycle; flags reset on plug-in.
         function onPercentageChanged() {
             const b = root.battery;
             if (b.state !== UPowerDeviceState.Discharging) return;
             const pct  = b.percentage * 100;
-            const left = b.timeToEmpty > 0 ? ` - about ${root.fmtMins(b.timeToEmpty)} left` : "";
+            const left = b.timeToEmpty > 0 ? ` · ${root.fmtMins(b.timeToEmpty)} left` : "";
             if (pct <= 10 && !root.warned10) {
                 root.warned10 = true;
                 root.warned20 = true;
-                Quickshell.execDetached(["notify-send", "-u", "critical", "-a", "Power",
-                    "Battery critical", `${Math.round(pct)}% remaining${left}`]);
+                root.showCritical(root.batteryIcon(pct), `${Math.round(pct)}% · Critical${left}`);
             } else if (pct <= 20 && !root.warned20) {
                 root.warned20 = true;
-                Quickshell.execDetached(["notify-send", "-u", "normal", "-a", "Power",
-                    "Battery low", `${Math.round(pct)}% remaining${left}`]);
+                root.showMessage(root.batteryIcon(pct), `${Math.round(pct)}% · Low battery${left}`);
             }
         }
     }
@@ -205,11 +231,16 @@ Scope {
             id: card
             anchors.fill: parent
             radius: Theme.popupRadius
-            color: Theme.surface
-            border.color: Theme.border
-            border.width: Theme.borderWidth
+            color: root.critical ? Qt.rgba(
+                Theme.red.r * 0.18, Theme.red.g * 0.18, Theme.red.b * 0.18, 0.96)
+                : Theme.surface
+            border.color: root.critical ? Qt.alpha(Theme.red, 0.7) : Theme.border
+            border.width: root.critical ? 2 : Theme.borderWidth
             opacity: 0
             clip: true
+
+            Behavior on color        { ColorAnimation { duration: 200 } }
+            Behavior on border.color { ColorAnimation { duration: 200 } }
 
             Text {
                 id: osdIcon
@@ -217,7 +248,10 @@ Scope {
                 text:           root.icon
                 font.family:    Theme.nerdFont
                 font.pixelSize: 20
-                color: root.muted ? Qt.alpha(Theme.foreground, 0.4) : Theme.foreground
+                color: root.critical ? Theme.red
+                     : root.muted   ? Qt.alpha(Theme.foreground, 0.4)
+                     : Theme.foreground
+                Behavior on color { ColorAnimation { duration: 200 } }
             }
 
             NumberAnimation {
@@ -242,7 +276,8 @@ Scope {
                 font.family: Theme.font
                 font.pixelSize: Theme.fontSize - 1
                 font.weight: Font.Medium
-                color: Theme.foreground
+                color: root.critical ? Theme.red : Theme.foreground
+                Behavior on color { ColorAnimation { duration: 200 } }
             }
 
             Rectangle {

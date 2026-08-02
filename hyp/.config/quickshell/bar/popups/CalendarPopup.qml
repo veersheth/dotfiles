@@ -25,8 +25,8 @@ BarPopup {
     readonly property int minYear: 1900
     readonly property int maxYear: 2100
 
-    contentWidth: col.implicitWidth + 44
-    contentHeight: col.implicitHeight + 44
+    contentWidth: mainRow.implicitWidth + 44
+    contentHeight: mainRow.implicitHeight + 44
 
     onShownChanged: if (shown) goToday()
 
@@ -80,9 +80,13 @@ BarPopup {
         precision: SystemClock.Minutes
     }
 
-    ColumnLayout {
-        id: col
+    RowLayout {
+        id: mainRow
         anchors.centerIn: parent
+        spacing: 20
+
+        ColumnLayout {
+        id: col
         spacing: 10
 
         // ── Header: ⇑ ↑ Month Year ↓ ⇓ ────────────────────────────────
@@ -90,8 +94,8 @@ BarPopup {
             Layout.fillWidth: true
             spacing: 2
 
-            NavButton { label: "<<"; onActivated: root.addMonths(-12) }
-            NavButton { label: "<"; onActivated: root.addMonths(-1) }
+            NavButton { label: "󰄿"; onActivated: root.addMonths(-12) }
+            NavButton { label: ""; onActivated: root.addMonths(-1) }
 
             Rectangle {
                 Layout.fillWidth: true
@@ -116,8 +120,9 @@ BarPopup {
                 }
             }
 
-            NavButton { label: ">"; onActivated: root.addMonths(1) }
-            NavButton { label: ">>"; onActivated: root.addMonths(12) }
+            NavButton { label: ""; onActivated: root.addMonths(1) }
+            NavButton { label: "󰄼"; onActivated: root.addMonths(12) }
+            
         }
 
         // ── Day-of-week labels ────────────────────────────────────────
@@ -241,5 +246,13 @@ BarPopup {
                 }
             }
         }
-    }
+    }   // ColumnLayout col
+
+        AnalogClock {
+            implicitWidth:  180
+            implicitHeight: 180
+            Layout.alignment: Qt.AlignVCenter
+            running: root.shown
+        }
+    }   // RowLayout mainRow
 }

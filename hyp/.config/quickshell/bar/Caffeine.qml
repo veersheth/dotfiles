@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 import qs.common
@@ -13,6 +14,23 @@ Item {
 
     property bool on: false
     property real until: -1   // expiry ms timestamp; -1 = indefinite
+    property bool _autoActive: false   // true when activated by fullscreen detection
+
+    // ── Fullscreen auto-toggle ─────────────────────────────────────────
+    readonly property bool fullscreenActive: Hyprland.focusedClient?.fullscreen ?? false
+    onFullscreenActiveChanged: {
+        if (fullscreenActive && !root.on) {
+            root._autoActive = true
+            root.on = true
+            inhibitProc.running = true
+        } else if (!fullscreenActive && root._autoActive) {
+            root._autoActive = false
+            root.on = false
+            root.until = -1
+            expiryTimer.stop()
+            inhibitProc.running = false
+        }
+    }
 
     Layout.alignment: Qt.AlignVCenter
     implicitWidth: icon.implicitWidth + 20
@@ -76,6 +94,7 @@ Item {
     }
 
     function activate(durationMs) {
+        _autoActive = false;   // manual activation overrides auto
         until = durationMs > 0 ? Date.now() + durationMs : -1;
         on    = true;
         inhibitProc.running = true;
@@ -91,6 +110,7 @@ Item {
     }
 
     function deactivate() {
+        _autoActive = false;   // clear auto flag on any manual deactivation
         on    = false;
         until = -1;
         expiryTimer.stop();

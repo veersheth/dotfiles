@@ -72,10 +72,14 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "<leader>lk", function()
       vim.diagnostic.config({ virtual_text = not vim.diagnostic.config().virtual_text })
     end, "toggle inline diagnostics")
-
     map("n", "<leader>ln", vim.diagnostic.goto_next, "next diagnostic")
     map("n", "<leader>lp", vim.diagnostic.goto_prev, "prev diagnostic")
     map("n", "<leader>lf", function() vim.lsp.buf.format({ async = true }) end, "format buffer")
+
+    map("n", "gd", vim.lsp.buf.definition, "go to definition")
+    map("n", "gD", vim.lsp.buf.declaration, "go to declaration")
+    map("n", "gr", vim.lsp.buf.references, "go to references")
+    map("n", "gi", vim.lsp.buf.implementation, "go to implementation")
     map({ "n", "v" }, "<leader>ca", require("actions-preview").code_actions, "code actions (preview)")
     map("n", "<leader>rn", vim.lsp.buf.rename, "rename symbol")
     map("n", "K", vim.lsp.buf.hover, "hover docs")

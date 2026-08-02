@@ -8,10 +8,10 @@ import QtQuick
 
 QtObject {
     // Colors
-    readonly property color background: "#AE000000"   // #00000088
+    readonly property color background: "#22000000"   // #00000088
     readonly property color surface:    "#AA000000"   // #262626ff
     readonly property color border:     "#66ffffff"   // #ffffff22
-    readonly property color barBorder:  "#22ffffff"   // bottom border of the status bar
+    readonly property color barBorder:  "#00ffffff"   // bottom border of the status bar
     readonly property color foreground: "#ffffffff"   // #ffffffff
     readonly property color onAccent:   "#ff1a1a1a"   // dark text on accent fills
     readonly property color hover:      "#22ffffff"   // subtle hover wash
@@ -22,10 +22,10 @@ QtObject {
     readonly property color yellow:     "#d2d270"
 
     // Type
-    readonly property string font:     "Iosevka Nerd Font"
+    readonly property string font:     "JetBrainsMono Nerd Font"
     readonly property string nerdFont: "JetBrainsMono Nerd Font"
-    readonly property int    fontSize: 14
-    readonly property int    iconSize: 15
+    readonly property int    fontSize: 13
+    readonly property int    iconSize: 14
 
     // Metrics
     readonly property int barHeight:    32
@@ -43,10 +43,4 @@ QtObject {
     // Shared component widths —  popups set contentWidth = {list,slider}Width + 2 * contentPadding
     readonly property int listWidth:   300
     readonly property int sliderWidth: 300
-
-    // Dock
-    readonly property int   dockHideDelay:  600           // grace period before auto-hide (ms)
-    readonly property int   dockPadding:    14            // space between icons and card edge
-    // Alpha must stay above Hyprland's ignore_alpha (0.4) or blur won't apply
-    readonly property color dockBackground: "#88000000"
 }

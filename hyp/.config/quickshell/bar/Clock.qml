@@ -5,7 +5,7 @@ import qs.common
 import qs.components
 import qs.bar.popups
 
-Pill {
+Item {
     id: root
 
     implicitWidth: lbl.implicitWidth + 20
