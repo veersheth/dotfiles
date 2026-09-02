@@ -395,21 +395,6 @@ Item {
                 }
             }
 
-            Item { implicitWidth: 14 }
-
-            Text {
-                text: "󰊓"
-                font.family: Theme.nerdFont; font.pixelSize: 19
-                color: (root.player?.fullscreen ?? false)
-                    ? root.accentColor
-                    : Qt.alpha(Theme.foreground, (root.player?.canSetFullscreen ?? false) ? 0.48 : 0.18)
-                Behavior on color { ColorAnimation { duration: 250 } }
-                MouseArea {
-                    anchors.fill: parent; anchors.margins: -10
-                    enabled: root.player?.canSetFullscreen ?? false
-                    onClicked: root.player.fullscreen = !root.player.fullscreen
-                }
-            }
         }
     }
 }
