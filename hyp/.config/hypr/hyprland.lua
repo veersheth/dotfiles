@@ -61,8 +61,8 @@ hl.config({
 
 hl.config({
   decoration = {
-    rounding       = 20,
-    rounding_power = 2,
+    rounding       = 16,
+    rounding_power = 3,
 
     active_opacity   = 1.0,
     inactive_opacity = 1.0,
@@ -354,7 +354,6 @@ hl.window_rule({
   float    = true,
   pin      = true,
   no_anim  = true,
-  rounding = 16,
 })
 
 hl.window_rule({
@@ -362,14 +361,12 @@ hl.window_rule({
   match    = { class = ".*LiveCaptions.*" },
   float    = true,
   pin      = true,
-  rounding = 16,
 })
 
 hl.window_rule({
   name     = "preview",
   match    = { class = ".*NautilusPreviewer.*" },
   float    = true,
-  rounding = 16,
 })
 
 hl.window_rule({
@@ -377,7 +374,6 @@ hl.window_rule({
   match    = { class = ".*satty.*" },
   float    = true,
   pin      = true,
-  rounding = 16,
 })
 
 hl.window_rule({
