@@ -28,13 +28,12 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
 fi
 
 if [[ "$1" == "-c" || "$1" == "--clean" ]]; then
-    echo "Collecting nix garbage (removing old generations)..."
+    sudo echo "Collecting nix garbage (removing old generations)..."
     sudo nix-collect-garbage -d
     echo "Done."
     exit 0
 fi
 
-# Check for update flag
 if [[ "$1" == "-u" || "$1" == "--update" ]]; then
     UPDATE_CHANNELS=true
 fi
@@ -42,10 +41,8 @@ fi
 TMP_BEFORE="$(mktemp)"
 cp "$CONFIG_FILE" "$TMP_BEFORE"
 
-# Edit
 nvim "$CONFIG_FILE"
 
-# Show what changed
 if ! diff -q "$TMP_BEFORE" "$CONFIG_FILE" >/dev/null; then
     echo "Changes detected:"
     echo "-----------------"
@@ -84,19 +81,17 @@ while true; do
     esac
 done
 
-# Perform Channel Update if requested
 if [ "$UPDATE_CHANNELS" = true ]; then
-    echo "Updating flake inputs..."
+    sudo echo "Updating flake inputs..."
     sudo nix flake update --flake /home/veer/dotfiles/nixos
 fi
 
-echo "Rebuilding NixOS..."
+sudo echo "Rebuilding NixOS..."
 
 if $VERBOSE; then
     sudo nixos-rebuild switch --flake /home/veer/dotfiles/nixos#nixos
 else
-    # Improved logging: print log path so user knows where to look if it hangs
-    echo "Building in background...       tail -f ~/nixos-switch.log"
+    sudo echo "Building in background...       tail -f ~/nixos-switch.log"
     sudo nixos-rebuild switch --flake /home/veer/dotfiles/nixos#nixos &> ~/nixos-switch.log \
         || (grep --color=auto -A 5 "error:" ~/nixos-switch.log && exit 1)
 fi

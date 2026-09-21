@@ -28,11 +28,16 @@
     "kvm-amd"
   ];
   boot.kernelParams = [
-    "mem_sleep_default=s2idle"
+    "mem_sleep_default=deep"
     "amdgpu.sg_display=0"
   ];
 
-  hardware.graphics.enable32Bit = true; # for lutris
+  hardware.graphics = {
+    enable32Bit = true; # for lutris
+    extraPackages = with pkgs; [
+      rocmPackages.clr.icd
+    ];
+  };
 
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -129,12 +134,13 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       # GUI 
+      thunderbird
       tigervnc
       packet
       gnome-power-manager
       gimp-with-plugins
-      steam lutris wine winetricks mangohud
-      blender
+      steam lutris wine winetricks mangohud # gaming
+      blender shotcut davinci-resolve # video
       spotify spotatui
       sioyek mupdf
       tor-browser
@@ -144,12 +150,14 @@
       vscode android-studio
       livecaptions
       obs-studio
+      davinci-resolve
       onlyoffice-desktopeditors
       keepass
 
 
       # CLI
       marp-cli
+      yarn
       lazygit
       figlet
       imagemagick
@@ -160,6 +168,7 @@
       docker_25
       btop powertop
       bun
+      uv 
       claude-code
 
 
@@ -190,6 +199,8 @@
       helvetica-neue-lt-std
       nerd-fonts.jetbrains-mono
       maple-mono.NL-CN
+      googlesans-code
+
 
       nerd-fonts.iosevka
       
@@ -209,8 +220,18 @@
   programs = {
     appimage = { enable = true; binfmt = true; package = pkgs.appimage-run.override { extraPkgs = pkgs: [ pkgs.libthai ]; }; };
 
-    nix-ld = { enable = true; };
-    nix-ld.libraries = with pkgs; [ stdenv.cc.cc zlib fuse3 icu nss openssl curl expat ];
+    nix-ld = {
+      enable = true;
+      libraries = with pkgs; [ 
+        stdenv.cc.cc zlib fuse3 icu nss openssl curl expat 
+        ## Put here any library that is required when running a package
+        ## ...
+        ## Uncomment if you want to use the libraries provided by default in the steam distribution
+        ## but this is quite far from being exhaustive
+        ## https://github.com/NixOS/nixpkgs/issues/354513
+        # (pkgs.runCommand "steamrun-lib" {} "mkdir $out; ln -s ${pkgs.steam-run.fhsenv}/usr/lib64 $out/lib")
+      ];
+    };
 
     firefox = { enable = true; };
 
@@ -268,7 +289,7 @@
     keyd
     openssl
     tree
-    yazi
+    yazi ranger
     wget
     tmux
     stow
@@ -308,10 +329,10 @@
     keyd.enable = true;
     fprintd.enable = true;
     flatpak.enable = true;
-    logind = {
-      settings.Login.powerKey = "suspend";
-      settings.Login.lidSwitch = "suspend";
-      settings.Login.lidSwitchExternalPower = "suspend"; 
+    logind.settings.Login = {
+      HandlePowerKey = "lock";
+      HandleLidSwitch = "suspend";
+      HandleLidSwitchExternalPower = "suspend";
     };
     upower = {
       enable = true;
