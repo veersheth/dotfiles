@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+STATE="/run/user/$(id -u)/focus.state"
+LOG="$HOME/.local/share/focus-sessions.log"
+
+block_sites() {
+    printf '0.0.0.0 %s # focus-block\n' \
+        www.youtube.com youtube.com youtu.be m.youtube.com \
+        | pkexec tee -a /etc/hosts >/dev/null
+}
+
+
+log_session() {
+    local start="$1"
+    local start_ts end_ts duration
+    start_ts=$(date -d "$start" +%s)
+    end_ts=$(date +%s)
+    duration=$(( (end_ts - start_ts) / 60 ))
+    mkdir -p "$(dirname "$LOG")"
+    echo "$start → $(date '+%Y-%m-%d %H:%M:%S') (${duration}m)" >> "$LOG"
+}
+
+stop_focus() {
+    # 30-second cooloff — no cancel button
+    (
+        for i in $(seq 30 -1 1); do
+            echo $(( (30 - i) * 100 / 30 ))
+            echo "# Hold on... ${i}s"
+            sleep 1
+        done
+        echo 100
+    ) | zenity --progress \
+        --title="End Focus Mode" \
+        --text="Cooling off..." \
+        --no-cancel \
+        --auto-close || return 1
+
+    # Must type the phrase exactly
+    while true; do
+        input=$(zenity --entry \
+            --title="End Focus Mode" \
+            --text="Type <b>end focus mode</b> to continue:") || return 1
+        [ "$input" = "end focus mode" ] && break
+        zenity --error --title="Try again" --text="Type exactly: end focus mode" --no-wrap
+    done
+
+    # Force password prompt regardless of cached sudo/polkit state
+    password=$(zenity --password --title="End Focus Mode") || return 1
+    echo "$password" | sudo -kS sed -i '/# focus-block/d' /etc/hosts || {
+        zenity --error --title="Authentication failed" --text="Wrong password." --no-wrap
+        return 1
+    }
+
+    local start
+    start=$(cat "$STATE")
+    log_session "$start"
+    qs ipc call flash triggerWith '#ffffff' 900
+    rm -f "$STATE"
+}
+
+if [ -f "$STATE" ]; then
+    stop_focus
+else
+    START=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "$START" > "$STATE"
+    block_sites
+    qs ipc call flash triggerWith '#ffe100' 900
+fi
