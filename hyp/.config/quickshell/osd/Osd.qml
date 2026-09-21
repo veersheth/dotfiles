@@ -200,9 +200,11 @@ Scope {
             : 252
         readonly property int cardH: 64
 
-        anchors.bottom: true
+        anchors.bottom: BarState.barBottom
+        anchors.top:    !BarState.barBottom
         exclusiveZone:  0
-        WlrLayershell.margins.bottom: 32
+        WlrLayershell.margins.bottom: BarState.barBottom  ? Theme.barHeight + 10 : 0
+        WlrLayershell.margins.top:    !BarState.barBottom ? Theme.barHeight + 10 : 0
         implicitWidth:  win.cardW
         implicitHeight: win.cardH
         color:          "transparent"
@@ -212,21 +214,27 @@ Scope {
         WlrLayershell.namespace: "quickshell:osd"
         WlrLayershell.layer: WlrLayer.Overlay
 
-        NumberAnimation {
+        // Slide direction: toward the bar edge the OSD morphs out of
+        readonly property real _slideDir: BarState.barBottom ? 14 : -14
+
+        ParallelAnimation {
             id: enterAnim
-            target: card; property: "opacity"
-            from: 0; to: 1; duration: 180; easing.type: Easing.OutCubic
+            NumberAnimation { target: card; property: "opacity";  from: 0; to: 1;              duration: 180; easing.type: Easing.OutCubic }
+            NumberAnimation { target: card; property: "_slideY";  from: win._slideDir; to: 0;  duration: 180; easing.type: Easing.OutCubic }
         }
-        NumberAnimation {
+        ParallelAnimation {
             id: exitAnim
-            target: card; property: "opacity"
-            to: 0; duration: 140; easing.type: Easing.InCubic
+            NumberAnimation { target: card; property: "opacity";  to: 0;              duration: 140; easing.type: Easing.InCubic }
+            NumberAnimation { target: card; property: "_slideY";  to: win._slideDir;  duration: 140; easing.type: Easing.InCubic }
         }
 
         Rectangle {
             id: card
             anchors.fill: parent
             radius: Theme.popupRadius
+
+            property real _slideY: 0
+            transform: Translate { y: card._slideY }
             color: root.critical ? Qt.rgba(
                 Theme.red.r * 0.18, Theme.red.g * 0.18, Theme.red.b * 0.18, 0.96)
                 : Theme.surface

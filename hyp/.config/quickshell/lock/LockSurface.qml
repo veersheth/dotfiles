@@ -12,10 +12,11 @@ Item {
     required property var ctx
 
     // ── Background ────────────────────────────────────────────────────────
+    // Image mode: blurred wallpaper + dark overlay for readability
     Image {
         id: wall
         anchors.fill: parent
-        source: WallpaperService.current.length > 0 ? "file://" + WallpaperService.current : ""
+        source: WallpaperService.imagePath.length > 0 ? "file://" + WallpaperService.imagePath : ""
         fillMode: Image.PreserveAspectCrop
         visible: false
         asynchronous: true
@@ -26,11 +27,13 @@ Item {
         blurEnabled: true
         blurMax: 64
         blur: 1.0
+        visible: !WallpaperService.isColor
     }
+    // Color mode: solid chosen color; image mode: black at 0.5 opacity darkens the blur
     Rectangle {
         anchors.fill: parent
-        color: "black"
-        opacity: 0.5
+        color: WallpaperService.isColor ? WallpaperService.colorValue : "black"
+        opacity: WallpaperService.isColor ? 1 : 0.5
     }
 
     // ── Fade-in ───────────────────────────────────────────────────────────

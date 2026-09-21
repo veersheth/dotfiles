@@ -2,7 +2,6 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
-import QtQuick.Dialogs
 import qs.common
 import qs.components
 import qs.wallpaper
@@ -30,64 +29,61 @@ Scope {
         }
     }
 
-    // Native GTK picker via zenity when installed; otherwise falls back
-    // to the Qt dialog in pickerWin below.
+    // ── Image picker ──────────────────────────────────────────────────────
+    // XDG FileChooser portal — GTK_USE_PORTAL=1 makes zenity delegate to the
+    // portal backend, giving the native system file picker instead of its own widget.
     Process {
-        id: zenityProc
-        command: ["sh", "-c",
-            'if command -v zenity >/dev/null 2>&1; then ' +
-            'exec zenity --file-selection --title="Choose wallpaper" ' +
-            '--file-filter="Images | *.jpg *.jpeg *.png *.webp *.bmp *.avif" ' +
-            '--file-filter="All files | *" ' +
-            '--filename="$START_DIR/"; ' +
-            'else echo __NOZENITY__; fi']
-        environment: ({ START_DIR: root.effective.substring(0, root.effective.lastIndexOf("/")) })
+        id: pickerProc
+        environment: ({ GTK_USE_PORTAL: "1" })
+        command: ["zenity", "--file-selection",
+                  "--title=Choose wallpaper",
+                  "--file-filter=Images | *.jpg *.jpeg *.png *.webp *.bmp *.avif",
+                  "--filename=" + (!WallpaperService.isColor && root.effective !== ""
+                      ? root.effective.substring(0, root.effective.lastIndexOf("/")) + "/"
+                      : Quickshell.env("HOME") + "/Pictures/")]
         stdout: StdioCollector {
             onStreamFinished: {
                 const out = text.trim();
-                if (out === "__NOZENITY__") { pickerWin.visible = true; return; }
-                if (out === "") return;   // cancelled
+                if (out === "") return;
                 root.chosen = out;
                 store.setText(out);
             }
         }
     }
 
-    // Qt's file dialog needs a real toplevel to live in — layer-shell
-    // surfaces don't qualify — so the picker borrows a floating window
-    // that only exists while choosing.
-    FloatingWindow {
-        id: pickerWin
-        visible: false
-        title: "Choose wallpaper"
-        implicitWidth: 760
-        implicitHeight: 520
-        color: Theme.surface
-
-        onVisibleChanged: if (visible) Qt.callLater(() => picker.open())
-
-        Item {
-            anchors.fill: parent
-
-            FileDialog {
-                id: picker
-                title: "Choose wallpaper"
-                nameFilters: ["Images (*.jpg *.jpeg *.png *.webp *.bmp *.avif)"]
-                currentFolder: "file://" + root.effective.substring(0, root.effective.lastIndexOf("/"))
-                onAccepted: {
-                    const p = decodeURIComponent(selectedFile.toString().replace(/^file:\/\//, ""));
-                    root.chosen = p;
-                    store.setText(p);
-                    pickerWin.visible = false;
-                }
-                onRejected: pickerWin.visible = false
-            }
-        }
-    }
-
     Connections {
         target: BarState
-        function onWallpaperPickerRequested() { zenityProc.running = true }
+        function onWallpaperPickerRequested() { pickerProc.running = true }
+    }
+
+    // ── Color picker ──────────────────────────────────────────────────────
+    // zenity --color-selection outputs rgb(r,g,b) — we convert to #rrggbb
+    // and store it prefixed with "color:" so we can distinguish from a path.
+    Process {
+        id: colorPickerProc
+        command: (function() {
+            const args = ["zenity", "--color-selection",
+                          "--title=Choose background color",
+                          "--show-palette"]
+            // seed with current color if already in color mode
+            if (WallpaperService.isColor)
+                args.push("--color=" + WallpaperService.colorValue)
+            return args
+        })()
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const out = text.trim();
+                if (out === "") return;
+                // rgb(r,g,b) or rgba(r,g,b,a) → #rrggbb
+                const m = out.match(/(\d+),\s*(\d+),\s*(\d+)/);
+                if (!m) return;
+                const hex = "#" + [m[1], m[2], m[3]].map(
+                    v => parseInt(v).toString(16).padStart(2, "0")).join("");
+                const stored = "color:" + hex;
+                root.chosen = stored;
+                store.setText(stored);
+            }
+        }
     }
 
     Variants {
@@ -97,18 +93,22 @@ Scope {
             id: perScreen
             required property var modelData
 
-            // Background layer — the wallpaper itself
+            // Background layer — the wallpaper or solid color
             PanelWindow {
                 screen: perScreen.modelData
                 anchors { top: true; bottom: true; left: true; right: true }
                 exclusiveZone: -1
-                color: "black"
+                // Window background: solid color when in color mode,
+                // black fallback while image loads (or when no wallpaper set)
+                color: WallpaperService.isColor ? WallpaperService.colorValue : "black"
                 WlrLayershell.layer: WlrLayer.Background
                 WlrLayershell.namespace: "quickshell:wallpaper"
 
                 Image {
                     anchors.fill: parent
-                    source: root.effective.length > 0 ? "file://" + root.effective : ""
+                    visible: !WallpaperService.isColor
+                    source: (!WallpaperService.isColor && root.effective.length > 0)
+                            ? "file://" + root.effective : ""
                     fillMode: Image.PreserveAspectCrop
                     smooth: true
                     asynchronous: true
@@ -155,7 +155,19 @@ Scope {
                             Text { anchors.verticalCenter: parent.verticalCenter; text: "󰸉"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Theme.foreground }
                             Text { anchors.verticalCenter: parent.verticalCenter; text: "Change background…"; font.family: Theme.font; font.pixelSize: Theme.fontSize; font.weight: Font.Medium; color: Theme.foreground }
                         }
-                        MouseArea { id: wallMo; anchors.fill: parent; hoverEnabled: true; onClicked: { desktopMenu.close(); zenityProc.running = true } }
+                        MouseArea { id: wallMo; anchors.fill: parent; hoverEnabled: true; onClicked: { desktopMenu.close(); pickerProc.running = true } }
+                    }
+
+                    Rectangle {
+                        width: parent.width; height: 34; radius: 9
+                        color: colorMo.containsMouse ? Theme.hover : "transparent"
+                        Row {
+                            anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                            spacing: 9
+                            Text { anchors.verticalCenter: parent.verticalCenter; text: "󰏘"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Theme.foreground }
+                            Text { anchors.verticalCenter: parent.verticalCenter; text: "Set solid color…"; font.family: Theme.font; font.pixelSize: Theme.fontSize; font.weight: Font.Medium; color: Theme.foreground }
+                        }
+                        MouseArea { id: colorMo; anchors.fill: parent; hoverEnabled: true; onClicked: { desktopMenu.close(); colorPickerProc.running = true } }
                     }
 
                     Rectangle {

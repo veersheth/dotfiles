@@ -38,6 +38,9 @@ Scope {
             sessionLock.locked = true;
             lockContext.begin();
         }
+        // suspend/resume hooks: stop fprintd D-Bus activity during s2idle sleep
+        function pause(): void { lockContext.suspendFprint() }
+        function resume(): void { lockContext.resumeFprint() }
         // debug: arm the fingerprint PAM conversation without locking
         function testFprint(): void { lockContext.testFprint() }
     }

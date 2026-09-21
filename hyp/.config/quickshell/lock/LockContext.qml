@@ -104,6 +104,18 @@ Scope {
         fprintWatch.start();
     }
 
+    // called by hypridle before_sleep_cmd / after_sleep_cmd to avoid
+    // pam_fprintd D-Bus activity keeping s2idle in a shallow sleep state
+    function suspendFprint() {
+        console.log("[lock] suspendFprint(): pausing fingerprint watchdog");
+        fprintWatch.stop();
+        fprint.abort();
+    }
+    function resumeFprint() {
+        console.log("[lock] resumeFprint(): resuming fingerprint watchdog");
+        if (armed && !succeeded) fprintWatch.start();
+    }
+
     PamContext {
         id: fprint
         config: "swaylock"

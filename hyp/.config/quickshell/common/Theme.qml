@@ -8,7 +8,7 @@ import QtQuick
 
 QtObject {
     // Colors
-    readonly property color background: "#22000000"   // #00000088
+    readonly property color background: "#DD000000"   // #00000088
     readonly property color surface:    "#FF101010"   // #262626ff
     readonly property color border:     "#66ffffff"   // #ffffff22
     readonly property color barBorder:  "#00ffffff"   // bottom border of the status bar
@@ -22,7 +22,7 @@ QtObject {
     readonly property color yellow:     "#d2d270"
 
     // Type
-    readonly property string font:     "Inter"
+    readonly property string font:     "JetBrainsMono Nerd Font"
     readonly property string nerdFont: "JetBrainsMono Nerd Font"
     readonly property int    fontSize: 13
     readonly property int    iconSize: 16

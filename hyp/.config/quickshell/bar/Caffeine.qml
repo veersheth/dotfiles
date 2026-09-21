@@ -130,6 +130,18 @@ Item {
 
     Timer { id: expiryTimer; repeat: false; onTriggered: root.deactivate() }
 
+    IpcHandler {
+        target: "caffeine"
+        // qs ipc call caffeine toggle
+        function toggle(): void {
+            if (root.on) root.deactivate(); else root.activate(0);
+        }
+        // qs ipc call caffeine activate <ms>   (0 = indefinite)
+        function activate(ms: int): void { root.activate(ms) }
+        // qs ipc call caffeine deactivate
+        function deactivate(): void { root.deactivate() }
+    }
+
     // ── Visuals ────────────────────────────────────────────────────────
     Rectangle {
         anchors.fill: parent; radius: height / 2

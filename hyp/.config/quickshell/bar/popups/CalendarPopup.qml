@@ -103,6 +103,7 @@ BarPopup {
         ColumnLayout {
         id: col
         spacing: 10
+        Layout.alignment: Qt.AlignTop
 
         // ── Header: ⇑ ↑ Month Year ↓ ⇓ ────────────────────────────────
         RowLayout {
@@ -261,18 +262,12 @@ BarPopup {
                 }
             }
         }
-        // ── Analog clock + digital time ───────────────────────────────
-        ColumnLayout {
+        // ── Analog clock ─────────────────────────────────────────────
+        AnalogClock {
+            implicitWidth:  220
+            implicitHeight: 220
             Layout.alignment: Qt.AlignHCenter
-            spacing: 6
-
-            AnalogClock {
-                implicitWidth:  220
-                implicitHeight: 220
-                Layout.alignment: Qt.AlignHCenter
-                running: root.shown
-            }
-
+            running: root.shown
         }
 
     }   // ColumnLayout col
@@ -289,7 +284,7 @@ BarPopup {
 
             Layout.preferredWidth: _w
             Layout.preferredHeight: mediaCard.implicitHeight
-            Layout.alignment: Qt.AlignVCenter
+            Layout.alignment: Qt.AlignTop
             clip: true
             visible: _w > 0
 
@@ -298,7 +293,7 @@ BarPopup {
                 x: 16           // indent past the divider
                 width: 284
                 player: mediaHost.player
-                active: root.shown && mediaHost.hasPlayer
+                active: root.shown && mediaHost.player !== null
 
                 opacity: mediaSection.hasPlayer ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: 180 } }

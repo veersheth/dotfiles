@@ -63,7 +63,7 @@ Item {
         Item {
             Layout.fillWidth: true
             Layout.preferredHeight: 234
-            Layout.topMargin: 20
+            Layout.topMargin: 0
             clip: true
 
             Rectangle {
@@ -193,7 +193,7 @@ Item {
 
         // ── Seek bar ───────────────────────────────────────────────────
         ColumnLayout {
-            Layout.fillWidth: true; Layout.topMargin: 16
+            Layout.fillWidth: true; Layout.topMargin: 32
             Layout.leftMargin: 18; Layout.rightMargin: 18; spacing: 6
             visible: root.length > 0
 
