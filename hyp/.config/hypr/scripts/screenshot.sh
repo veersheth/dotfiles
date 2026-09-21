@@ -9,6 +9,13 @@ case "$1" in
     annotate)
         hyprshot -m region -z --raw | satty --filename - --output-filename "$FILE" --copy-command wl-copy
         ;;
+    lens)
+        TMPFILE=$(mktemp /tmp/screenshot-lens-XXXXXX.png)
+        hyprshot -m region -z --raw > "$TMPFILE"
+        URL=$(curl -s -F "reqtype=fileupload" -F "time=1h" -F "fileToUpload=@$TMPFILE" https://litterbox.catbox.moe/resources/internals/api.php)
+        rm -f "$TMPFILE"
+        xdg-open "https://lens.google.com/uploadbyurl?url=${URL}"
+        ;;
     ocr)
         TMPFILE=$(mktemp /tmp/screenshot-ocr-XXXXXX.png)
         hyprshot -m region -z --raw > "$TMPFILE"
@@ -19,7 +26,7 @@ case "$1" in
         hyprshot -m output -z --raw | tee "$FILE" | wl-copy --type image/png
         ;;
     *)
-        echo "Usage: $0 {region|annotate|output|ocr}"
+        echo "Usage: $0 {region|annotate|output|ocr|lens}"
         exit 1
         ;;
 esac

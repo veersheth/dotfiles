@@ -39,13 +39,13 @@ hl.config({
 
 hl.config({
   general = {
-    gaps_in          = 0,
-    gaps_out         = 0,
+    gaps_in          = 2,
+    gaps_out         = 4,
 
     border_size      = 1,
 
     col = {
-      active_border   = "rgba(130, 100, 100, 1)",
+      active_border   = "rgba(110, 110, 110, 1)",
       inactive_border = "rgba(50, 50, 50, 1)",
     },
 
@@ -61,11 +61,11 @@ hl.config({
 
 hl.config({
   decoration = {
-    rounding       = 2,
+    rounding       = 20,
     rounding_power = 2,
 
     active_opacity   = 1.0,
-    inactive_opacity = 0.90,
+    inactive_opacity = 1.0,
 
     shadow = {
       enabled        = false,
@@ -98,12 +98,12 @@ hl.config({
 -----  SMART GAPS -------
 -------------------------
 
-hl.workspace_rule({ workspace = "w[tv1]s[false]", gaps_out = 0, gaps_in = 0 })
-hl.workspace_rule({ workspace = "f[1]s[false]", gaps_out = 0, gaps_in = 0 })
-hl.window_rule({ match = { float = false, workspace = "w[tv1]s[false]" }, border_size = 0 })
-hl.window_rule({ match = { float = false, workspace = "w[tv1]s[false]" }, rounding = 0 })
-hl.window_rule({ match = { float = false, workspace = "f[1]s[false]" }, border_size = 0 })
-hl.window_rule({ match = { float = false, workspace = "f[1]s[false]" }, rounding = 0 })
+-- hl.workspace_rule({ workspace = "w[tv1]s[false]", gaps_out = 0, gaps_in = 0 })
+-- hl.workspace_rule({ workspace = "f[1]s[false]", gaps_out = 0, gaps_in = 0 })
+-- hl.window_rule({ match = { float = false, workspace = "w[tv1]s[false]" }, border_size = 0 })
+-- hl.window_rule({ match = { float = false, workspace = "w[tv1]s[false]" }, rounding = 0 })
+-- hl.window_rule({ match = { float = false, workspace = "f[1]s[false]" }, border_size = 0 })
+-- hl.window_rule({ match = { float = false, workspace = "f[1]s[false]" }, rounding = 0 })
 
 --------------------------
 ---- ANIMATIONS        ----
@@ -123,8 +123,8 @@ hl.curve("easy",           { type = "spring", mass = 1, stiffness = 71, dampenin
 hl.animation({ leaf = "global",     enabled = true, speed = 1, bezier = "default" })
 
 hl.animation({ leaf = "windows",    enabled = true, speed = 4,  bezier = "easeOutQuint" })
-hl.animation({ leaf = "windowsIn",  enabled = true, speed = 3,  bezier = "easeOutQuint", style = "popin" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 3,  bezier = "linear",       style = "popin" })
+hl.animation({ leaf = "windowsIn",  enabled = true, speed = 3,  bezier = "easeOutQuint", style = "slide" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 3,  bezier = "linear",       style = "slide" })
 
 hl.animation({ leaf = "fadeIn",     enabled = true, speed = 1,  bezier = "almostLinear" })
 hl.animation({ leaf = "fadeOut",    enabled = true, speed = 1,  bezier = "almostLinear" })
@@ -134,9 +134,9 @@ hl.animation({ leaf = "layers",     enabled = true, speed = 7,  bezier = "easeOu
 hl.animation({ leaf = "layersIn",   enabled = true, speed = 7,  bezier = "easeOutQuint", style = "fade" })
 hl.animation({ leaf = "layersOut",  enabled = true, speed = 7,  bezier = "linear",       style = "fade" })
 
-hl.animation({ leaf = "workspaces",    enabled = false, speed = 2, bezier = "easeOutQuint", style = "slidefade 5%" })
-hl.animation({ leaf = "workspacesIn",  enabled = false, speed = 2, bezier = "easeOutQuint", style = "slidefade 5%" })
-hl.animation({ leaf = "workspacesOut", enabled = false, speed = 2, bezier = "easeOutQuint", style = "slidefade 5%" })
+hl.animation({ leaf = "workspaces",    enabled = true, speed = 5, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 5, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "workspacesOut", enabled = true, speed = 5, bezier = "easeOutQuint", style = "fade" })
 
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 4, bezier = "easeOutQuint", style = "slidefadevert 11%" })
 
@@ -250,7 +250,9 @@ hl.bind("SUPER + J", hl.dsp.layout("cyclenext"))
 hl.bind("SUPER + K", hl.dsp.layout("cycleprev"))
 
 -- Promote focused window to master
-hl.bind("SUPER + Space", hl.dsp.layout("swapwithmaster"))
+hl.bind("SUPER + Space",       hl.dsp.layout("swapwithmaster"))
+-- Toggle master orientation: horizontal (left) ↔ vertical (top)
+hl.bind("SUPER + SHIFT + Space", hl.dsp.layout("orientationcycle left top"))
 
 --------------------------
 ---- RESIZE            ----
@@ -416,6 +418,7 @@ hl.bind("Print",         hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh r
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh annotate")) -- annotate
 hl.bind("CTRL + Print", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh ocr")) -- annotate
 hl.bind("SUPER + Print", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh output"))   -- output
+hl.bind("ALT + Print",  hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh lens"))     -- google lens
 
 -- Framework media key
 hl.bind("SUPER + XF86AudioMedia", hl.dsp.exec_cmd("kitty -e nixx --hold"))
