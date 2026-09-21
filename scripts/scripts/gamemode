@@ -4,6 +4,7 @@ STATE="/run/user/$(id -u)/gaming.state"
 
 cleanup() {
     qs ipc call flash triggerWith "#ffffff" 900
+    qs ipc call caffeine deactivate
     hyprctl reload
     powerprofilesctl set balanced 2>/dev/null || true
     rm -f "$STATE"
@@ -23,6 +24,7 @@ else
     hyprctl keyword decoration:rounding 0
 
     powerprofilesctl set performance 2>/dev/null || true
+    qs ipc call caffeine toggle
 
     # 940×627
     # 1128 752
