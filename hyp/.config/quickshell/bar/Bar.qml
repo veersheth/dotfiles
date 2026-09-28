@@ -25,33 +25,7 @@ Variants {
 
         WlrLayershell.namespace: "quickshell:bar"
 
-        mask: Region { item: bar._hidden ? triggerStrip : bar }
-
-        // 2 px strip at the screen edge so hover can re-peek the bar when hidden.
-        Item {
-            id: triggerStrip
-            anchors.top:    !BarState.barBottom ? parent.top    : undefined
-            anchors.bottom:  BarState.barBottom ? parent.bottom : undefined
-            anchors.left:  parent.left
-            anchors.right: parent.right
-            height: 2
-
-            HoverHandler {
-                onHoveredChanged: {
-                    if (hovered && bar._hidden) {
-                        bar._peeking = true
-                        peekHideTimer.stop()
-                    }
-                }
-            }
-        }
-
-        // Auto-hide: hide after the bar loses hover.
-        Timer {
-            id: peekHideTimer
-            interval: 700
-            onTriggered: if (bar.autoHide) bar._peeking = false
-        }
+        mask: Region { item: bar }
 
         Rectangle {
             id: bar
@@ -60,29 +34,6 @@ Variants {
             }
             height: Theme.barHeight
             color: Theme.background
-
-            // Auto-hide state.
-            property bool autoHide: false
-            // Temporarily revealed by hovering the edge strip or the bar itself.
-            property bool _peeking: false
-            readonly property bool _hidden: autoHide && !_peeking
-
-            // Slide off-screen via transform so anchors aren't disturbed.
-            property real _slideY: _hidden ? (BarState.barBottom ? Theme.barHeight : -Theme.barHeight) : 0
-            Behavior on _slideY { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
-            transform: Translate { y: bar._slideY }
-
-            HoverHandler {
-                id: barHover
-                onHoveredChanged: {
-                    if (hovered && bar.autoHide) {
-                        bar._peeking = true
-                        peekHideTimer.stop()
-                    } else if (!hovered && bar.autoHide) {
-                        peekHideTimer.restart()
-                    }
-                }
-            }
 
             // Hot corner — hover the leftmost corner square to open the scratchpad.
             Item {
@@ -101,16 +52,11 @@ Variants {
                 }
             }
 
-            // Empty bar space → focus-dim (double-click) / context menu (right-click).
+            // Empty bar space → context menu (right-click).
             // First child, so every module's own MouseArea stays on top.
             MouseArea {
                 anchors.fill: parent
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
-                onDoubleClicked: {
-                    bar.autoHide = !bar.autoHide
-                    // Leaving auto-hide mode: ensure bar is visible immediately.
-                    if (!bar.autoHide) bar._peeking = false
-                }
+                acceptedButtons: Qt.RightButton
                 onClicked: mouse => {
                     if (mouse.button === Qt.RightButton) {
                         const half = barMenu.contentWidth / 2 + 8

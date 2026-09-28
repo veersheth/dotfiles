@@ -7,9 +7,8 @@ import qs.common
 MouseArea {
     property real slackX: 6
 
-    anchors.fill: parent
-    anchors.topMargin:    -(Theme.barHeight - parent.height) / 2
-    anchors.bottomMargin: -(Theme.barHeight - parent.height) / 2
-    anchors.leftMargin:   -slackX
-    anchors.rightMargin:  -slackX
+    x: -slackX
+    width: parent.width + 2 * slackX
+    height: Theme.barHeight
+    anchors.verticalCenter: parent.verticalCenter
 }

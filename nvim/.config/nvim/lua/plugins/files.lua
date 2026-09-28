@@ -53,8 +53,8 @@ require('neo-tree').setup({
 
   default_component_configs = {
     icon = {
-      folder_closed = "▸",
-      folder_open   = "▾",
+      folder_closed = "📁",
+      folder_open   = "📂",
       folder_empty  = "▸",
       default       = "*",
       highlight     = "NeoTreeFileIcon",
@@ -88,7 +88,7 @@ vim.cmd([[
   highlight NeoTreeDiagnosticHint  guifg=#2c2c2c
 ]])
 
-vim.keymap.set("n", "<leader>e", "<cmd>Neotree toggle left<cr>", { desc = "Toggle file tree" })
+vim.keymap.set("n", "<leader>e", "<cmd>Neotree toggle right<cr>", { desc = "Toggle file tree" })
 
 -- vim.api.nvim_create_autocmd("VimEnter", {
 --   callback = vim.schedule_wrap(function()

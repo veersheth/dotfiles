@@ -270,11 +270,12 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    cmake gnumake
     zenity
     tree-sitter
     ffmpeg
     brightnessctl
-    python313 python313Packages.pip
+    python313 python313Packages.pip jupyter conda
     bat
     pkg-config
     libnotify
@@ -296,14 +297,16 @@
     fzf
     fd
     ripgrep
-    rustup cargo rustc clippy
+    rustc cargo clippy rustfmt rust-analyzer
     bibata-cursors
     framework-tool
     tesseract # ocr
+    bubblewrap
 
 
     # hyprland
     hyprland hypridle hyprpicker hyprsunset hyprshot cliphist satty
+    hyprlock hyprpaper waybar
     quickshell qt5.qtgraphicaleffects
 
   ];

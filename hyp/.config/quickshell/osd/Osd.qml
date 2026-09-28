@@ -215,7 +215,7 @@ Scope {
         WlrLayershell.layer: WlrLayer.Overlay
 
         // Slide direction: toward the bar edge the OSD morphs out of
-        readonly property real _slideDir: BarState.barBottom ? 14 : -14
+        readonly property real _slideDir: 14
 
         ParallelAnimation {
             id: enterAnim

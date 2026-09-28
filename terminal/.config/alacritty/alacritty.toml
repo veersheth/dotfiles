@@ -1,9 +1,11 @@
+[general]
+
 [font]
-size = 13
+size = 11
 
 [font.normal]
-family = "Iosevka Nerd Font"
-# family = "JetBrainsMono Nerd Font"
+# family = "Iosevka Nerd Font"
+family = "JetBrainsMono Nerd Font"
 style = "Regular"
 
 # [font.bold]
