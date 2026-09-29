@@ -396,7 +396,7 @@ hl.bind("SUPER + B",      hl.dsp.exec_cmd("xdg-open https://"))  -- browser
 
 hl.bind("SUPER + Q",         hl.dsp.window.close())  -- close window
 hl.bind("SUPER + L",         hl.dsp.exec_cmd("loginctl lock-session"))  -- lock
-hl.bind("SUPER + XF86MonBrightnessUp", hl.dsp.exec_cmd("pkill hyprsunset || hyprsunset -t 2500"))  -- nightlight
+hl.bind("SUPER + XF86MonBrightnessUp", hl.dsp.exec_cmd("~/.config/hypr/scripts/nightlight"))  -- nightlight
 hl.bind("SUPER + SHIFT + W", hl.dsp.exec_cmd("pkill quickshell; pkill -x hypridle; sleep 0.5; hyprctl reload; quickshell & hypridle & disown; sleep 0.5;"))  -- restart shell
 
 hl.bind("CTRL + ALT + Delete", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))  -- force logout
@@ -440,8 +440,19 @@ hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("~/.config/hypr/scripts/volume-n
 
 
 -- Brightness
-hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl set +5%;  qs ipc call osd brightness"), { repeating = true, locked = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-;  qs ipc call osd brightness"), { repeating = true, locked = true })
+
+hl.bind("XF86MonBrightnessUp",
+    hl.dsp.exec_cmd("~/.config/hypr/scripts/brightess.sh up"),
+    { repeating = true, locked = true }
+)
+
+hl.bind("XF86MonBrightnessDown",
+    hl.dsp.exec_cmd("~/.config/hypr/scripts/brightess.sh down"),
+    { repeating = true, locked = true }
+)
+
+-- hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("brightnessctl set +5%;  qs ipc call osd brightness"), { repeating = true, locked = true })
+-- hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 5%-;  qs ipc call osd brightness"), { repeating = true, locked = true })
 
 -- Playback (requires playerctl)
 hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })
