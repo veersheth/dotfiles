@@ -53,13 +53,13 @@ BarPopup {
 
             Text {
                 text: {
-                    const t = dev.modelData.type ?? "";
-                    if (t === "headset" || t === "headphones") return "󰋋";
-                    if (t === "keyboard")  return "󰌌";
-                    if (t === "mouse")     return "󰍽";
-                    if (t === "phone")     return "󰏲";
-                    if (t === "speakers")  return "󰓃";
-                    if (t === "gamepad")   return "󰊗";
+                    const t = dev.modelData.icon ?? "";
+                    if (t.includes("headset") || t.includes("headphones")) return "󰋋";
+                    if (t.includes("keyboard"))  return "󰌌";
+                    if (t.includes("mouse"))     return "󰍽";
+                    if (t.includes("phone"))     return "󰏲";
+                    if (t.includes("audio-card") || t.includes("speaker"))  return "󰓃";
+                    if (t.includes("gaming"))   return "󰊗";
                     return "󰂱";
                 }
                 font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize
@@ -78,8 +78,8 @@ BarPopup {
 
             // battery percentage when reported
             Text {
-                visible: (dev.modelData.battery ?? -1) >= 0
-                text: `${dev.modelData.battery ?? 0}%`
+                visible: dev.modelData.batteryAvailable ?? false
+                text: `${Math.round((dev.modelData.battery ?? 0) * 100)}%`
                 font.family: Theme.font; font.pixelSize: Theme.fontSize - 3
                 color: Qt.alpha(Theme.foreground, 0.45)
             }

@@ -1,78 +1,53 @@
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Bluetooth
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
+import QtQml
 import QtQuick
 import qs.common
 
-// On-screen display for volume, brightness and keyboard backlight.
-// Leaks in from the bottom edge as a canvas-drawn card.
+// On-screen display, split by screen edge so nothing overwrites anything else:
+//   left   → volume
+//   right  → display brightness + keyboard backlight
+//   bottom → messages (charger, critical alerts) and Bluetooth connections
+//
+// Cards slide out of their edge on a fast-out, long-settle curve (no bounce)
+// and slide back into it on exit.
 Scope {
     id: root
-
-    property string icon:       ""
-    property real   value:      0
-    property bool   muted:      false
-    property string message:    ""
-    property bool   critical:   false   // red border + persists until charger connects
-    property bool   persistent: false   // stays visible until dismissed externally
-    property bool   shown:      false
 
     property bool ready: false
     Timer { interval: 1200; running: true; onTriggered: root.ready = true }
 
-    function show(icon, value, muted) {
+    // ── Public API ────────────────────────────────────────────────────
+    // side: "left" | "right"  (defaults to right)
+    function show(icon, value, muted, side) {
         if (!ready) return;
-        root.critical   = false;
-        root.persistent = false;
-        root.message = "";
-        root.icon  = icon;
-        root.value = value;
-        root.muted = muted ?? false;
-        shown = true;
-        hideTimer.restart();
+        (side === "left" ? leftOsd : rightOsd).showMeter(icon, value, muted ?? false);
     }
 
     function showMessage(icon, msg) {
         if (!ready) return;
-        root.critical   = false;
-        root.persistent = false;
-        root.message = msg;
-        root.icon    = icon;
-        root.muted   = false;
-        iconPop.restart();
-        shown = true;
-        hideTimer.restart();
+        bottomOsd.showMessage(icon, msg);
+    }
+
+    // Rich Bluetooth-style device card (name, status, battery)
+    function showDevice(icon, dev) {
+        if (!ready) return;
+        bottomOsd.showDevice(icon, dev);
     }
 
     // Persistent red-bordered OSD — stays until dismiss() is called.
     function showCritical(icon, msg) {
         if (!ready) return;
-        root.critical   = true;
-        root.persistent = true;
-        root.message = msg;
-        root.icon    = icon;
-        root.muted   = false;
-        iconPop.restart();
-        shown = true;
-        hideTimer.stop();   // don't auto-hide
+        bottomOsd.showCritical(icon, msg);
     }
 
-    function dismiss() {
-        root.persistent = false;
-        root.critical   = false;
-        root.shown      = false;
-    }
+    function dismiss() { bottomOsd.dismiss(); }
 
-    // messages need longer to be read than a glanceable meter
-    Timer {
-        id: hideTimer
-        interval: root.message !== "" ? 2600 : 1600
-        onTriggered: if (!root.persistent) root.shown = false
-    }
-
-    // ── Volume ────────────────────────────────────────────────────────
+    // ── Volume (left) ─────────────────────────────────────────────────
     readonly property var sink: Pipewire.defaultAudioSink
     PwObjectTracker { objects: [root.sink] }
 
@@ -83,7 +58,7 @@ Scope {
             : audio.volume < 0.33 ? "󰕿"
             : audio.volume < 0.66 ? "󰖀"
             : "󰕾";
-        show(icon, audio.volume, audio.muted);
+        show(icon, audio.volume, audio.muted, "left");
     }
 
     Connections {
@@ -92,7 +67,7 @@ Scope {
         function onMutedChanged()  { root.showVolume(); }
     }
 
-    // ── Brightness + keyboard backlight ───────────────────────────────
+    // ── Brightness + keyboard backlight (right) ───────────────────────
     property string backlightDev: ""
     property real   backlightMax: 1
     property string kbdDev:       ""
@@ -137,7 +112,7 @@ Scope {
             onStreamFinished: {
                 if (!text.trim() || !root.backlightDev) return;
                 const pct = (parseInt(text) || 0) / root.backlightMax;
-                root.show(pct < 0.34 ? "󰃞" : pct < 0.67 ? "󰃟" : "󰃠", pct);
+                root.show(pct < 0.34 ? "󰃞" : pct < 0.67 ? "󰃟" : "󰃠", pct, false, "right");
             }
         }
     }
@@ -152,7 +127,40 @@ Scope {
         id: readKbd
         command: ["cat", `/sys/class/leds/${root.kbdDev}/brightness`]
         stdout: StdioCollector {
-            onStreamFinished: root.show("󰌌", (parseInt(text) || 0) / root.kbdMax)
+            onStreamFinished: root.show("󰌌", (parseInt(text) || 0) / root.kbdMax, false, "right")
+        }
+    }
+
+    // ── Bluetooth connections (bottom) ────────────────────────────────
+    // Devices already connected at startup are ignored because showDevice()
+    // bails out until `ready` flips.
+    property var btLast: ({})
+
+    function btGlyph(icon) {
+        const t = icon ?? "";
+        if (t.includes("headset") || t.includes("headphones")) return "󰋋";
+        if (t.includes("keyboard")) return "󰌌";
+        if (t.includes("mouse"))    return "󰍽";
+        if (t.includes("phone"))    return "󰏲";
+        if (t.includes("audio-card") || t.includes("speaker")) return "󰓃";
+        if (t.includes("gaming"))   return "󰊗";
+        return "󰂱";
+    }
+
+    function btConnected(dev) {
+        const now = Date.now();
+        if (now - (btLast[dev.address] ?? 0) < 4000) return;   // ignore flapping
+        btLast[dev.address] = now;
+        showDevice(btGlyph(dev.icon), dev);
+    }
+
+    Instantiator {
+        model: Bluetooth.devices
+        delegate: QtObject {
+            required property var modelData
+            readonly property bool conn: modelData.connected
+            onConnChanged: if (conn) root.btConnected(modelData)
+            Component.onCompleted: if (conn) root.btConnected(modelData)
         }
     }
 
@@ -191,69 +199,189 @@ Scope {
         }
     }
 
-    // ── The card ──────────────────────────────────────────────────────
-    PanelWindow {
+    // ── The three edge windows ────────────────────────────────────────
+    EdgeOsd { id: leftOsd;   edge: "left" }
+    EdgeOsd { id: rightOsd;  edge: "right" }
+    EdgeOsd { id: bottomOsd; edge: "bottom" }
+
+    // ══════════════════════════════════════════════════════════════════
+    // One OSD surface glued to one screen edge. `dist` is how far the
+    // card's inner face sits from that edge; the window is flush with the
+    // edge, so a negative `dist` means the card is still tucked inside it.
+    // ══════════════════════════════════════════════════════════════════
+    component EdgeOsd: PanelWindow {
         id: win
 
-        readonly property int cardW: root.message !== ""
-            ? Math.min(Math.round(msgText.implicitWidth + osdIcon.implicitWidth) + 50, 440)
-            : 252
-        readonly property int cardH: 64
+        required property string edge            // "left" | "right" | "bottom"
+        readonly property bool vertical: edge !== "bottom"
 
-        anchors.bottom: BarState.barBottom
-        anchors.top:    !BarState.barBottom
+        // content state
+        property string icon:       ""
+        property real   value:      0
+        property bool   muted:      false
+        property string message:    ""
+        property bool   critical:   false
+        property bool   persistent: false
+        property bool   shown:      false
+
+        // rich Bluetooth card state
+        property bool rich:     false
+        property var  device:   null
+        property bool settled:  false
+        property real nameT:    1       // 0→1 reveal progress for the name
+        property real subT:     1       // 0→1 reveal progress for the status line
+        readonly property real batteryPct:
+            (device?.batteryAvailable ?? false) ? Math.round((device?.battery ?? 0) * 100) : -1
+
+        // animation state
+        property bool alive: false      // window mapped (covers the exit slide)
+        property real dist: -cardA
+
+        // geometry
+        readonly property int cardA: rich ? 84 : 64              // thickness (toward the screen)
+        readonly property int cardL: vertical ? 220              // length (along the edge)
+            : rich
+                ? Math.max(250, Math.min(
+                    18 + 48 + 14 + Math.max(nameText.implicitWidth, subRow.implicitWidth) + 30, 420))
+            : message !== ""
+                ? Math.max(170, Math.min(Math.round(msgText.implicitWidth + osdIcon.implicitWidth) + 50, 440))
+                : 252
+        readonly property int dRest: vertical ? 20 : (BarState.barBottom ? 10 : 24)
+        readonly property int winU: dRest + cardA + 6
+
+        // ── API ───────────────────────────────────────────────────────
+        function showMeter(ic, v, m) {
+            critical = false; persistent = false; rich = false; message = "";
+            icon = ic; value = v; muted = m;
+            shown = true;
+            hideTimer.restart();
+        }
+
+        function showMessage(ic, msg) {
+            critical = false; persistent = false; rich = false;
+            message = msg; icon = ic; muted = false;
+            iconPop.restart();
+            shown = true;
+            hideTimer.restart();
+        }
+
+        function showDevice(ic, dev) {
+            critical = false; persistent = false; rich = true;
+            device = dev;
+            message = dev.name ?? dev.address;
+            icon = ic; muted = false;
+            settled = false;
+            settleTimer.restart();
+            badgeAnim.restart();
+            ringAnim.restart();
+            revealAnim.restart();
+            shown = true;
+            hideTimer.restart();
+        }
+
+        function showCritical(ic, msg) {
+            critical = true; persistent = true; rich = false;
+            message = msg; icon = ic; muted = false;
+            iconPop.restart();
+            shown = true;
+            hideTimer.stop();
+        }
+
+        function dismiss() {
+            persistent = false;
+            critical = false;
+            shown = false;
+        }
+
+        Timer {
+            id: hideTimer
+            interval: win.rich ? 3600 : win.message !== "" ? 2600 : 1600
+            onTriggered: if (!win.persistent) win.shown = false
+        }
+
+        // ── Window ────────────────────────────────────────────────────
+        anchors.bottom: edge === "bottom"
+        anchors.left:   edge === "left"
+        anchors.right:  edge === "right"
         exclusiveZone:  0
-        WlrLayershell.margins.bottom: BarState.barBottom  ? Theme.barHeight + 10 : 0
-        WlrLayershell.margins.top:    !BarState.barBottom ? Theme.barHeight + 10 : 0
-        implicitWidth:  win.cardW
-        implicitHeight: win.cardH
-        color:          "transparent"
-        visible:        root.shown || hideDelay.running
+        WlrLayershell.margins.bottom: edge === "bottom" && BarState.barBottom ? Theme.barHeight : 0
+        implicitWidth:  vertical ? winU : cardL
+        implicitHeight: vertical ? cardL : winU
+        color:   "transparent"
+        visible: alive
         mask: Region {}
 
         WlrLayershell.namespace: "quickshell:osd"
         WlrLayershell.layer: WlrLayer.Overlay
 
-        // Slide direction: toward the bar edge the OSD morphs out of
-        readonly property real _slideDir: 14
-
-        ParallelAnimation {
+        // ── Slide in: quick out of the edge, long soft settle ─────────
+        NumberAnimation {
             id: enterAnim
-            NumberAnimation { target: card; property: "opacity";  from: 0; to: 1;              duration: 180; easing.type: Easing.OutCubic }
-            NumberAnimation { target: card; property: "_slideY";  from: win._slideDir; to: 0;  duration: 180; easing.type: Easing.OutCubic }
-        }
-        ParallelAnimation {
-            id: exitAnim
-            NumberAnimation { target: card; property: "opacity";  to: 0;              duration: 140; easing.type: Easing.InCubic }
-            NumberAnimation { target: card; property: "_slideY";  to: win._slideDir;  duration: 140; easing.type: Easing.InCubic }
+            target: win; property: "dist"; to: win.dRest
+            duration: 460
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: [0.16, 1.0, 0.3, 1.0, 1.0, 1.0]
         }
 
+        // ── Slide out: eases in, then is gone ─────────────────────────
+        SequentialAnimation {
+            id: exitAnim
+            NumberAnimation {
+                target: win; property: "dist"; to: -win.cardA
+                duration: 300
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: [0.7, 0.0, 0.84, 0.0, 1.0, 1.0]
+            }
+            ScriptAction { script: win.alive = false }
+        }
+
+        onShownChanged: {
+            if (shown) {
+                exitAnim.stop();
+                if (!alive) {
+                    dist = -cardA;
+                    alive = true;
+                }
+                enterAnim.restart();
+            } else {
+                enterAnim.stop();
+                exitAnim.restart();
+            }
+        }
+
+        // ── The card ──────────────────────────────────────────────────
         Rectangle {
             id: card
-            anchors.fill: parent
-            radius: Theme.popupRadius
+            width:  win.vertical ? win.cardA : win.cardL
+            height: win.vertical ? win.cardL : win.cardA
+            x: win.edge === "left"  ? win.dist
+             : win.edge === "right" ? win.width - win.dist - width
+             : (win.width - width) / 2
+            y: win.edge === "bottom" ? win.height - win.dist - height
+             : (win.height - height) / 2
 
-            property real _slideY: 0
-            transform: Translate { y: card._slideY }
-            color: root.critical ? Qt.rgba(
+            radius: Theme.popupRadius + (win.rich ? 6 : 0)
+            color: win.critical ? Qt.rgba(
                 Theme.red.r * 0.18, Theme.red.g * 0.18, Theme.red.b * 0.18, 0.96)
                 : Theme.surface
-            border.color: root.critical ? Qt.alpha(Theme.red, 0.7) : Theme.border
-            border.width: root.critical ? 2 : Theme.borderWidth
-            opacity: 0
+            border.color: win.critical ? Qt.alpha(Theme.red, 0.7) : Theme.border
+            border.width: win.critical ? 2 : Theme.borderWidth
             clip: true
 
             Behavior on color        { ColorAnimation { duration: 200 } }
             Behavior on border.color { ColorAnimation { duration: 200 } }
 
+            // ── Classic content: icon + message / vertical meter ──────
             Text {
                 id: osdIcon
-                anchors { left: parent.left; leftMargin: 20; verticalCenter: parent.verticalCenter }
-                text:           root.icon
+                visible: !win.rich
+                x: win.vertical ? (card.width - implicitWidth) / 2 : 20
+                y: win.vertical ? 16 : (card.height - implicitHeight) / 2
+                text:           win.icon
                 font.family:    Theme.nerdFont
                 font.pixelSize: 20
-                color: root.critical ? Theme.red
-                     : root.muted   ? Qt.alpha(Theme.foreground, 0.4)
+                color: win.critical ? Theme.red
+                     : win.muted    ? Qt.alpha(Theme.foreground, 0.4)
                      : Theme.foreground
                 Behavior on color { ColorAnimation { duration: 200 } }
             }
@@ -261,73 +389,227 @@ Scope {
             NumberAnimation {
                 id: iconPop
                 target: osdIcon; property: "scale"
-                from: 0.5; to: 1
+                from: 0.6; to: 1
                 duration: 380
-                easing.type: Easing.OutBack
-                easing.overshoot: 2.2
+                easing.type: Easing.OutCubic
             }
 
             Text {
                 id: msgText
+                visible: !win.vertical && !win.rich
                 anchors {
                     left: osdIcon.right; leftMargin: 10
                     right: parent.right; rightMargin: 20
                     verticalCenter: parent.verticalCenter
                 }
-                visible: root.message !== ""
                 elide: Text.ElideRight
-                text: root.message
+                text: win.message
                 font.family: Theme.font
                 font.pixelSize: Theme.fontSize - 1
                 font.weight: Font.Medium
-                color: root.critical ? Theme.red : Theme.foreground
+                color: win.critical ? Theme.red : Theme.foreground
                 Behavior on color { ColorAnimation { duration: 200 } }
             }
 
             Rectangle {
                 id: track
-                visible: root.message === ""
+                visible: win.vertical
+                width: 6
+                radius: width / 2
+                color: Theme.hover
                 anchors {
-                    left: parent.left;  leftMargin: 56
-                    right: parent.right; rightMargin: 62
-                    verticalCenter: parent.verticalCenter
+                    horizontalCenter: parent.horizontalCenter
+                    top: parent.top;       topMargin: 56
+                    bottom: parent.bottom; bottomMargin: 46
                 }
-                height: 6
-                radius: height / 2
-                color:  Theme.hover
 
                 Rectangle {
-                    anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                    width: Math.min(1, root.value) * parent.width
-                    radius: height / 2
-                    color:  root.muted ? Qt.alpha(Theme.foreground, 0.35) : Theme.blue
-                    Behavior on width { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                    height: Math.min(1, win.value) * parent.height
+                    radius: width / 2
+                    color:  win.muted ? Qt.alpha(Theme.foreground, 0.35) : Theme.blue
+                    Behavior on height { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
                 }
             }
 
             Text {
-                visible: root.message === ""
-                anchors { right: parent.right; rightMargin: 18; verticalCenter: parent.verticalCenter }
-                text:           `${Math.round(root.value * 100)}%`
+                visible: win.vertical
+                anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 14 }
+                text:           `${Math.round(win.value * 100)}%`
                 font.family:    Theme.font
                 font.pixelSize: Theme.fontSize - 2
                 font.weight:    Font.Medium
                 color:          Theme.foreground
             }
-        }
 
-        Timer { id: hideDelay; interval: 280 }
-    }
+            // ── Rich content: Bluetooth device card ───────────────────
+            Item {
+                id: richContent
+                visible: win.rich
+                anchors.fill: parent
 
-    onShownChanged: {
-        if (shown) {
-            exitAnim.stop()
-            card.opacity = 0
-            enterAnim.restart()
-        } else {
-            enterAnim.stop()
-            exitAnim.restart()
-            hideDelay.restart()
+                // icon badge: tinted disc, spinning glyph, pulse rings
+                Item {
+                    id: badge
+                    x: 18
+                    y: (parent.height - height) / 2
+                    width: 48; height: 48
+
+                    Rectangle {
+                        id: ring
+                        anchors.fill: parent
+                        radius: width / 2
+                        color: "transparent"
+                        border.width: 2
+                        border.color: Theme.blue
+                        opacity: 0
+                    }
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: width / 2
+                        color: Qt.alpha(Theme.blue, 0.18)
+                    }
+                    Text {
+                        id: badgeGlyph
+                        anchors.centerIn: parent
+                        text: win.icon
+                        font.family: Theme.nerdFont
+                        font.pixelSize: 24
+                        color: Theme.blue
+                    }
+                }
+
+                // badge grows in while the glyph makes one smooth turn
+                ParallelAnimation {
+                    id: badgeAnim
+                    NumberAnimation {
+                        target: badge; property: "scale"; from: 0.65; to: 1
+                        duration: 520
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: [0.16, 1.0, 0.3, 1.0, 1.0, 1.0]
+                    }
+                    NumberAnimation {
+                        target: badgeGlyph; property: "rotation"; from: -180; to: 0
+                        duration: 800; easing.type: Easing.OutCubic
+                    }
+                }
+
+                // two soft pulses radiating while it connects
+                SequentialAnimation {
+                    id: ringAnim
+                    loops: 2
+                    ParallelAnimation {
+                        NumberAnimation { target: ring; property: "scale"; from: 1; to: 1.6; duration: 700; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: ring; property: "opacity"; from: 0.5; to: 0; duration: 700; easing.type: Easing.OutCubic }
+                    }
+                }
+
+                // staggered text reveal
+                SequentialAnimation {
+                    id: revealAnim
+                    PropertyAction { target: win; property: "nameT"; value: 0 }
+                    PropertyAction { target: win; property: "subT";  value: 0 }
+                    PauseAnimation { duration: 140 }
+                    ParallelAnimation {
+                        NumberAnimation { target: win; property: "nameT"; to: 1; duration: 320; easing.type: Easing.OutCubic }
+                        SequentialAnimation {
+                            PauseAnimation { duration: 100 }
+                            NumberAnimation { target: win; property: "subT"; to: 1; duration: 320; easing.type: Easing.OutCubic }
+                        }
+                    }
+                }
+
+                // status flips from "Connecting…" to "Connected" after the turn
+                Timer {
+                    id: settleTimer
+                    interval: 850
+                    onTriggered: win.settled = true
+                }
+
+                Column {
+                    x: 18 + 48 + 14
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 4
+
+                    Text {
+                        id: nameText
+                        text: win.message
+                        font.family: Theme.font
+                        font.pixelSize: Theme.fontSize + 1
+                        font.weight: Font.DemiBold
+                        color: Theme.foreground
+                        opacity: win.nameT
+                        transform: Translate { x: (1 - win.nameT) * 10 }
+                    }
+
+                    Row {
+                        id: subRow
+                        spacing: 7
+                        opacity: win.subT
+                        transform: Translate { x: (1 - win.subT) * 10 }
+
+                        Text {
+                            visible: win.settled
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "󰄬"
+                            font.family: Theme.nerdFont
+                            font.pixelSize: Theme.fontSize - 1
+                            color: Theme.blue
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: win.settled ? "Connected" : "Connecting…"
+                            font.family: Theme.font
+                            font.pixelSize: Theme.fontSize - 2
+                            color: Qt.alpha(Theme.foreground, 0.55)
+                        }
+
+                        // battery, when the device reports it
+                        Row {
+                            visible: win.batteryPct >= 0
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 5
+
+                            Item {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 24; height: 11
+
+                                Rectangle {
+                                    id: batBody
+                                    width: 21; height: 11
+                                    radius: 3.5
+                                    color: "transparent"
+                                    border.width: 1
+                                    border.color: Qt.alpha(Theme.foreground, 0.45)
+
+                                    Rectangle {
+                                        x: 2; y: 2
+                                        height: parent.height - 4
+                                        width: Math.max(2, (parent.width - 4) * Math.max(0, win.batteryPct) / 100)
+                                        radius: 2
+                                        color: win.batteryPct <= 20 ? Theme.red : Qt.alpha(Theme.foreground, 0.85)
+                                        Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                                    }
+                                }
+                                Rectangle {
+                                    x: 22; y: 3.5
+                                    width: 2; height: 4
+                                    radius: 1
+                                    color: Qt.alpha(Theme.foreground, 0.45)
+                                }
+                            }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: `${win.batteryPct}%`
+                                font.family: Theme.font
+                                font.pixelSize: Theme.fontSize - 2
+                                color: Qt.alpha(Theme.foreground, 0.55)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
+
