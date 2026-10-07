@@ -42,7 +42,10 @@ BarPopup {
         Layout.fillWidth: true
         implicitHeight: 40
         radius: Theme.itemRadius
-        color: devMo.containsMouse ? Theme.hover : "transparent"
+        // connected devices use the same highlight as the active Wi-Fi network
+        color: dev.isConnected ? Qt.alpha(Theme.blue, 0.18)
+             : devMo.containsMouse ? Theme.hover : "transparent"
+        Behavior on color { ColorAnimation { duration: Theme.animDuration } }
 
         RowLayout {
             anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
@@ -69,6 +72,7 @@ BarPopup {
                 elide: Text.ElideRight
                 text: dev.modelData.name ?? dev.modelData.address
                 font.family: Theme.font; font.pixelSize: Theme.fontSize - 1
+                font.weight: dev.isConnected ? Font.DemiBold : Font.Medium
                 color: Theme.foreground
             }
 
@@ -284,3 +288,4 @@ BarPopup {
         }
     }
 }
+
