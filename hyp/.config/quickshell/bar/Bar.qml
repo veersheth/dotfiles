@@ -35,22 +35,22 @@ Variants {
             height: Theme.barHeight
             color: Theme.background
 
-            // Hot corner — hover the leftmost corner square to open the scratchpad.
-            Item {
-                anchors { left: parent.left; top: parent.top }
-                width: 20; height: parent.height
-                z: 10
-
-                HoverHandler {
-                    id: hotCornerHover
-                    onHoveredChanged: if (hovered) hotCornerTimer.restart(); else hotCornerTimer.stop()
-                }
-                Timer {
-                    id: hotCornerTimer
-                    interval: 500   // must hover intentionally for half a second
-                    onTriggered: if (hotCornerHover.hovered && !scratchpad.shown) scratchpad.shown = true
-                }
-            }
+            // // Hot corner — hover the leftmost corner square to open the scratchpad.
+            // Item {
+            //     anchors { left: parent.left; top: parent.top }
+            //     width: 20; height: parent.height
+            //     z: 10
+            //
+            //     HoverHandler {
+            //         id: hotCornerHover
+            //         onHoveredChanged: if (hovered) hotCornerTimer.restart(); else hotCornerTimer.stop()
+            //     }
+            //     Timer {
+            //         id: hotCornerTimer
+            //         interval: 500   // must hover intentionally for half a second
+            //         onTriggered: if (hotCornerHover.hovered && !scratchpad.shown) scratchpad.shown = true
+            //     }
+            // }
 
             // Empty bar space → context menu (right-click).
             // First child, so every module's own MouseArea stays on top.

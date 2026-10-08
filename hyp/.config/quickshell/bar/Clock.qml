@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
 import qs.common
@@ -8,7 +9,10 @@ import qs.bar.popups
 Item {
     id: root
 
-    implicitWidth: lbl.implicitWidth + 20
+    // True when any MPRIS player is currently playing
+    readonly property bool playing: Mpris.players.values.some(p => p.isPlaying)
+
+    implicitWidth: content.implicitWidth + 20
     implicitHeight: Theme.pillHeight
 
     SystemClock {
@@ -28,14 +32,63 @@ Item {
         function onWoke() { root._displayDate = new Date() }
     }
 
-    Text {
-        id: lbl
+    Row {
+        id: content
         anchors.centerIn: parent
-        text: Qt.formatDateTime(root._displayDate, "ddd MMM dd  hh:mm AP")
-        font.family: Theme.font
-        font.pixelSize: Theme.fontSize
-        font.weight: Font.Medium
-        color: Theme.foreground
+        spacing: 0
+
+        // // Waveform: collapses to zero width when nothing is playing
+        // Item {
+        //     id: wave
+        //     height: 16
+        //     width: root.playing ? 28 : 0   // 18px of bars + 8px gap
+        //     opacity: root.playing ? 1 : 0
+        //     clip: true
+        //     anchors.verticalCenter: parent.verticalCenter
+        //     Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        //     Behavior on opacity { NumberAnimation { duration: 200 } }
+        //     Row {
+        //         spacing: 1
+        //         height: parent.height
+        //         Repeater {
+        //             // Per-bar cycle durations (ms) so the bars drift out of sync
+        //             model: [380, 520, 440, 600]
+        //             Rectangle {
+        //                 required property int modelData
+        //                 required property int index
+        //                 width: 3
+        //                 height: 3
+        //                 radius: width / 2
+        //                 y: (parent.height - height) / 2
+        //                 color: Theme.foreground
+        //                 SequentialAnimation on height {
+        //                     running: root.playing
+        //                     loops: Animation.Infinite
+        //                     NumberAnimation {
+        //                         to: 16 - (index % 2) * 4
+        //                         duration: modelData
+        //                         easing.type: Easing.InOutSine
+        //                     }
+        //                     NumberAnimation {
+        //                         to: 3 + (index % 3) * 2
+        //                         duration: modelData
+        //                         easing.type: Easing.InOutSine
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        Text {
+            id: lbl
+            anchors.verticalCenter: parent.verticalCenter
+            text: Qt.formatDateTime(root._displayDate, "ddd MMM dd  hh:mm AP")
+            font.family: Theme.font
+            font.pixelSize: Theme.fontSize
+            font.weight: Font.Medium
+            color: Theme.foreground
+        }
     }
 
     Rectangle {
@@ -56,3 +109,4 @@ Item {
         anchorItem: root
     }
 }
+

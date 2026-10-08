@@ -1,0 +1,7 @@
+map J zoom in 
+map K zoom out 
+
+
+set recolor-lightcolor "#1b1b1b"   # The page background color
+set recolor-darkcolor "#d8cdca"    # The page text color
+

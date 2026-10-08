@@ -39,8 +39,8 @@ hl.config({
 
 hl.config({
   general = {
-    gaps_in          = 2,
-    gaps_out         = 0,
+    gaps_in          = 1,
+    gaps_out         = 4,
 
     border_size      = 1,
 
@@ -61,7 +61,7 @@ hl.config({
 
 hl.config({
   decoration = {
-    rounding       = 16,
+    rounding       = 12,
     rounding_power = 3,
 
     active_opacity   = 1.0,
@@ -134,9 +134,9 @@ hl.animation({ leaf = "layers",     enabled = true, speed = 7,  bezier = "easeOu
 hl.animation({ leaf = "layersIn",   enabled = true, speed = 7,  bezier = "easeOutQuint", style = "fade" })
 hl.animation({ leaf = "layersOut",  enabled = true, speed = 7,  bezier = "linear",       style = "fade" })
 
-hl.animation({ leaf = "workspaces",    enabled = true, speed = 5, bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 5, bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "workspacesOut", enabled = true, speed = 5, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "workspaces",    enabled = false, speed = 2, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "workspacesIn",  enabled = false, speed = 2, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "workspacesOut", enabled = false, speed = 2, bezier = "easeOutQuint", style = "fade" })
 
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 4, bezier = "easeOutQuint", style = "slidefadevert 11%" })
 
@@ -378,7 +378,7 @@ hl.window_rule({
 
 hl.window_rule({
   name            = "chromium-scroll",
-  match           = { class = "spotify|brave-browser|helium|md\\.Obsidian" },
+  match           = { class = "spotify|brave-browser|helium|Obsidian" },
   scroll_touchpad = 0.1,
 })
 
@@ -387,7 +387,7 @@ hl.window_rule({
 --------------------------
 
 hl.bind("SUPER + comma",  hl.dsp.exec_cmd("hypr-settings"))  -- settings
-hl.bind("SUPER + Return", hl.dsp.exec_cmd("kitty"))          -- terminal
+hl.bind("SUPER + Return", hl.dsp.exec_cmd("ghostty"))          -- terminal
 hl.bind("SUPER + B",      hl.dsp.exec_cmd("xdg-open https://"))  -- browser
 
 --------------------------

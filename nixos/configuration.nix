@@ -146,7 +146,7 @@
       tor-browser
       obsidian
       mpv
-      kitty
+      ghostty kitty alacritty
       vscode android-studio
       livecaptions
       obs-studio
@@ -164,7 +164,7 @@
       luajitPackages.magick
       sshfs
       typst texliveFull
-      pnpm nodejs_22
+      pnpm nodejs_24
       docker_25
       btop powertop
       bun

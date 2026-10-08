@@ -33,7 +33,7 @@ Scope {
         bottomOsd.showMessage(icon, msg);
     }
 
-    // Rich Bluetooth-style device card (name, status, battery)
+    // Rich Bluetooth-style device card (name, battery ring)
     function showDevice(icon, dev) {
         if (!ready) return;
         bottomOsd.showDevice(icon, dev);
@@ -227,9 +227,7 @@ Scope {
         // rich Bluetooth card state
         property bool rich:     false
         property var  device:   null
-        property bool settled:  false
         property real nameT:    1       // 0→1 reveal progress for the name
-        property real subT:     1       // 0→1 reveal progress for the status line
         readonly property real batteryPct:
             (device?.batteryAvailable ?? false) ? Math.round((device?.battery ?? 0) * 100) : -1
 
@@ -238,11 +236,10 @@ Scope {
         property real dist: -cardA
 
         // geometry
-        readonly property int cardA: rich ? 84 : 64              // thickness (toward the screen)
+        readonly property int cardA: rich ? 76 : 64              // thickness (toward the screen)
         readonly property int cardL: vertical ? 220              // length (along the edge)
             : rich
-                ? Math.max(250, Math.min(
-                    18 + 48 + 14 + Math.max(nameText.implicitWidth, subRow.implicitWidth) + 30, 420))
+                ? Math.max(210, Math.min(18 + 52 + 14 + nameText.implicitWidth + 30, 420))
             : message !== ""
                 ? Math.max(170, Math.min(Math.round(msgText.implicitWidth + osdIcon.implicitWidth) + 50, 440))
                 : 252
@@ -270,10 +267,7 @@ Scope {
             device = dev;
             message = dev.name ?? dev.address;
             icon = ic; muted = false;
-            settled = false;
-            settleTimer.restart();
             badgeAnim.restart();
-            ringAnim.restart();
             revealAnim.restart();
             shown = true;
             hideTimer.restart();
@@ -448,38 +442,69 @@ Scope {
                 visible: win.rich
                 anchors.fill: parent
 
-                // icon badge: tinted disc, spinning glyph, pulse rings
+                // icon badge: glyph inside a battery progress ring
                 Item {
                     id: badge
                     x: 18
                     y: (parent.height - height) / 2
-                    width: 48; height: 48
+                    width: 52; height: 52
 
-                    Rectangle {
-                        id: ring
-                        anchors.fill: parent
-                        radius: width / 2
-                        color: "transparent"
-                        border.width: 2
-                        border.color: Theme.blue
-                        opacity: 0
-                    }
+                    // tinted disc, inset so the ring sits around it
                     Rectangle {
                         anchors.fill: parent
+                        anchors.margins: 6
                         radius: width / 2
                         color: Qt.alpha(Theme.blue, 0.18)
                     }
+
+                    // battery ring
+                    Canvas {
+                        id: batRing
+                        anchors.fill: parent
+                        antialiasing: true
+
+                        property real progress: 0
+                        readonly property real pct: win.batteryPct
+
+                        onProgressChanged: requestPaint()
+                        onPctChanged: if (!badgeAnim.running) progress = pct >= 0 ? pct / 100 : 0
+
+                        onPaint: {
+                            const ctx = getContext("2d");
+                            ctx.reset();
+                            const c = width / 2;
+                            const r = c - 2;
+                            ctx.lineWidth = 3;
+                            ctx.lineCap = "round";
+
+                            // faint track
+                            ctx.strokeStyle = Qt.alpha(Theme.green, 0.2);
+                            ctx.beginPath();
+                            ctx.arc(c, c, r, 0, Math.PI * 2);
+                            ctx.stroke();
+
+                            // progress, starting at 12 o'clock
+                            if (pct >= 0 && progress > 0) {
+                                ctx.strokeStyle = Theme.green;
+                                ctx.beginPath();
+                                ctx.arc(c, c, r, -Math.PI / 2,
+                                        -Math.PI / 2 + Math.PI * 2 * progress);
+                                ctx.stroke();
+                            }
+                        }
+                    }
+
                     Text {
                         id: badgeGlyph
                         anchors.centerIn: parent
                         text: win.icon
                         font.family: Theme.nerdFont
-                        font.pixelSize: 24
+                        font.pixelSize: 22
                         color: Theme.blue
                     }
                 }
 
-                // badge grows in while the glyph makes one smooth turn
+                // badge grows in, glyph makes one turn, ring fills up
                 ParallelAnimation {
                     id: badgeAnim
                     NumberAnimation {
@@ -492,121 +517,32 @@ Scope {
                         target: badgeGlyph; property: "rotation"; from: -180; to: 0
                         duration: 800; easing.type: Easing.OutCubic
                     }
-                }
-
-                // two soft pulses radiating while it connects
-                SequentialAnimation {
-                    id: ringAnim
-                    loops: 2
-                    ParallelAnimation {
-                        NumberAnimation { target: ring; property: "scale"; from: 1; to: 1.6; duration: 700; easing.type: Easing.OutCubic }
-                        NumberAnimation { target: ring; property: "opacity"; from: 0.5; to: 0; duration: 700; easing.type: Easing.OutCubic }
+                    NumberAnimation {
+                        target: batRing; property: "progress"
+                        from: 0; to: win.batteryPct >= 0 ? win.batteryPct / 100 : 0
+                        duration: 900; easing.type: Easing.OutCubic
                     }
                 }
 
-                // staggered text reveal
+                // name reveal
                 SequentialAnimation {
                     id: revealAnim
                     PropertyAction { target: win; property: "nameT"; value: 0 }
-                    PropertyAction { target: win; property: "subT";  value: 0 }
                     PauseAnimation { duration: 140 }
-                    ParallelAnimation {
-                        NumberAnimation { target: win; property: "nameT"; to: 1; duration: 320; easing.type: Easing.OutCubic }
-                        SequentialAnimation {
-                            PauseAnimation { duration: 100 }
-                            NumberAnimation { target: win; property: "subT"; to: 1; duration: 320; easing.type: Easing.OutCubic }
-                        }
-                    }
+                    NumberAnimation { target: win; property: "nameT"; to: 1; duration: 320; easing.type: Easing.OutCubic }
                 }
 
-                // status flips from "Connecting…" to "Connected" after the turn
-                Timer {
-                    id: settleTimer
-                    interval: 850
-                    onTriggered: win.settled = true
-                }
-
-                Column {
-                    x: 18 + 48 + 14
+                Text {
+                    id: nameText
+                    x: 18 + 52 + 14
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 4
-
-                    Text {
-                        id: nameText
-                        text: win.message
-                        font.family: Theme.font
-                        font.pixelSize: Theme.fontSize + 1
-                        font.weight: Font.DemiBold
-                        color: Theme.foreground
-                        opacity: win.nameT
-                        transform: Translate { x: (1 - win.nameT) * 10 }
-                    }
-
-                    Row {
-                        id: subRow
-                        spacing: 7
-                        opacity: win.subT
-                        transform: Translate { x: (1 - win.subT) * 10 }
-
-                        Text {
-                            visible: win.settled
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "󰄬"
-                            font.family: Theme.nerdFont
-                            font.pixelSize: Theme.fontSize - 1
-                            color: Theme.blue
-                        }
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: win.settled ? "Connected" : "Connecting…"
-                            font.family: Theme.font
-                            font.pixelSize: Theme.fontSize - 2
-                            color: Qt.alpha(Theme.foreground, 0.55)
-                        }
-
-                        // battery, when the device reports it
-                        Row {
-                            visible: win.batteryPct >= 0
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 5
-
-                            Item {
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: 24; height: 11
-
-                                Rectangle {
-                                    id: batBody
-                                    width: 21; height: 11
-                                    radius: 3.5
-                                    color: "transparent"
-                                    border.width: 1
-                                    border.color: Qt.alpha(Theme.foreground, 0.45)
-
-                                    Rectangle {
-                                        x: 2; y: 2
-                                        height: parent.height - 4
-                                        width: Math.max(2, (parent.width - 4) * Math.max(0, win.batteryPct) / 100)
-                                        radius: 2
-                                        color: win.batteryPct <= 20 ? Theme.red : Qt.alpha(Theme.foreground, 0.85)
-                                        Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                                    }
-                                }
-                                Rectangle {
-                                    x: 22; y: 3.5
-                                    width: 2; height: 4
-                                    radius: 1
-                                    color: Qt.alpha(Theme.foreground, 0.45)
-                                }
-                            }
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: `${win.batteryPct}%`
-                                font.family: Theme.font
-                                font.pixelSize: Theme.fontSize - 2
-                                color: Qt.alpha(Theme.foreground, 0.55)
-                            }
-                        }
-                    }
+                    text: win.message
+                    font.family: Theme.font
+                    font.pixelSize: Theme.fontSize + 1
+                    font.weight: Font.DemiBold
+                    color: Theme.foreground
+                    opacity: win.nameT
+                    transform: Translate { x: (1 - win.nameT) * 10 }
                 }
             }
         }
