@@ -142,7 +142,7 @@
       steam lutris wine winetricks mangohud # gaming
       blender shotcut davinci-resolve # video
       spotify spotatui
-      sioyek mupdf
+      sioyek mupdf zathura
       tor-browser
       obsidian
       mpv
@@ -153,7 +153,10 @@
       davinci-resolve
       onlyoffice-desktopeditors
       keepass
+      
 
+      # onedriver
+      # onedrive onedrivegui
 
       # CLI
       marp-cli
@@ -198,8 +201,9 @@
       inter
       helvetica-neue-lt-std
       nerd-fonts.jetbrains-mono
-      maple-mono.NL-CN
       googlesans-code
+
+      pkgs.maple-mono.NormalNL-CN
 
 
       nerd-fonts.iosevka
@@ -255,12 +259,21 @@
       withUWSM = true;
       xwayland.enable = true;
     };
+
     dconf.enable = true;
+
+    niri.enable = true;
 
     # kdeconnect = {
     #   enable = true;
     #   package = pkgs.kdePackages.kdeconnect-kde;
     # };
+
+    craftapps = {
+      enable = true;
+      enableAll = true;
+      linkFonts = true;
+    };
 
   };
 
@@ -270,6 +283,7 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    inotify-tools
     cmake gnumake
     zenity
     tree-sitter
@@ -370,6 +384,12 @@
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
+
+  # JUST FOR AIRDROP THRU OMDROP
+  networking.firewall.interfaces."awdl0" = {
+    allowedTCPPorts = [ 8771 ];
+    allowedUDPPorts = [ 5353 ];
+  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
