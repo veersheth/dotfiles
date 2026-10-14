@@ -14,7 +14,7 @@ ShellRoot {
     Bar {}
     NotificationPopups {}
     Osd {}
-    Lock {}
+    // Lock {}
     Launcher {}
     PolkitAuth {}
     Flash {}

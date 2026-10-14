@@ -119,7 +119,6 @@ Item {
             id: mediaCard
             anchors { left: parent.left; right: parent.right; top: parent.top }
             player: mediaHost.player
-            active: mediaHost.visible
         }
     }
 

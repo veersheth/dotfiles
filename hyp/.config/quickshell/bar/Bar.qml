@@ -194,7 +194,7 @@ Variants {
                   anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; bottom: parent.bottom }
                   spacing: Theme.moduleSpacing
 
-                  Clock { Layout.fillHeight: true }
+                  // Clock { Layout.fillHeight: true }
 
               }
 
@@ -213,8 +213,10 @@ Variants {
 
                   BluetoothIndicator { Layout.fillHeight: true }
 
-                  Volume { Layout.fillHeight: true }
+                  Clock { Layout.fillHeight: true }
 
+                  Volume { Layout.fillHeight: true }
+                  
                   Battery { Layout.fillHeight: true }
               }
             }
