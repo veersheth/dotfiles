@@ -22,7 +22,7 @@
         "height": 1080,
         "refreshRate": 60.0,
         "x": 9920,
-        "y": 6226,
+        "y": 6752,
         "scale": 1.0,
         "transform": 3,
         "mirror": null,
@@ -146,6 +146,25 @@
         "scale": 2.0,
         "transform": 0,
         "mirror": "eDP-1",
+        "disabled": false,
+        "_workspaces": []
+      }
+    ],
+    "use_edid": true
+  },
+  "BOE 0x0BCA Unknown": {
+    "monitors": [
+      {
+        "name": "eDP-1",
+        "description": "BOE 0x0BCA Unknown",
+        "width": 2256,
+        "height": 1504,
+        "refreshRate": 59.999,
+        "x": 734,
+        "y": -31,
+        "scale": 1.4,
+        "transform": 0,
+        "mirror": null,
         "disabled": false,
         "_workspaces": []
       }

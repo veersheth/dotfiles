@@ -39,13 +39,13 @@ hl.config({
 
 hl.config({
   general = {
-    gaps_in          = 1,
+    gaps_in          = 3,
     gaps_out         = 4,
 
     border_size      = 1,
 
     col = {
-      active_border   = "rgba(110, 110, 110, 1)",
+      active_border   = "rgba(130, 130, 130, 1)",
       inactive_border = "rgba(50, 50, 50, 1)",
     },
 
@@ -61,25 +61,25 @@ hl.config({
 
 hl.config({
   decoration = {
-    rounding       = 12,
+    rounding       = 18,
     rounding_power = 3,
 
     active_opacity   = 1.0,
     inactive_opacity = 1.0,
 
     shadow = {
-      enabled        = false,
+      enabled        = true,
       color = "rgba(0, 0, 0, 0.45)",
-      range = 18,
-      render_power = 3,
+      range = 28,
+      render_power = 10,
     },
 
     blur = {
-      enabled  = false,
-      size     = 4,
+      enabled  = true,
+      size     = 3,
       passes   = 3,
       vibrancy = 0,
-      special  = true,
+      special  = false,
     },
 
     -- motion_blur = {
@@ -134,9 +134,9 @@ hl.animation({ leaf = "layers",     enabled = true, speed = 7,  bezier = "easeOu
 hl.animation({ leaf = "layersIn",   enabled = true, speed = 7,  bezier = "easeOutQuint", style = "fade" })
 hl.animation({ leaf = "layersOut",  enabled = true, speed = 7,  bezier = "linear",       style = "fade" })
 
-hl.animation({ leaf = "workspaces",    enabled = false, speed = 2, bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "workspacesIn",  enabled = false, speed = 2, bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "workspacesOut", enabled = false, speed = 2, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "workspaces",    enabled = true, speed = 3, bezier = "easeOutQuint", style = "slide" })
+hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 3, bezier = "easeOutQuint", style = "slide" })
+hl.animation({ leaf = "workspacesOut", enabled = true, speed = 3, bezier = "easeOutQuint", style = "slide" })
 
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 4, bezier = "easeOutQuint", style = "slidefadevert 11%" })
 
@@ -173,6 +173,8 @@ hl.config({
 
     follow_mouse = 1,
     sensitivity  = 0,  -- -1.0 – 1.0, 0 means no modification
+
+    float_switch_override_focus = 0,   -- floating windows only raise on click
 
     touchpad = {
       natural_scroll = true,
@@ -240,7 +242,6 @@ hl.bind("SUPER + T",         hl.dsp.window.float({ action = "toggle" }))       -
 hl.bind("SUPER + P",         hl.dsp.window.pseudo())                            -- toggle pseudo
 hl.bind("SUPER + F",         hl.dsp.window.fullscreen({ mode = "maximized" }))                      -- maximize
 hl.bind("SUPER + SHIFT + F", hl.dsp.window.fullscreen())                                               -- fullscreen
-hl.bind("SUPER + CTRL + F",  hl.dsp.exec_cmd("~/.config/hypr/scripts/workspace-float-toggle"))        -- toggle float all on workspace
 
 --------------------------
 ---- FOCUS / CYCLE     ----
@@ -387,7 +388,7 @@ hl.window_rule({
 --------------------------
 
 hl.bind("SUPER + comma",  hl.dsp.exec_cmd("hypr-settings"))  -- settings
-hl.bind("SUPER + Return", hl.dsp.exec_cmd("ghostty"))          -- terminal
+hl.bind("SUPER + Return", hl.dsp.exec_cmd("alacritty"))          -- terminal
 hl.bind("SUPER + B",      hl.dsp.exec_cmd("xdg-open https://"))  -- browser
 
 --------------------------
@@ -405,7 +406,7 @@ hl.bind("CTRL + ALT + Delete", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/nu
 ---- UTILITIES         ----
 --------------------------
 
-hl.bind("SUPER + G", hl.dsp.exec_cmd("~/scripts/gamemode")) --gaming mode
+hl.bind("SUPER + CTRL + G", hl.dsp.exec_cmd("~/scripts/gamemode")) --gaming mode
 
 hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a"))  -- color picker
 
@@ -459,3 +460,313 @@ hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = tr
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+local expose = { active = false, saved = {} }
+
+local function dbg(msg)
+  -- msg = tostring(msg):gsub("'", "")
+  -- hl.exec_cmd("notify-send expose '" .. msg .. "'")
+end
+
+local function xy(t) return t.x or t[1], t.y or t[2] end
+
+-- local function grid(n, mw, mh)
+--   local cols = math.ceil(math.sqrt(n * mw / mh))
+--   return cols, math.ceil(n / cols)
+-- end
+
+local MAX_SCALE = 1.0   -- 1.0 = never enlarge past original size
+
+local function layout_for(wins, mw, mh, top, cols)
+  local n    = #wins
+  local rows = math.ceil(n / cols)
+  local pad  = math.max(10, math.min(40, 160 / n))
+  local cw   = (mw - pad * (cols + 1)) / cols
+  local ch   = (mh - top - pad * (rows + 1)) / rows
+  local score = 0
+  for _, it in ipairs(wins) do
+    score = score + math.min(cw / it.sw, ch / it.sh, MAX_SCALE)
+  end
+  return { cols = cols, rows = rows, pad = pad, cw = cw, ch = ch, score = score }
+end
+
+local function best_layout(wins, mw, mh, top)
+  local best
+  for cols = 1, #wins do
+    local l = layout_for(wins, mw, mh, top, cols)
+    if l.cw > 0 and l.ch > 0 and (not best or l.score > best.score + 1e-6) then
+      best = l
+    end
+  end
+  return best or layout_for(wins, mw, mh, top, math.ceil(math.sqrt(#wins)))
+end
+
+
+local function enter_expose()
+  local ws  = hl.get_active_workspace()
+  local mon = hl.get_monitors()[1]
+  local sc  = mon.scale or 1
+  local mw, mh = mon.width / sc, mon.height / sc
+  local mx, my = mon.x or 0, mon.y or 0
+
+  -- collect every window on this workspace, floating or tiled,
+  -- capturing geometry BEFORE any floating happens
+  local wins = {}
+  for _, w in ipairs(hl.get_windows()) do
+    if w.workspace and w.workspace.id == ws.id then
+      local ax, ay = xy(w.at)
+      local sw, sh = xy(w.size)
+      table.insert(wins, {
+        win = w, ax = ax, ay = ay, sw = sw, sh = sh,
+        cx = ax + sw / 2, cy = ay + sh / 2,
+        tiled = not w.floating,
+      })
+    end
+  end
+  if #wins == 0 then return end
+
+  -- float the tiled ones so they can be moved and resized
+  for _, it in ipairs(wins) do
+    if it.tiled then
+      hl.dispatch(hl.dsp.window.float({ action = "enable", window = it.win }))
+    end
+  end
+
+  local top = 60
+local L = best_layout(wins, mw, mh, top)
+local cols, rows, pad, cw, ch = L.cols, L.rows, L.pad, L.cw, L.ch
+  -- local pad, top = 40, 60
+  -- local cols, rows = grid(#wins, mw, mh)
+  -- local cw = (mw - pad * (cols + 1)) / cols
+  -- local ch = (mh - top - pad * (rows + 1)) / rows
+
+  -- sort top to bottom, split into rows, sort each row left to right
+  table.sort(wins, function(a, b) return a.cy < b.cy end)
+  local ordered = {}
+  for r = 0, rows - 1 do
+    local row = {}
+    for c = 1, cols do
+      local item = wins[r * cols + c]
+      if item then table.insert(row, item) end
+    end
+    table.sort(row, function(a, b) return a.cx < b.cx end)
+    for c, item in ipairs(row) do
+      item.col, item.row, item.rowcount = c - 1, r, #row
+      table.insert(ordered, item)
+    end
+  end
+
+  expose.saved = {}
+  for _, it in ipairs(ordered) do
+    local w = it.win
+    table.insert(expose.saved, {
+      win = w, x = it.ax, y = it.ay, w = it.sw, h = it.sh, tiled = it.tiled,
+    })
+
+    -- local s = math.min(cw / it.sw, ch / it.sh, 1)
+    local s = math.min(cw / it.sw, ch / it.sh, MAX_SCALE)
+    local nw, nh = it.sw * s, it.sh * s
+    local row_offset = (cols - it.rowcount) * (cw + pad) / 2
+    local x = mx + pad + row_offset + it.col * (cw + pad) + (cw - nw) / 2
+    local y = my + top + pad + it.row * (ch + pad) + (ch - nh) / 2
+
+    hl.dispatch(hl.dsp.window.resize({ x = nw, y = nh, window = w }))
+    hl.dispatch(hl.dsp.window.move({ x = x, y = y, window = w }))
+  end
+  expose.active = true
+  hl.dispatch(hl.dsp.submap("expose"))
+end
+
+local function exit_expose()
+  -- floating windows go back to their exact spots
+  for _, s in ipairs(expose.saved) do
+    if not s.tiled then
+      hl.dispatch(hl.dsp.window.resize({ x = s.w, y = s.h, window = s.win }))
+      hl.dispatch(hl.dsp.window.move({ x = s.x, y = s.y, window = s.win }))
+    end
+  end
+
+  -- tiled windows get re-tiled in their original layout order
+  -- (left to right, then top to bottom; this matches master orientation "left")
+  local tiled = {}
+  for _, s in ipairs(expose.saved) do
+    if s.tiled then table.insert(tiled, s) end
+  end
+  table.sort(tiled, function(a, b)
+    if a.x ~= b.x then return a.x < b.x end
+    return a.y < b.y
+  end)
+  for _, s in ipairs(tiled) do
+    hl.dispatch(hl.dsp.window.float({ action = "disable", window = s.win }))
+  end
+
+  hl.dispatch(hl.dsp.window.bring_to_top())
+  expose.saved, expose.active = {}, false
+  hl.dispatch(hl.dsp.submap("reset"))
+end
+
+
+
+hl.bind("SUPER + G", function()
+  local ok, err = pcall(function()
+    if expose.active then exit_expose() else enter_expose() end
+  end)
+  if not ok then dbg("error: " .. err) end
+end)
+
+hl.define_submap("expose", function()
+  hl.bind("escape", exit_expose)
+  hl.bind("return", exit_expose)
+  hl.bind("Tab", hl.dsp.window.cycle_next())
+  hl.bind("SUPER + G", exit_expose)
+    -- left click: pick the window under the cursor and close expose
+  hl.bind("mouse:272", function()
+    local ok, err = pcall(exit_expose)
+    if not ok then dbg("error: " .. err) end
+  end)
+end)
+
+hl.gesture({
+  fingers   = 3,
+  direction = "up",
+  action    = function()
+    local ok, err = pcall(function()
+      if not expose.active then enter_expose() end
+    end)
+    if not ok then dbg("error: " .. err) end
+  end,
+})
+
+-- 3-finger swipe down: close it
+hl.gesture({
+  fingers   = 3,
+  direction = "down",
+  action    = function()
+    local ok, err = pcall(function()
+      if expose.active then exit_expose() end
+    end)
+    if not ok then dbg("error: " .. err) end
+  end,
+})
+
+
+
+
+------------------------------------------------
+---- SUPER + X: toggle workspace float/tile ----
+------------------------------------------------
+
+local ws_mode  = {}   -- [workspace id] = "float" | "tile"
+local ws_rules = {}   -- [workspace id] = { float = rule, tile = rule }
+
+local function ws_selector(ws)
+  if ws.name and tostring(ws.id) ~= ws.name then
+    return "name:" .. ws.name
+  end
+  return tostring(ws.id)
+end
+
+-- per-workspace rules so windows opened later follow the mode
+local function set_ws_rule(ws, mode)
+  local r = ws_rules[ws.id]
+  if not r then
+    r = hl.window_rule({
+      name  = "wsmode-float-" .. ws.id,
+      match = { workspace = ws_selector(ws) },
+      float = true,
+    })
+    r:set_enabled(false)
+    ws_rules[ws.id] = r
+  end
+  r:set_enabled(mode == "float")
+end
+
+local function toggle_ws_float()
+  if expose.active then return end
+
+  local ws = hl.get_active_workspace()
+  if not ws then return end
+
+  local wins, all_floating = {}, true
+  for _, w in ipairs(hl.get_windows()) do
+    if w.workspace and w.workspace.id == ws.id and not w.pinned then
+      table.insert(wins, w)
+      if not w.floating then all_floating = false end
+    end
+  end
+
+  local to_float
+  if #wins == 0 then
+    to_float = ws_mode[ws.id] ~= "float"      -- empty workspace: just flip the mode
+  else
+    to_float = not all_floating               -- anything tiled -> float all; all floating -> tile all
+  end
+
+  ws_mode[ws.id] = to_float and "float" or "tile"
+  set_ws_rule(ws, ws_mode[ws.id])
+
+  if to_float then
+    for _, w in ipairs(wins) do
+      if not w.floating then
+        hl.dispatch(hl.dsp.window.float({ action = "enable", window = w }))
+      end
+    end
+  else
+    -- re-tile left to right, then top to bottom, so master/stack order is sensible
+    table.sort(wins, function(a, b)
+      local ax, ay = xy(a.at)
+      local bx, by = xy(b.at)
+      if ax ~= bx then return ax < bx end
+      return ay < by
+    end)
+    for _, w in ipairs(wins) do
+      if w.floating then
+        hl.dispatch(hl.dsp.window.float({ action = "disable", window = w }))
+      end
+    end
+  end
+end
+
+hl.bind("SUPER + X", function()
+  local ok, err = pcall(toggle_ws_float)
+  if not ok then dbg("error: " .. err) end
+end)
