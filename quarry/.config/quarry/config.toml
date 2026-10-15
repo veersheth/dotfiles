@@ -27,7 +27,7 @@ scripts = '^s (.*)$'
 [theme]
 background_color = "rgba(26, 26, 26, 1.00)"
 background_opacity = 1
-font_size = 15
+font_size = 14
 font_color = "rgba(255, 255, 255, 1)"
 font_family = "Inter"
 monospace_font_family = "JetBrainsMono Nerd Font"

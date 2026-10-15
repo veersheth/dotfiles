@@ -134,9 +134,7 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       # GUI 
-      thunderbird
       tigervnc
-      packet
       gnome-power-manager
       gimp-with-plugins
       steam lutris wine winetricks mangohud # gaming

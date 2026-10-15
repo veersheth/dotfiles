@@ -70,14 +70,14 @@ hl.config({
     shadow = {
       enabled        = true,
       color = "rgba(0, 0, 0, 0.45)",
-      range = 28,
-      render_power = 10,
+      range = 18,
+      render_power = 8,
     },
 
     blur = {
       enabled  = true,
-      size     = 3,
-      passes   = 3,
+      size     = 2,
+      passes   = 2,
       vibrancy = 0,
       special  = false,
     },
@@ -141,14 +141,6 @@ hl.animation({ leaf = "workspacesOut", enabled = true, speed = 3, bezier = "ease
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 4, bezier = "easeOutQuint", style = "slidefadevert 11%" })
 
 hl.animation({ leaf = "zoomFactor", enabled = true, speed = 8, bezier = "easeInOutCubic" })
-
-
-
-
-
-
-
-
 
 --------------------------
 ---- GESTURES          ----
@@ -238,17 +230,18 @@ hl.config({
 ---- WINDOW STATE      ----
 --------------------------
 
-hl.bind("SUPER + T",         hl.dsp.window.float({ action = "toggle" }))       -- toggle float
+-- hl.bind("SUPER + T",         hl.dsp.window.float({ action = "toggle" }))       -- toggle float
 hl.bind("SUPER + P",         hl.dsp.window.pseudo())                            -- toggle pseudo
-hl.bind("SUPER + F",         hl.dsp.window.fullscreen({ mode = "maximized" }))                      -- maximize
+-- hl.bind("SUPER + F",         hl.dsp.window.fullscreen({ mode = "maximized" }))                      -- maximize
 hl.bind("SUPER + SHIFT + F", hl.dsp.window.fullscreen())                                               -- fullscreen
 
 --------------------------
 ---- FOCUS / CYCLE     ----
 --------------------------
 
-hl.bind("SUPER + J", hl.dsp.layout("cyclenext"))
-hl.bind("SUPER + K", hl.dsp.layout("cycleprev"))
+-- SUPER + J / K are defined further down (switcher_step), after the expose code.
+-- hl.bind("SUPER + J", hl.dsp.layout("cyclenext"))
+-- hl.bind("SUPER + K", hl.dsp.layout("cycleprev"))
 
 -- Promote focused window to master
 hl.bind("SUPER + Space",       hl.dsp.layout("swapwithmaster"))
@@ -336,7 +329,7 @@ hl.window_rule({
 hl.layer_rule({
   name         = "quickshell",
   match        = { namespace = "^quickshell:.*" },
-  blur         = true,
+  -- blur         = true,
   ignore_alpha = 0.2,
   no_anim      = true,  -- don't interfere with the native bounce morph animation
 })
@@ -413,7 +406,7 @@ hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a"))  -- color picker
 -- Screenshots
 hl.bind("Print",         hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh region"))   -- region
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh annotate")) -- annotate
-hl.bind("CTRL + Print", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh ocr")) -- annotate
+hl.bind("CTRL + Print", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh ocr")) -- ocr
 hl.bind("SUPER + Print", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh output"))   -- output
 hl.bind("ALT + Print",  hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh lens"))     -- google lens
 
@@ -427,7 +420,7 @@ hl.bind("XF86AudioMedia", hl.dsp.exec_cmd("qs ipc call flash triggerWith '#233b8
 
 hl.bind("ALT + Space",     hl.dsp.exec_cmd("/home/veer/code/quarry/src-tauri/target/release/quarry-toggle"))
 hl.bind("SUPER + V",       hl.dsp.exec_cmd("/home/veer/code/quarry/src-tauri/target/release/quarry --with 'cp '"))
-hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("/home/veer/code/quarry/src-tauri/target/release/quarry-toggle"), { release = true })
+-- SUPER release → quarry toggle is defined further down, next to the J/K binds.
 
 --------------------------
 ---- MEDIA KEYS        ----
@@ -438,7 +431,6 @@ hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("~/.config/hypr/scripts/volume-n
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("~/.config/hypr/scripts/volume-notify.sh 5%-"),                   { locked = true, repeating = true })
 hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("~/.config/hypr/scripts/volume-notify.sh --mute"),                              { locked = true })
 hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("~/.config/hypr/scripts/volume-notify.sh --mute @DEFAULT_AUDIO_SOURCE@"), { locked = true })
-
 
 -- Brightness
 
@@ -461,46 +453,11 @@ hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = tr
 hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
 
+------------------------------------------------
+---- EXPOSE                                  ----
+------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-local expose = { active = false, saved = {} }
+local expose = { active = false, switcher = false, saved = {} }
 
 local function dbg(msg)
   -- msg = tostring(msg):gsub("'", "")
@@ -540,8 +497,64 @@ local function best_layout(wins, mw, mh, top)
   return best or layout_for(wins, mw, mh, top, math.ceil(math.sqrt(#wins)))
 end
 
+local function wkey(w)
+  return tostring(w.address or w)
+end
 
-local function enter_expose()
+-- lay out a list of window items in the expose grid and record their
+-- original geometry in expose.saved
+local function place_windows(wins)
+  local mon = hl.get_monitors()[1]
+  local sc  = mon.scale or 1
+  local mw, mh = mon.width / sc, mon.height / sc
+  local mx, my = mon.x or 0, mon.y or 0
+
+  local top = 60
+  local L = best_layout(wins, mw, mh, top)
+  local cols, rows, pad, cw, ch = L.cols, L.rows, L.pad, L.cw, L.ch
+
+  -- sort top to bottom, split into rows, sort each row left to right
+  table.sort(wins, function(a, b)
+    local acy, bcy = math.floor(a.cy + 0.5), math.floor(b.cy + 0.5)
+    if acy ~= bcy then return acy < bcy end
+    local acx, bcx = math.floor(a.cx + 0.5), math.floor(b.cx + 0.5)
+    if acx ~= bcx then return acx < bcx end
+    return wkey(a.win) < wkey(b.win)
+  end)
+
+  local ordered = {}
+  for r = 0, rows - 1 do
+    local row = {}
+    for c = 1, cols do
+      local item = wins[r * cols + c]
+      if item then table.insert(row, item) end
+    end
+    table.sort(row, function(a, b) return a.cx < b.cx end)
+    for c, item in ipairs(row) do
+      item.col, item.row, item.rowcount = c - 1, r, #row
+      table.insert(ordered, item)
+    end
+  end
+
+  expose.saved = {}
+  for _, it in ipairs(ordered) do
+    local w = it.win
+    table.insert(expose.saved, {
+      win = w, x = it.ax, y = it.ay, w = it.sw, h = it.sh, tiled = it.tiled,
+    })
+
+    local s = math.min(cw / it.sw, ch / it.sh, MAX_SCALE)
+    local nw, nh = it.sw * s, it.sh * s
+    local row_offset = (cols - it.rowcount) * (cw + pad) / 2
+    local x = mx + pad + row_offset + it.col * (cw + pad) + (cw - nw) / 2
+    local y = my + top + pad + it.row * (ch + pad) + (ch - nh) / 2
+
+    hl.dispatch(hl.dsp.window.resize({ x = nw, y = nh, window = w }))
+    hl.dispatch(hl.dsp.window.move({ x = x, y = y, window = w }))
+  end
+end
+
+local function enter_expose(no_submap)
   local ws  = hl.get_active_workspace()
   local mon = hl.get_monitors()[1]
   local sc  = mon.scale or 1
@@ -571,49 +584,11 @@ local function enter_expose()
     end
   end
 
-  local top = 60
-local L = best_layout(wins, mw, mh, top)
-local cols, rows, pad, cw, ch = L.cols, L.rows, L.pad, L.cw, L.ch
-  -- local pad, top = 40, 60
-  -- local cols, rows = grid(#wins, mw, mh)
-  -- local cw = (mw - pad * (cols + 1)) / cols
-  -- local ch = (mh - top - pad * (rows + 1)) / rows
-
-  -- sort top to bottom, split into rows, sort each row left to right
-  table.sort(wins, function(a, b) return a.cy < b.cy end)
-  local ordered = {}
-  for r = 0, rows - 1 do
-    local row = {}
-    for c = 1, cols do
-      local item = wins[r * cols + c]
-      if item then table.insert(row, item) end
-    end
-    table.sort(row, function(a, b) return a.cx < b.cx end)
-    for c, item in ipairs(row) do
-      item.col, item.row, item.rowcount = c - 1, r, #row
-      table.insert(ordered, item)
-    end
-  end
-
-  expose.saved = {}
-  for _, it in ipairs(ordered) do
-    local w = it.win
-    table.insert(expose.saved, {
-      win = w, x = it.ax, y = it.ay, w = it.sw, h = it.sh, tiled = it.tiled,
-    })
-
-    -- local s = math.min(cw / it.sw, ch / it.sh, 1)
-    local s = math.min(cw / it.sw, ch / it.sh, MAX_SCALE)
-    local nw, nh = it.sw * s, it.sh * s
-    local row_offset = (cols - it.rowcount) * (cw + pad) / 2
-    local x = mx + pad + row_offset + it.col * (cw + pad) + (cw - nw) / 2
-    local y = my + top + pad + it.row * (ch + pad) + (ch - nh) / 2
-
-    hl.dispatch(hl.dsp.window.resize({ x = nw, y = nh, window = w }))
-    hl.dispatch(hl.dsp.window.move({ x = x, y = y, window = w }))
-  end
+  place_windows(wins)
   expose.active = true
-  hl.dispatch(hl.dsp.submap("expose"))
+  if not no_submap then
+    hl.dispatch(hl.dsp.submap("expose"))
+  end
 end
 
 local function exit_expose()
@@ -640,11 +615,35 @@ local function exit_expose()
   end
 
   hl.dispatch(hl.dsp.window.bring_to_top())
-  expose.saved, expose.active = {}, false
+  expose.saved, expose.active, expose.switcher = {}, false, false
   hl.dispatch(hl.dsp.submap("reset"))
 end
 
+-- SUPER+Q inside expose: close the focused window and re-flow the grid
+local function close_in_expose()
+  local w = hl.get_active_window()
+  if not w then return end
+  local k = wkey(w)
+  hl.dispatch(hl.dsp.window.close())
 
+  local wins = {}
+  for _, sv in ipairs(expose.saved) do
+    if wkey(sv.win) ~= k then
+      table.insert(wins, {
+        win = sv.win, ax = sv.x, ay = sv.y, sw = sv.w, sh = sv.h,
+        cx = sv.x + sv.w / 2, cy = sv.y + sv.h / 2,
+        tiled = sv.tiled,
+      })
+    end
+  end
+
+  if #wins == 0 then
+    expose.saved = {}
+    exit_expose()
+    return
+  end
+  place_windows(wins)
+end
 
 hl.bind("SUPER + G", function()
   local ok, err = pcall(function()
@@ -653,12 +652,51 @@ hl.bind("SUPER + G", function()
   if not ok then dbg("error: " .. err) end
 end)
 
+-- SUPER+J/K: when the focused window is floating, cycle focus through windows
+-- and raise each one to the front (no expose). Tiled windows keep the normal
+-- master cyclenext/cycleprev behaviour.
+local function switcher_step(dir)
+  local ok, err = pcall(function()
+    local w = hl.get_active_window()
+    if expose.active or (w and w.floating) then
+      -- floating: cycle focus and raise the newly focused window
+      if dir > 0 then
+        hl.dispatch(hl.dsp.window.cycle_next())
+      else
+        hl.dispatch(hl.dsp.window.cycle_next({ next = false }))
+      end
+      if not expose.active then
+        hl.dispatch(hl.dsp.window.bring_to_top())
+      end
+    else
+      -- tiled: normal master behaviour
+      hl.dispatch(hl.dsp.layout(dir > 0 and "cyclenext" or "cycleprev"))
+    end
+  end)
+  if not ok then dbg("error: " .. err) end
+end
+
+-- global binds (work from normal mode)
+hl.bind("SUPER + J", function() switcher_step(1)  end)
+hl.bind("SUPER + K", function() switcher_step(-1) end)
+
+hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("/home/veer/code/quarry/src-tauri/target/release/quarry-toggle"), { release = true })
+
 hl.define_submap("expose", function()
   hl.bind("escape", exit_expose)
   hl.bind("return", exit_expose)
   hl.bind("Tab", hl.dsp.window.cycle_next())
   hl.bind("SUPER + G", exit_expose)
-    -- left click: pick the window under the cursor and close expose
+  hl.bind("SUPER + Q", function()
+    local ok, err = pcall(close_in_expose)
+    if not ok then dbg("error: " .. err) end
+  end)
+
+  -- keep cycling while in the submap (global binds don't fire here)
+  hl.bind("SUPER + J", function() switcher_step(1)  end)
+  hl.bind("SUPER + K", function() switcher_step(-1) end)
+
+  -- left click: pick the window under the cursor and close expose
   hl.bind("mouse:272", function()
     local ok, err = pcall(exit_expose)
     if not ok then dbg("error: " .. err) end
@@ -688,15 +726,49 @@ hl.gesture({
   end,
 })
 
+------------------------------------------------
+---- Remember each window's last floating geometry ----
+------------------------------------------------
 
+local float_mem = {}   -- [window key] = { x, y, w, h }
 
+local function fkey(w) return tostring(w.address or w) end
+
+-- call while the window is still floating, before tiling it
+local function remember_float(w)
+  if not w.floating then return end
+  local x, y = xy(w.at)
+  local sw, sh = xy(w.size)
+  float_mem[fkey(w)] = { x = x, y = y, w = sw, h = sh }
+end
+
+local function float_window(w)
+  hl.dispatch(hl.dsp.window.float({ action = "enable", window = w }))
+  local m = float_mem[fkey(w)]
+  if m then
+    hl.dispatch(hl.dsp.window.resize({ x = m.w, y = m.h, window = w }))
+    hl.dispatch(hl.dsp.window.move({   x = m.x, y = m.y, window = w }))
+  end
+end
+
+local function tile_window(w)
+  remember_float(w)
+  hl.dispatch(hl.dsp.window.float({ action = "disable", window = w }))
+end
+
+hl.bind("SUPER + T", function()
+  if expose.active then return end
+  local w = hl.get_active_window()
+  if not w then return end
+  if w.floating then tile_window(w) else float_window(w) end
+end)
 
 ------------------------------------------------
 ---- SUPER + X: toggle workspace float/tile ----
 ------------------------------------------------
 
 local ws_mode  = {}   -- [workspace id] = "float" | "tile"
-local ws_rules = {}   -- [workspace id] = { float = rule, tile = rule }
+local ws_rules = {}   -- [workspace id] = window rule
 
 local function ws_selector(ws)
   if ws.name and tostring(ws.id) ~= ws.name then
@@ -747,7 +819,7 @@ local function toggle_ws_float()
   if to_float then
     for _, w in ipairs(wins) do
       if not w.floating then
-        hl.dispatch(hl.dsp.window.float({ action = "enable", window = w }))
+        float_window(w)
       end
     end
   else
@@ -760,7 +832,7 @@ local function toggle_ws_float()
     end)
     for _, w in ipairs(wins) do
       if w.floating then
-        hl.dispatch(hl.dsp.window.float({ action = "disable", window = w }))
+        tile_window(w)
       end
     end
   end
@@ -769,4 +841,74 @@ end
 hl.bind("SUPER + X", function()
   local ok, err = pcall(toggle_ws_float)
   if not ok then dbg("error: " .. err) end
+end)
+
+------------------------------------------------
+---- SUPER + F: pseudo-maximize when floating ----
+------------------------------------------------
+
+local PMAX_MARGIN = 12      -- gap left around the window, in logical px
+local pmax_saved  = {}      -- [window key] = { x, y, w, h }
+
+local function win_key(w)
+  return w.address or tostring(w)
+end
+
+local function pseudo_maximize(w)
+  local mon = hl.get_monitors()[1]            -- same lookup your expose code uses
+  local sc  = mon.scale or 1
+  local mw, mh = mon.width / sc, mon.height / sc
+  local mx, my = mon.x or 0, mon.y or 0
+
+  -- manual reserved space (logical px), used if the monitor reports none
+  local BAR_TOP, BAR_BOTTOM, BAR_LEFT, BAR_RIGHT = 40, 0, 0, 0
+
+  -- Hyprland order is {left, top, right, bottom}
+  local rl, rt, rr, rb = 0, 0, 0, 0
+  if type(mon.reserved) == "table" then
+    rl, rt = mon.reserved[1] or 0, mon.reserved[2] or 0
+    rr, rb = mon.reserved[3] or 0, mon.reserved[4] or 0
+  end
+
+  -- fall back to the manual values when nothing is reported
+  if rl + rt + rr + rb == 0 then
+    rl, rt, rr, rb = BAR_LEFT, BAR_TOP, BAR_RIGHT, BAR_BOTTOM
+  end
+
+  local key = win_key(w)
+  local ax, ay = xy(w.at)
+  local sw, sh = xy(w.size)
+
+  local nx = mx + rl + PMAX_MARGIN
+  local ny = my + rt + PMAX_MARGIN
+  local nw = mw - rl - rr - PMAX_MARGIN * 2
+  local nh = mh - rt - rb - PMAX_MARGIN * 2
+
+  local saved = pmax_saved[key]
+  local already = saved
+    and math.abs(ax - nx) < 3 and math.abs(ay - ny) < 3
+    and math.abs(sw - nw) < 3 and math.abs(sh - nh) < 3
+
+  if already then
+    -- second press: restore the previous geometry
+    hl.dispatch(hl.dsp.window.resize({ x = saved.w, y = saved.h, window = w }))
+    hl.dispatch(hl.dsp.window.move({   x = saved.x, y = saved.y, window = w }))
+    pmax_saved[key] = nil
+  else
+    pmax_saved[key] = { x = ax, y = ay, w = sw, h = sh }
+    hl.dispatch(hl.dsp.window.resize({ x = nw, y = nh, window = w }))
+    hl.dispatch(hl.dsp.window.move({   x = nx, y = ny, window = w }))
+  end
+end
+
+hl.bind("SUPER + F", function()
+  if expose.active then return end
+
+  local w = hl.get_active_window()
+  if w and w.floating then
+    local ok, err = pcall(pseudo_maximize, w)
+    if not ok then dbg("error: " .. err) end
+  else
+    hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized" }))
+  end
 end)

@@ -42,7 +42,7 @@ family = "Maple Mono Normal NL CN"
 style = "Regular"
 
 [window]
-opacity = 0.85
+opacity = 0.80
 padding = { x = 24, y = 24 }
 decorations = "None"
 

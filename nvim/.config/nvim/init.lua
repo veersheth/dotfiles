@@ -44,5 +44,6 @@ require("plugins.markdown")
 -- require("plugins.lualine")
 
 -- require("plugins.bufferline")
+require("plugins.python-notebooks")
 require("color-theme")
 
