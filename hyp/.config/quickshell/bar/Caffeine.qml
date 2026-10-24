@@ -11,6 +11,7 @@ import qs.components
 // quickshell reloads via ~/.local/state/quickshell/caffeine.json.
 Item {
     id: root
+    property color foreground: Theme.foreground
 
     property bool on: false
     property real until: -1   // expiry ms timestamp; -1 = indefinite
@@ -145,7 +146,7 @@ Item {
     // ── Visuals ────────────────────────────────────────────────────────
     Rectangle {
         anchors.fill: parent; radius: height / 2
-        color: root.on ? Qt.alpha(Theme.yellow, 0.18) : Theme.hover
+        color: root.on ? Qt.alpha(Theme.yellow, 0.18) : Qt.alpha(root.foreground, 0.13)
         opacity: root.on || hitArea.containsMouse ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 100 } }
         Behavior on color   { ColorAnimation  { duration: Theme.animDuration } }
@@ -157,7 +158,7 @@ Item {
         text: ""
         font.family: Theme.font
         font.pixelSize: Theme.iconSize
-        color: root.on ? Theme.yellow : Qt.alpha(Theme.foreground, 0.45)
+        color: root.on ? Theme.yellow : Qt.alpha(root.foreground, 0.45)
         scale: root._dragging ? 1.25 : 1.0
         Behavior on color { ColorAnimation { duration: Theme.animDuration } }
         Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutBack } }

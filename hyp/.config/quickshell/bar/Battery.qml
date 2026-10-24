@@ -9,6 +9,7 @@ import qs.bar.popups
 // click for the power profile popup.
 Item {
     id: root
+    property color foreground: Theme.foreground
 
     readonly property var battery: UPower.displayDevice
     readonly property real percent: (battery?.percentage ?? 0) * 100
@@ -74,7 +75,7 @@ Item {
             }
             font.family: Theme.nerdFont
             font.pixelSize: Theme.iconSize
-            color: Theme.foreground
+            color: root.foreground
         }
 
         Text {
@@ -83,14 +84,14 @@ Item {
             font.family: Theme.font
             font.pixelSize: Theme.fontSize
             font.weight: Font.Medium
-            color: Theme.foreground
+            color: root.foreground
         }
 
     }
 
     Rectangle {
         anchors.fill: parent; radius: height / 2
-        color: Theme.hover
+        color: Qt.alpha(root.foreground, 0.13)
         opacity: hitArea.containsMouse ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 100 } }
     }

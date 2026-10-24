@@ -8,7 +8,7 @@ import QtQuick
 
 QtObject {
     // Colors
-    readonly property color background: "#FF000000"   // #00000088 
+    readonly property color background: "#99000000"   // #00000088 
     readonly property color surface:    "#FF101010"   // #262626ff
     readonly property color border:     "#66ffffff"   // #ffffff22
     readonly property color barBorder:  "#00ffffff"   // bottom border of the status bar
@@ -22,13 +22,13 @@ QtObject {
     readonly property color yellow:     "#d2d270"
 
     // Type
-    readonly property string font:     "JetBrainsMono Nerd Font"
+    readonly property string font:     "Maple Mono Normal NL CN"
     readonly property string nerdFont: "JetBrainsMono Nerd Font"
     readonly property int    fontSize: 13
     readonly property int    iconSize: 16
 
     // Metrics
-    readonly property int barHeight:    30
+    readonly property int barHeight:    36
     readonly property int radius:       0    // large pill containers, dock card
     readonly property int popupRadius:  12    // popup cards, floating labels
     readonly property int itemRadius:   10    // list rows, interactive hover tiles

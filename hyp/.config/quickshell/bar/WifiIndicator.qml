@@ -11,6 +11,7 @@ import qs.bar.popups
 // network picker popup.
 Item {
     id: root
+    property color foreground: Theme.foreground
 
     property bool connected: false
     property int strength: 0
@@ -39,8 +40,8 @@ Item {
             font.family: Theme.nerdFont
             font.pixelSize: Theme.iconSize
             color: root.noInternet ? Theme.yellow
-                 : root.connected ? Theme.foreground
-                 : Qt.alpha(Theme.foreground, 0.4)
+                 : root.connected ? root.foreground
+                 : Qt.alpha(root.foreground, 0.4)
 
             Behavior on color { ColorAnimation { duration: Theme.animDuration } }
         }
@@ -54,7 +55,7 @@ Item {
             font.family: Theme.font
             font.pixelSize: Theme.fontSize - 1
             font.weight: Font.Medium
-            color: root.noInternet ? Theme.yellow : Qt.alpha(Theme.foreground, 0.85)
+            color: root.noInternet ? Theme.yellow : Qt.alpha(root.foreground, 0.85)
 
             Behavior on color { ColorAnimation { duration: Theme.animDuration } }
         }
@@ -62,7 +63,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent; radius: height / 2
-        color: Theme.hover
+        color: Qt.alpha(root.foreground, 0.13)
         opacity: hitArea.containsMouse ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 100 } }
     }

@@ -5,6 +5,7 @@ import qs.common
 
 Rectangle {
     id: root
+    property color foreground: Theme.foreground
     property string monitorName: ""
 
     implicitWidth: row.implicitWidth + 20
@@ -17,7 +18,7 @@ Rectangle {
 
     Rectangle {
         anchors.fill: parent; radius: height / 2
-        color: Theme.hover
+        color: Qt.alpha(root.foreground, 0.13)
         opacity: pillMouse.containsMouse ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 100 } }
     }
@@ -49,8 +50,8 @@ Rectangle {
                     color: parent.isFocused
                         ? Theme.blue
                         : wsMouse.containsMouse
-                            ? Qt.alpha(Theme.foreground, 0.6)
-                            : Qt.alpha(Theme.foreground, 0.3)
+                            ? Qt.alpha(root.foreground, 0.6)
+                            : Qt.alpha(root.foreground, 0.3)
                 }
 
                 MouseArea {

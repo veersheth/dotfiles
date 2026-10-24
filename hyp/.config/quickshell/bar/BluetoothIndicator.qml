@@ -10,6 +10,7 @@ import qs.bar.popups
 // Click to open the device popup; settings button inside handles hypr-settings.
 Item {
     id: root
+    property color foreground: Theme.foreground
 
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property bool enabled: adapter?.enabled ?? false
@@ -31,7 +32,7 @@ Item {
             text: root.connected ? "󰂱" : root.enabled ? "󰂯" : "󰂲"
             font.family: Theme.nerdFont
             font.pixelSize: Theme.iconSize
-            color: root.enabled ? Theme.foreground : Qt.alpha(Theme.foreground, 0.4)
+            color: root.enabled ? root.foreground : Qt.alpha(root.foreground, 0.4)
 
             Behavior on color { ColorAnimation { duration: Theme.animDuration } }
         }
@@ -45,13 +46,13 @@ Item {
             font.family: Theme.font
             font.pixelSize: Theme.fontSize - 1
             font.weight: Font.Medium
-            color: Qt.alpha(Theme.foreground, 0.85)
+            color: Qt.alpha(root.foreground, 0.85)
         }
     }
 
     Rectangle {
         anchors.fill: parent; radius: height / 2
-        color: Theme.hover
+        color: Qt.alpha(root.foreground, 0.13)
         opacity: hitArea.containsMouse ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 100 } }
     }

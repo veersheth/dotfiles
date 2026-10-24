@@ -5,12 +5,12 @@ set -euo pipefail
 HOME_SESSION="HOME"
 TEMP_SESSION="TEMP"
 LLM_SESSION="LLM"
-LLM_DIR="$HOME/syncthing/chats"
+LLM_DIR="$HOME/sync/chats"
 TEMP_DIR="/tmp/tmuxtmp"
 
 SEARCH_DIRS=(
     "$HOME"
-    "$HOME/syncthing"
+    "$HOME/sync"
     "$HOME/code"
 )
 

@@ -8,6 +8,7 @@ import qs.bar.popups
 // Tray icons shown inline in the bar — one slot per app, right-click for menu.
 RowLayout {
     id: root
+    property color foreground: Theme.foreground
     spacing: Theme.moduleSpacing
     visible: SystemTray.items.values.length > 0
     Layout.alignment: Qt.AlignVCenter
@@ -28,7 +29,7 @@ RowLayout {
             Rectangle {
                 anchors.fill: parent
                 radius:       height / 2
-                color:        mo.containsMouse ? Theme.hover : "transparent"
+                color:        mo.containsMouse ? Qt.alpha(root.foreground, 0.13) : "transparent"
                 Behavior on color { ColorAnimation { duration: Theme.animDuration } }
             }
 

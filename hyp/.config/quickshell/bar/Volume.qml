@@ -8,6 +8,7 @@ import qs.bar.popups
 
 Item {
     id: root
+    property color foreground: Theme.foreground
 
     readonly property var  sink:   Pipewire.defaultAudioSink
     PwObjectTracker { objects: [root.sink] }
@@ -29,13 +30,13 @@ Item {
             : "󰕾"
         font.family:    Theme.nerdFont
         font.pixelSize: Theme.iconSize
-        color: root.muted ? Qt.alpha(Theme.red, 0.95) : Theme.foreground
+        color: root.muted ? Qt.alpha(Theme.red, 0.95) : root.foreground
         Behavior on color { ColorAnimation { duration: Theme.animDuration } }
     }
 
     Rectangle {
         anchors.fill: parent; radius: height / 2
-        color: Theme.hover
+        color: Qt.alpha(root.foreground, 0.13)
         opacity: hitArea.containsMouse ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 100 } }
     }

@@ -8,6 +8,7 @@ import qs.bar.popups
 // Fixed-width wrapper so glyph-width differences between icons never shift the bar layout.
 Item {
     id: root
+    property color foreground: Theme.foreground
     readonly property int count: NotificationService.unreadCount
 
     // Use the wider glyph's width as the constant size
@@ -31,14 +32,14 @@ Item {
         font.family:    Theme.nerdFont
         font.pixelSize: Theme.iconSize
         color: NotificationService.dnd ? Theme.blue
-             : root.count > 0          ? Theme.foreground
-             :                           Qt.alpha(Theme.foreground, 0.45)
+             : root.count > 0          ? root.foreground
+             :                           Qt.alpha(root.foreground, 0.45)
         Behavior on color { ColorAnimation { duration: Theme.animDuration } }
     }
 
     Rectangle {
         anchors.fill: parent; radius: height / 2
-        color: Theme.hover
+        color: Qt.alpha(root.foreground, 0.13)
         opacity: hitArea.containsMouse ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 100 } }
     }

@@ -39,8 +39,8 @@ hl.config({
 
 hl.config({
   general = {
-    gaps_in          = 3,
-    gaps_out         = 4,
+    gaps_in          = 2,
+    gaps_out         = 0,
 
     border_size      = 1,
 
@@ -61,23 +61,23 @@ hl.config({
 
 hl.config({
   decoration = {
-    rounding       = 18,
-    rounding_power = 3,
+    rounding       = 17,
+    rounding_power = 2.5,
 
     active_opacity   = 1.0,
     inactive_opacity = 1.0,
 
     shadow = {
-      enabled        = true,
-      color = "rgba(0, 0, 0, 0.45)",
-      range = 18,
-      render_power = 8,
+      enabled = false,
+      color = "rgba(0, 0, 0, 0.25)",
+      range = 20,
+      render_power = 3,
     },
 
     blur = {
       enabled  = true,
-      size     = 2,
-      passes   = 2,
+      size     = 4,
+      passes   = 5,
       vibrancy = 0,
       special  = false,
     },
@@ -134,9 +134,9 @@ hl.animation({ leaf = "layers",     enabled = true, speed = 7,  bezier = "easeOu
 hl.animation({ leaf = "layersIn",   enabled = true, speed = 7,  bezier = "easeOutQuint", style = "fade" })
 hl.animation({ leaf = "layersOut",  enabled = true, speed = 7,  bezier = "linear",       style = "fade" })
 
-hl.animation({ leaf = "workspaces",    enabled = true, speed = 3, bezier = "easeOutQuint", style = "slide" })
-hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 3, bezier = "easeOutQuint", style = "slide" })
-hl.animation({ leaf = "workspacesOut", enabled = true, speed = 3, bezier = "easeOutQuint", style = "slide" })
+hl.animation({ leaf = "workspaces",    enabled = false, speed = 2, bezier = "easeOutQuint", style = "fade" })
+-- hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 3, bezier = "easeOutQuint", style = "slide" })
+-- hl.animation({ leaf = "workspacesOut", enabled = true, speed = 3, bezier = "easeOutQuint", style = "slide" })
 
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 4, bezier = "easeOutQuint", style = "slidefadevert 11%" })
 
@@ -372,7 +372,7 @@ hl.window_rule({
 
 hl.window_rule({
   name            = "chromium-scroll",
-  match           = { class = "spotify|brave-browser|helium|Obsidian" },
+  match           = { class = "spotify|brave-browser|helium|md.obsidian.Obsidian" },
   scroll_touchpad = 0.1,
 })
 
@@ -380,8 +380,9 @@ hl.window_rule({
 ---- APP LAUNCHERS     ----
 --------------------------
 
+hl.bind("SUPER + SHIFT + d", hl.dsp.exec_cmd("if [ \"$(gsettings get org.gnome.desktop.interface color-scheme)\" = \"'prefer-dark'\" ]; then gsettings set org.gnome.desktop.interface color-scheme prefer-light; else gsettings set org.gnome.desktop.interface color-scheme prefer-dark; fi"))
 hl.bind("SUPER + comma",  hl.dsp.exec_cmd("hypr-settings"))  -- settings
-hl.bind("SUPER + Return", hl.dsp.exec_cmd("alacritty"))          -- terminal
+hl.bind("SUPER + Return", hl.dsp.exec_cmd("kitty"))          -- terminal
 hl.bind("SUPER + B",      hl.dsp.exec_cmd("xdg-open https://"))  -- browser
 
 --------------------------
@@ -645,7 +646,7 @@ local function close_in_expose()
   place_windows(wins)
 end
 
-hl.bind("SUPER + G", function()
+hl.bind("SUPER + D", function()
   local ok, err = pcall(function()
     if expose.active then exit_expose() else enter_expose() end
   end)
@@ -686,7 +687,7 @@ hl.define_submap("expose", function()
   hl.bind("escape", exit_expose)
   hl.bind("return", exit_expose)
   hl.bind("Tab", hl.dsp.window.cycle_next())
-  hl.bind("SUPER + G", exit_expose)
+  hl.bind("SUPER + D", exit_expose)
   hl.bind("SUPER + Q", function()
     local ok, err = pcall(close_in_expose)
     if not ok then dbg("error: " .. err) end

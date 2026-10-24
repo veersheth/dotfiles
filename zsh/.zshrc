@@ -1,3 +1,4 @@
+
 autoload -U colors && colors
 setopt PROMPT_SUBST
 
@@ -15,13 +16,14 @@ RPROMPT='%{$fg[cyan]%}%D{%I:%M:%S %p}%{$reset_color%}'
 HISTFILE=~/.zsh_history
 HISTSIZE=1500
 SAVEHIST=1500
-setopt INC_APPEND_HISTORY       # Add commands as they are typed
-setopt SHARE_HISTORY            # Share history across terminals
-setopt HIST_IGNORE_DUPS         # Ignore duplicate commands
-setopt HIST_FIND_NO_DUPS        # Don't display dupes when searching history
+setopt INC_APPEND_HISTORY
+setopt SHARE_HISTORY
+setopt HIST_IGNORE_DUPS
+setopt HIST_FIND_NO_DUPS
 
 export EDITOR="nvim"
 export VISUAL="nvim"
+
 alias vi="nvim"
 alias l="ls -la --color=auto"
 alias ls="ls --color=auto"
@@ -48,13 +50,22 @@ bindkey '^e' opengui
 bindkey '^p' history-beginning-search-backward
 bindkey '^n' history-beginning-search-forward
 
+# Completion
 autoload -U compinit && compinit
-zstyle ':completion:*' menu select
-zmodload zsh/complist
-autoload -U colors && colors
 zmodload zsh/complist
 
-# YO PATH 
+zstyle ':completion:*' menu select
+
+# Try normal prefix completion first.
+# If nothing matches, try case-insensitive completion,
+# then substring matching.
+zstyle ':completion:*' matcher-list \
+  '' \
+  'm:{a-zA-Z}={A-Za-z}' \
+  'l:|=* r:|=*'
+
+# YO PATH
+export MANPAGER="nvim +Man!"
 export PATH="$HOME/scripts:$PATH"
 export PATH="$HOME/.cargo/bin:$PATH"
 export PATH="/home/veer/.bun/bin:$PATH"
@@ -71,3 +82,6 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
+export PATH="$HOME/code/flutter-sdk/flutter/bin:$PATH"
+

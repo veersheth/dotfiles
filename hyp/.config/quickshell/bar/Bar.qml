@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import qs.common
 import qs.components
+import qs.wallpaper
 import qs.notifications
 import qs.bar.popups
 
@@ -27,13 +28,19 @@ Variants {
 
         mask: Region { item: bar }
 
+        BarContrast {
+            id: contrast
+            screenWidth: root.screen?.width ?? 1920
+            screenHeight: root.screen?.height ?? 1080
+        }
+
         Rectangle {
             id: bar
             anchors {
               top: parent.top; left: parent.left; right: parent.right
             }
             height: Theme.barHeight
-            color: Theme.background
+            color: BarState.transparent ? "transparent" : Theme.background
 
             // // Hot corner — hover the leftmost corner square to open the scratchpad.
             // Item {
@@ -147,6 +154,24 @@ Variants {
 
                     Rectangle {
                         width: parent.width; height: 34; radius: 9
+                        color: transparencyMo.containsMouse ? Theme.hover : "transparent"
+                        Text {
+                            anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                            text: BarState.transparent ? "✓  Transparent bar" : "Transparent bar"
+                            font.family: Theme.font
+                            font.pixelSize: Theme.fontSize
+                            color: Theme.foreground
+                        }
+                        MouseArea {
+                            id: transparencyMo
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: { BarState.setTransparent(!BarState.transparent); barMenu.close() }
+                        }
+                    }
+
+                    Rectangle {
+                        width: parent.width; height: 34; radius: 9
                         color: barPosMo.containsMouse ? Theme.hover : "transparent"
                         Row {
                             anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
@@ -165,7 +190,7 @@ Variants {
                 anchors.left:   parent.left
                 anchors.right:  parent.right
                 height: Theme.borderWidth
-                color: Theme.barBorder
+                color: BarState.transparent ? "transparent" : Theme.barBorder
               }
 
               Item {
@@ -182,7 +207,7 @@ Variants {
                   anchors { left: parent.left; leftMargin: 14; top: parent.top; bottom: parent.bottom }
                   spacing: Theme.moduleSpacing
 
-                  Workspaces { monitorName: root.screen?.name ?? ""; Layout.fillHeight: true }
+                  Workspaces { foreground: contrast.foreground; monitorName: root.screen?.name ?? ""; Layout.fillHeight: true }
 
                   // Media { Layout.fillHeight: true }
 
@@ -194,7 +219,7 @@ Variants {
                   anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; bottom: parent.bottom }
                   spacing: Theme.moduleSpacing
 
-                  // Clock { Layout.fillHeight: true }
+                  // Clock { foreground: contrast.foreground; Layout.fillHeight: true }
 
               }
 
@@ -203,21 +228,21 @@ Variants {
                   anchors { right: parent.right; rightMargin: 14; top: parent.top; bottom: parent.bottom }
                   spacing: Theme.moduleSpacing
 
-                  Tray { Layout.fillHeight: true; Layout.alignment: Qt.AlignVCenter }
+                  Tray { foreground: contrast.foreground; Layout.fillHeight: true; Layout.alignment: Qt.AlignVCenter }
 
-                  Caffeine { Layout.fillHeight: true }
+                  Caffeine { foreground: contrast.foreground; Layout.fillHeight: true }
 
-                  NotificationBell { Layout.fillHeight: true }
+                  NotificationBell { foreground: contrast.foreground; Layout.fillHeight: true }
 
-                  WifiIndicator { Layout.fillHeight: true }
+                  WifiIndicator { foreground: contrast.foreground; Layout.fillHeight: true }
 
-                  BluetoothIndicator { Layout.fillHeight: true }
+                  BluetoothIndicator { foreground: contrast.foreground; Layout.fillHeight: true }
 
-                  Clock { Layout.fillHeight: true }
+                  Clock { foreground: contrast.foreground; Layout.fillHeight: true }
 
-                  Volume { Layout.fillHeight: true }
+                  Volume { foreground: contrast.foreground; Layout.fillHeight: true }
                   
-                  Battery { Layout.fillHeight: true }
+                  Battery { foreground: contrast.foreground; Layout.fillHeight: true }
               }
             }
         }

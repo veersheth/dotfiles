@@ -8,6 +8,7 @@ import qs.bar.popups
 
 Item {
     id: root
+    property color foreground: Theme.foreground
 
     // True when any MPRIS player is currently playing
     readonly property bool playing: Mpris.players.values.some(p => p.isPlaying)
@@ -60,7 +61,7 @@ Item {
         //                 height: 3
         //                 radius: width / 2
         //                 y: (parent.height - height) / 2
-        //                 color: Theme.foreground
+        //                 color: root.foreground
         //                 SequentialAnimation on height {
         //                     running: root.playing
         //                     loops: Animation.Infinite
@@ -87,13 +88,13 @@ Item {
             font.family: Theme.font
             font.pixelSize: Theme.fontSize
             font.weight: Font.Medium
-            color: Theme.foreground
+            color: root.foreground
         }
     }
 
     Rectangle {
         anchors.fill: parent; radius: height / 2
-        color: Theme.hover
+        color: Qt.alpha(root.foreground, 0.13)
         opacity: hitArea.containsMouse ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 100 } }
     }

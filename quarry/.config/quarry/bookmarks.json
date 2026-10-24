@@ -25,10 +25,6 @@
       "url": "https://my.unsw.edu.au"
     },
     {
-      "name": "syncthing",
-      "url": "http://localhost:8384/"
-    },
-    {
       "name": "unsw-moodle",
       "url": "https://moodle.telt.unsw.edu.au"
     },
@@ -43,6 +39,14 @@
     {
       "name": "gemini",
       "url": "https://gemini.google.com"
+    },
+    {
+      "name": "resilio-sync",
+      "url": "http://localhost:9000/gui/"
+    },
+    {
+      "name": "wordle",
+      "url": "https://www.nytimes.com/games/wordle/index.html"
     }
   ]
 }

@@ -6,6 +6,7 @@ import QtQuick
 Singleton {
     id: root
     property bool barBottom: false
+    property bool transparent: false
     signal wallpaperPickerRequested()
 
     FileView {
@@ -14,6 +15,19 @@ Singleton {
         printErrors: false
         atomicWrites: true
         onLoaded: root.barBottom = text().trim() === "bottom"
+    }
+
+    FileView {
+        id: appearanceStore
+        path: `${Quickshell.env("HOME")}/.local/state/quickshell/bar-transparent.txt`
+        printErrors: false
+        atomicWrites: true
+        onLoaded: root.transparent = text().trim() === "true"
+    }
+
+    function setTransparent(v) {
+        transparent = v;
+        appearanceStore.setText(v ? "true" : "false");
     }
 
     function setBottom(v) {

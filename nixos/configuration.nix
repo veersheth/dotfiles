@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports =
@@ -134,6 +134,7 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       # GUI 
+      vicinae
       tigervnc
       gnome-power-manager
       gimp-with-plugins
@@ -150,9 +151,8 @@
       obs-studio
       davinci-resolve
       onlyoffice-desktopeditors
-      keepass
+      keepassxc
       
-
       # onedriver
       # onedrive onedrivegui
 
@@ -260,7 +260,7 @@
 
     dconf.enable = true;
 
-    niri.enable = true;
+    # niri.enable = true;
 
     # kdeconnect = {
     #   enable = true;
@@ -318,7 +318,7 @@
 
     # hyprland
     hyprland hypridle hyprpicker hyprsunset hyprshot cliphist satty
-    hyprlock hyprpaper waybar
+    hyprlock 
     quickshell qt5.qtgraphicaleffects
 
   ];
@@ -353,16 +353,21 @@
       enable = true;
       criticalPowerAction = "PowerOff";
     };
-    syncthing = {
+    resilio = {
       enable = true;
-      user = "veer";      
-      group = "users";         
-      dataDir = "/home/veer";
-      configDir = "/home/veer/.config/syncthing";
-      openDefaultPorts = true;    
+      enableWebUI = true;
+      httpLogin = "holysheth";
+      httpPass = "resiliopass123";
     };
   };
 
+  systemd.services.resilio.serviceConfig = {
+    User = lib.mkForce "veer";
+    Group = lib.mkForce "users";
+    ExecStartPre = lib.mkBefore [
+      "+${pkgs.coreutils}/bin/chown -R veer:users /var/lib/resilio-sync"
+    ];
+  };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.

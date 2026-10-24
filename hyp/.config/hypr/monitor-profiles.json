@@ -170,5 +170,38 @@
       }
     ],
     "use_edid": true
+  },
+  "BOE 0x0BCA Unknown + PNP(CPO) Ingnok 0x00000066": {
+    "monitors": [
+      {
+        "name": "DP-2",
+        "description": "PNP(CPO) Ingnok 0x00000066",
+        "width": 1920,
+        "height": 1080,
+        "refreshRate": 60.0,
+        "x": 1611,
+        "y": -1027,
+        "scale": 1.0,
+        "transform": 3,
+        "mirror": null,
+        "disabled": false,
+        "_workspaces": []
+      },
+      {
+        "name": "eDP-1",
+        "description": "BOE 0x0BCA Unknown",
+        "width": 2256,
+        "height": 1504,
+        "refreshRate": 59.999,
+        "x": 0,
+        "y": 0,
+        "scale": 1.4,
+        "transform": 0,
+        "mirror": null,
+        "disabled": false,
+        "_workspaces": []
+      }
+    ],
+    "use_edid": true
   }
 }
