@@ -243,6 +243,8 @@ Variants {
                   Volume { foreground: contrast.foreground; Layout.fillHeight: true }
                   
                   Battery { foreground: contrast.foreground; Layout.fillHeight: true }
+
+                  Power { foreground: contrast.foreground; Layout.fillHeight: true }
               }
             }
         }

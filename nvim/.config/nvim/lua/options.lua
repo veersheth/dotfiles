@@ -35,8 +35,15 @@ vim.opt.timeoutlen = 500
 vim.opt.ttimeoutlen = 0
 vim.opt.autoread = true
 
+-- Use LSP folding ranges (functions, classes, blocks) where the server provides them.
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "v:lua.vim.lsp.foldexpr()"
+vim.opt.foldlevel = 99 -- keep folds open until requested
+vim.opt.foldenable = true
+
 -- normal mode mappings
 vim.keymap.set("n", "<Esc>", ":nohlsearch<CR>", { desc = "" })
+vim.keymap.set("n", "<M-a>", "zazz", { desc = "toggle code fold" })
 vim.keymap.set("v", "id", "<Esc>ggVG", { desc = "select entire doc" })
 vim.keymap.set("n", "<leader>R", vim.cmd.restart, { desc = "restart nvim" })
 

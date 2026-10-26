@@ -24,9 +24,12 @@ telescope.setup({
 local builtin = require("telescope.builtin")
 
 local function find_files()
-  local vault = vim.fn.expand("~/syncthing/notes")
-  if vim.fn.getcwd():find(vault, 1, true) then
-    vim.cmd("Obsidian search")
+  local vault = vim.fn.expand("~/sync/vault")
+  local cwd = vim.fn.getcwd()
+  local current_file = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":p")
+  if cwd == vault or cwd:sub(1, #vault + 1) == vault .. "/"
+      or current_file:sub(1, #vault + 1) == vault .. "/" then
+    vim.cmd("Obsidian quick_switch")
   else
     builtin.find_files()
   end

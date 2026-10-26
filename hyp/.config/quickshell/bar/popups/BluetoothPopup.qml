@@ -129,17 +129,9 @@ BarPopup {
         // ── Header: Bluetooth  [⚙] [↺] [toggle] ───────────────────────
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 4; Layout.rightMargin: 2
+            Layout.leftMargin: 2; Layout.rightMargin: 2
             Layout.bottomMargin: 4
             spacing: 6
-
-            Rectangle {
-                Layout.alignment: Qt.AlignVCenter
-                width: 30; height: 30; radius: width / 2
-                color: btBackMo.containsMouse ? Theme.hover : "transparent"
-                Text { anchors.centerIn: parent; text: "󰅁"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Qt.alpha(Theme.foreground, 0.7) }
-                MouseArea { id: btBackMo; anchors.fill: parent; hoverEnabled: true; onClicked: root.escaped() }
-            }
 
             ColumnLayout {
                 spacing: 1

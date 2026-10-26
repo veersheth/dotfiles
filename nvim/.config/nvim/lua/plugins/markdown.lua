@@ -1,4 +1,13 @@
 vim.pack.add({ "https://github.com/MeanderingProgrammer/render-markdown.nvim" })
+vim.pack.add({ "https://github.com/dhruvasagar/vim-table-mode" })
+vim.g.table_mode_auto_align = 1
+vim.g.table_mode_corner = "|"
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "markdown",
+  callback = function(args)
+    vim.cmd("TableModeEnable")
+  end,
+})
 vim.pack.add({ "https://github.com/3rd/image.nvim" })
 
 require("image").setup({
@@ -20,6 +29,13 @@ require("image").setup({
 })
 
 require("render-markdown").setup({
+  heading = { enabled = true, width = "block" },
+  bullet = { enabled = false },
+  latex = {
+    enabled = true,
+    converter = { "utftex", "latex2text" },
+    position = "center",
+  },
   completions = { lsp = { enabled = true } },
 })
 

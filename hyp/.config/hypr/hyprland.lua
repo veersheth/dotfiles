@@ -37,9 +37,11 @@ hl.config({
 ---- GENERAL / BORDERS ----
 --------------------------
 
+local GAPS_IN = 2
+
 hl.config({
   general = {
-    gaps_in          = 2,
+    gaps_in          = GAPS_IN,
     gaps_out         = 0,
 
     border_size      = 1,
@@ -68,7 +70,7 @@ hl.config({
     inactive_opacity = 1.0,
 
     shadow = {
-      enabled = false,
+      enabled = true,
       color = "rgba(0, 0, 0, 0.25)",
       range = 20,
       render_power = 3,
@@ -77,7 +79,7 @@ hl.config({
     blur = {
       enabled  = true,
       size     = 4,
-      passes   = 5,
+      passes   = 2,
       vibrancy = 0,
       special  = false,
     },
@@ -134,7 +136,7 @@ hl.animation({ leaf = "layers",     enabled = true, speed = 7,  bezier = "easeOu
 hl.animation({ leaf = "layersIn",   enabled = true, speed = 7,  bezier = "easeOutQuint", style = "fade" })
 hl.animation({ leaf = "layersOut",  enabled = true, speed = 7,  bezier = "linear",       style = "fade" })
 
-hl.animation({ leaf = "workspaces",    enabled = false, speed = 2, bezier = "easeOutQuint", style = "fade" })
+hl.animation({ leaf = "workspaces",    enabled = true, speed = 2, bezier = "easeOutQuint", style = "slide" })
 -- hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 3, bezier = "easeOutQuint", style = "slide" })
 -- hl.animation({ leaf = "workspacesOut", enabled = true, speed = 3, bezier = "easeOutQuint", style = "slide" })
 
@@ -310,6 +312,20 @@ hl.bind("SUPER + SHIFT + mouse:272", hl.dsp.window.resize(), { mouse = true })
 --------------------------
 
 -- See https://wiki.hypr.land/Configuring/Basics/Window-Rules/
+
+-- Start every new window floating; SUPER + X can switch a whole workspace
+-- back to tiled mode.
+hl.window_rule({
+  name  = "default-floating",
+  match = { class = ".*" },
+  float = true,
+})
+
+hl.window_rule({
+  name           = "firefox-persistent-size",
+  match          = { class = "^firefox$" },
+  persistent_size = true,
+})
 
 -- Fix dragging issues with XWayland
 hl.window_rule({
@@ -646,12 +662,15 @@ local function close_in_expose()
   place_windows(wins)
 end
 
-hl.bind("SUPER + D", function()
+local function toggle_expose()
   local ok, err = pcall(function()
     if expose.active then exit_expose() else enter_expose() end
   end)
   if not ok then dbg("error: " .. err) end
-end)
+end
+
+hl.bind("SUPER + D", toggle_expose)
+hl.bind("SUPER + SUPER_L", toggle_expose, { release = true })
 
 -- SUPER+J/K: when the focused window is floating, cycle focus through windows
 -- and raise each one to the front (no expose). Tiled windows keep the normal
@@ -681,13 +700,12 @@ end
 hl.bind("SUPER + J", function() switcher_step(1)  end)
 hl.bind("SUPER + K", function() switcher_step(-1) end)
 
-hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("/home/veer/code/quarry/src-tauri/target/release/quarry-toggle"), { release = true })
-
 hl.define_submap("expose", function()
   hl.bind("escape", exit_expose)
   hl.bind("return", exit_expose)
   hl.bind("Tab", hl.dsp.window.cycle_next())
   hl.bind("SUPER + D", exit_expose)
+  hl.bind("SUPER + SUPER_L", exit_expose, { release = true })
   hl.bind("SUPER + Q", function()
     local ok, err = pcall(close_in_expose)
     if not ok then dbg("error: " .. err) end
@@ -769,7 +787,7 @@ end)
 ------------------------------------------------
 
 local ws_mode  = {}   -- [workspace id] = "float" | "tile"
-local ws_rules = {}   -- [workspace id] = window rule
+local ws_rules = {}   -- [workspace id] = { float = rule, tile = rule }
 
 local function ws_selector(ws)
   if ws.name and tostring(ws.id) ~= ws.name then
@@ -778,19 +796,29 @@ local function ws_selector(ws)
   return tostring(ws.id)
 end
 
--- per-workspace rules so windows opened later follow the mode
+-- Per-workspace rules override the default for windows opened later.
 local function set_ws_rule(ws, mode)
-  local r = ws_rules[ws.id]
-  if not r then
-    r = hl.window_rule({
-      name  = "wsmode-float-" .. ws.id,
-      match = { workspace = ws_selector(ws) },
-      float = true,
-    })
-    r:set_enabled(false)
-    ws_rules[ws.id] = r
+  local rules = ws_rules[ws.id]
+  if not rules then
+    local match = { workspace = ws_selector(ws) }
+    rules = {
+      float = hl.window_rule({
+        name  = "wsmode-float-" .. ws.id,
+        match = match,
+        float = true,
+      }),
+      tile = hl.window_rule({
+        name  = "wsmode-tile-" .. ws.id,
+        match = match,
+        tile  = true,
+      }),
+    }
+    rules.float:set_enabled(false)
+    rules.tile:set_enabled(false)
+    ws_rules[ws.id] = rules
   end
-  r:set_enabled(mode == "float")
+  rules.float:set_enabled(mode == "float")
+  rules.tile:set_enabled(mode == "tile")
 end
 
 local function toggle_ws_float()
@@ -848,7 +876,7 @@ end)
 ---- SUPER + F: pseudo-maximize when floating ----
 ------------------------------------------------
 
-local PMAX_MARGIN = 12      -- gap left around the window, in logical px
+local PMAX_MARGIN = GAPS_IN -- keep floating maximize aligned with the tiled gap
 local pmax_saved  = {}      -- [window key] = { x, y, w, h }
 
 local function win_key(w)

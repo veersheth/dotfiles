@@ -29,7 +29,7 @@ BarPopup {
     readonly property int maxYear: 2100
 
     contentHeight: mainCol.implicitHeight + 44
-    contentWidth:  mainCol.implicitWidth + 44 + 44
+    contentWidth:  mainCol.implicitWidth + 44
 
     onShownChanged: if (shown) goToday()
 
@@ -278,14 +278,33 @@ BarPopup {
             color: Qt.alpha(Theme.foreground, 0.18)
         }
 
-        RotationAnimator {
+        // Start only on playback. Pausing an already running animation preserves
+        // its angle; opening the popup while paused never starts it.
+        property bool _animationReady: false
+        function syncRotation() {
+            if (!_animationReady) return;
+            if (active && spinning) {
+                if (spin.paused) spin.resume();
+                else if (!spin.running) spin.start();
+            } else if (spin.running && !spin.paused) {
+                spin.pause();
+            }
+        }
+        onActiveChanged: syncRotation()
+        onSpinningChanged: syncRotation()
+
+        NumberAnimation {
+            id: spin
             target: disc
+            property: "rotation"
             from: 0
             to: 360
             duration: vinyl.rpmMs
             loops: Animation.Infinite
-            running: vinyl.active
-            paused: !vinyl.spinning
+            Component.onCompleted: {
+                vinyl._animationReady = true;
+                vinyl.syncRotation();
+            }
         }
     }
 
@@ -485,7 +504,7 @@ BarPopup {
         AnalogClock {
             implicitWidth:  220
             implicitHeight: 220
-            Layout.alignment: Qt.AlignVCenter
+            Layout.alignment: Qt.AlignHCenter
             running: root.shown
         }
 
@@ -493,6 +512,7 @@ BarPopup {
 
     ColumnLayout {
         id: rightCol
+        visible: mediaHost.player !== null
         // anchors.centerIn: parent
         spacing: 40
         // ── Spinning vinyl (same size as clock) ───────────────────────

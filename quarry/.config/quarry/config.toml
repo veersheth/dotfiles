@@ -1,9 +1,13 @@
 timer_sound = "beep"
+setup_completed = true
+clipboard_tracking_enabled = true
+file_indexing_enabled = true
 
 [triggers]
 camera = "^cam$"
 bookmarks = '^bk\s+(.*)$'
 files = '^f\s+(.*)$'
+fonts = '^font(?:\s+(.*))?$'
 clipboard = '^cp\s+(.*)$'
 emojis = '^em\s+(.*)$'
 shell = '^!\s+(.*)$'
@@ -15,18 +19,17 @@ color_picker = "^color$"
 apps = '^app\s+(.*)$'
 url = '^(https?://\S+|(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(?:[:/]\S*)?)$'
 currency = '^fx\s+(.*)$'
-note = "^note$"
 ai = '^ \s*(.*)$'
 time = '^time\s(.*)$'
-settings = '^set\s*(.*)$'
-timer = '^timer (.*)$'
-screenshots = '^ss (.*)$'
-shortcuts = '^q (.*)$'
-scripts = '^s (.*)$'
+timer = "^timer (.*)$"
+screenshots = "^ss (.*)$"
+shortcuts = "^q (.*)$"
+scripts = "^s (.*)$"
+qr_code = '^qr\s+(.*)$'
 
 [theme]
 background_color = "rgba(26, 26, 26, 1.00)"
-background_opacity = 1
+background_opacity = 1.0
 font_size = 14
 font_color = "rgba(255, 255, 255, 1)"
 font_family = "Inter"
@@ -37,6 +40,19 @@ border_thickness = 0
 item_border_radius = 16
 active_bg_color = "rgba(50, 50, 50, 1)"
 active_border_color = "rgba(255,255,255,0.1)"
+surface = "rgba(5, 5, 5, 0.0)"
+surface_subtle = "rgba(255, 255, 255, 0.08)"
+surface_hover = "rgba(255, 255, 255, 0.2)"
+overlay = "rgba(30, 30, 30, 0.8)"
+border_subtle = "rgba(60, 60, 60, 0.3)"
+border_medium = "rgba(255, 255, 255, 0.15)"
+border_strong = "rgba(255, 255, 255, 0.26)"
+border_dark = "rgb(51, 51, 51)"
+divider = "rgba(80, 80, 80, 0.7)"
+divider_dark = "rgb(46, 46, 46)"
+code_bg = "rgb(24, 24, 24)"
+thumb_bg = "rgb(17, 17, 17)"
+glow = "rgba(50, 50, 50, 1)"
 
 [window]
 width = 850

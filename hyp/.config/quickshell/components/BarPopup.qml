@@ -38,6 +38,16 @@ PanelWindow {
     // Unified scale driven by animations so we only need one NumberAnimation.
     property real _scale: 0
 
+    // Popups can change size when device lists, confirmation views, or
+    // expandable controls change. Animate the layer surface and clipped card
+    // together so those layout changes read as a short slide instead of a jump.
+    Behavior on contentWidth {
+        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+    }
+    Behavior on contentHeight {
+        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+    }
+
     function toggle() {
         if (shown) { shown = false; return; }
         if (Date.now() - dismissedAt < 150) return;

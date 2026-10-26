@@ -134,6 +134,7 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       # GUI 
+      chatgpt
       vicinae
       tigervnc
       gnome-power-manager
@@ -164,7 +165,7 @@
       imagemagick
       luajitPackages.magick
       sshfs
-      typst texliveFull
+      typst
       pnpm nodejs_24
       docker_25
       btop powertop

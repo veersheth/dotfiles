@@ -40,7 +40,7 @@ require("plugins.ccc")
 require("plugins.git")
 -- require("plugins.image")
 require("plugins.markdown")
--- require("plugins.obsidian")
+require("plugins.obsidian")
 -- require("plugins.lualine")
 
 -- require("plugins.bufferline")

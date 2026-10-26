@@ -5,8 +5,10 @@ GAMMA=2.0
 
 direction="$1"
 
-current=$(brightnessctl get)
-max=$(brightnessctl max)
+# Limit brightnessctl to the panel backlight. Without this, it also probes
+# unrelated LED devices (including ChromeOS devices that may return EOF).
+current=$(brightnessctl -q -c backlight get)
+max=$(brightnessctl -q -c backlight max)
 
 # Convert current hardware brightness to perceptual percentage
 perceptual=$(awk \
@@ -42,5 +44,5 @@ hardware=$(awk \
         printf "%.0f", 100 * (perceptual / 100) ^ gamma
     }')
 
-brightnessctl set "${hardware}%"
+brightnessctl -q -c backlight set "${hardware}%"
 qs ipc call osd brightness
