@@ -42,23 +42,6 @@ Variants {
             height: Theme.barHeight
             color: BarState.transparent ? "transparent" : Theme.background
 
-            // // Hot corner — hover the leftmost corner square to open the scratchpad.
-            // Item {
-            //     anchors { left: parent.left; top: parent.top }
-            //     width: 20; height: parent.height
-            //     z: 10
-            //
-            //     HoverHandler {
-            //         id: hotCornerHover
-            //         onHoveredChanged: if (hovered) hotCornerTimer.restart(); else hotCornerTimer.stop()
-            //     }
-            //     Timer {
-            //         id: hotCornerTimer
-            //         interval: 500   // must hover intentionally for half a second
-            //         onTriggered: if (hotCornerHover.hovered && !scratchpad.shown) scratchpad.shown = true
-            //     }
-            // }
-
             // Empty bar space → context menu (right-click).
             // First child, so every module's own MouseArea stays on top.
             MouseArea {
@@ -73,60 +56,11 @@ Variants {
                 }
             }
 
-            // Drag a file over the bar → scratchpad auto-opens so you can drop
-            // into it. Focus-grab is suppressed while dragging (the drag source
-            // app keeps focus), then restored via a short timer after the drag
-            // leaves the bar so normal click-to-dismiss still works.
-            DropArea {
-                anchors.fill: parent
-
-                onEntered: {
-                    scratchpad.grabFocus         = false
-                    scratchpad.dismissOnFocusLoss = false
-                    if (!scratchpad.shown) scratchpad.shown = true
-                }
-
-                // Give enough time for the pointer to reach the scratchpad popup.
-                onExited:  dragRestoreTimer.restart()
-
-                // File dropped directly on the bar (not on the popup) — forward it.
-                onDropped: drop => {
-                    dragRestoreTimer.stop()
-                    if (drop.hasUrls) {
-                        for (const u of drop.urls) scratchpad.addUrl(u.toString())
-                        drop.accept(Qt.CopyAction)
-                    }
-                    dragRestoreTimer.triggered()
-                }
-
-                Timer {
-                    id: dragRestoreTimer
-                    interval: 2000
-                    onTriggered: {
-                        scratchpad.grabFocus          = true
-                        scratchpad.dismissOnFocusLoss = true
-                    }
-                }
-            }
-
-            // invisible nub the scratchpad morphs out of — left-aligned with hot corner
-            Item {
-                id: scratchAnchor
-                anchors { top: parent.top; left: parent.left }
-                width: 20
-                height: parent.height
-            }
-
             // moves to click x before the menu opens
             Item {
                 id: barMenuAnchor
                 anchors.top: parent.top
                 width: 1; height: parent.height
-            }
-
-            ScratchpadPopup {
-                id: scratchpad
-                anchorItem: scratchAnchor
             }
 
             BarPopup {
@@ -207,11 +141,16 @@ Variants {
                   anchors { left: parent.left; leftMargin: 14; top: parent.top; bottom: parent.bottom }
                   spacing: Theme.moduleSpacing
 
-                  Workspaces { foreground: contrast.foreground; monitorName: root.screen?.name ?? ""; Layout.fillHeight: true }
+                  Workspaces { id: workspaces; foreground: contrast.foreground; monitorName: root.screen?.name ?? ""; Layout.fillHeight: true }
 
                   // Media { Layout.fillHeight: true }
 
-                  // ActiveWindow { Layout.fillHeight: true }
+                  ActiveWindow {
+                      foreground: contrast.foreground
+                      maximumWidth: Math.max(0, Math.min(320, barContents.width - workspaces.implicitWidth - rightModules.implicitWidth - 60))
+                      Layout.leftMargin: 8
+                      Layout.fillHeight: true
+                  }
               }
 
               // CENTER
@@ -224,27 +163,10 @@ Variants {
               }
 
               // RIGHT
-              RowLayout {
+              StatusModules {
+                  id: rightModules
                   anchors { right: parent.right; rightMargin: 14; top: parent.top; bottom: parent.bottom }
-                  spacing: Theme.moduleSpacing
-
-                  Tray { foreground: contrast.foreground; Layout.fillHeight: true; Layout.alignment: Qt.AlignVCenter }
-
-                  Caffeine { foreground: contrast.foreground; Layout.fillHeight: true }
-
-                  NotificationBell { foreground: contrast.foreground; Layout.fillHeight: true }
-
-                  WifiIndicator { foreground: contrast.foreground; Layout.fillHeight: true }
-
-                  BluetoothIndicator { foreground: contrast.foreground; Layout.fillHeight: true }
-
-                  Clock { foreground: contrast.foreground; Layout.fillHeight: true }
-
-                  Volume { foreground: contrast.foreground; Layout.fillHeight: true }
-                  
-                  Battery { foreground: contrast.foreground; Layout.fillHeight: true }
-
-                  Power { foreground: contrast.foreground; Layout.fillHeight: true }
+                  foreground: contrast.foreground
               }
             }
         }

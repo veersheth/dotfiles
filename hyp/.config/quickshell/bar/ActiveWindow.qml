@@ -1,45 +1,35 @@
+import Quickshell
 import Quickshell.Wayland
 import QtQuick
-import QtQuick.Layouts
 import qs.common
 
 Item {
     id: root
     readonly property var active: ToplevelManager.activeToplevel
-    readonly property string appClass: active?.appId ?? ""
-    readonly property string displayName: {
-        if (appClass.length === 0) return ""
-        const parts = appClass.split(".")
-        const raw = parts.length > 1 ? parts[parts.length - 1] : appClass
+    property color foreground: Theme.foreground
+    property real maximumWidth: 320
+    readonly property string appId: active?.appId ?? ""
+    readonly property string appName: {
+        if (!appId) return ""
+        const entry = DesktopEntries.heuristicLookup(appId)
+        if (entry?.name) return entry.name
+        const raw = appId.split(".").pop()
         return raw.charAt(0).toUpperCase() + raw.slice(1)
     }
 
-    visible: appClass !== ""
-    implicitWidth: iconText.implicitWidth + 6 + Math.min(nameText.implicitWidth, 240) + 20
+    visible: appName !== "" && maximumWidth > 0
+    implicitWidth: Math.min(nameText.implicitWidth, maximumWidth)
     implicitHeight: Theme.pillHeight
-
-    Rectangle {
-        anchors.fill: parent; radius: height / 2
-        color: Theme.hover
-        opacity: awMouse.containsMouse ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 100 } }
-    }
 
     Text {
         id: nameText
-        anchors { left: iconText.right; verticalCenter: parent.verticalCenter }
-        width: Math.min(implicitWidth, 240)
+        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
         elide: Text.ElideRight
-        text: displayName
+        text: root.appName
+        textFormat: Text.PlainText
         font.family: Theme.font
         font.pixelSize: Theme.fontSize
-        font.weight: Font.Medium
-        color: Qt.alpha(Theme.foreground, 0.4)
-    }
-
-    MouseArea {
-        id: awMouse
-        anchors.fill: parent
-        hoverEnabled: true
+        font.weight: Font.Normal
+        color: Qt.alpha(root.foreground, 0.4)
     }
 }

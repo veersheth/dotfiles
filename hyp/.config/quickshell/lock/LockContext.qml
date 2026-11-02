@@ -17,7 +17,7 @@ Scope {
     property bool   succeeded: false
     property string currentText: ""
 
-    // brief green success beat before the lock actually releases
+    // Let the prompt and bottom scrim finish their unlock fade before releasing the lock.
     function succeed() {
         status = "";
         authenticating = false;
@@ -27,7 +27,7 @@ Scope {
 
     Timer {
         id: successDelay
-        interval: 680   // covers the padlock bounce
+        interval: 400
         onTriggered: root.unlocked()
     }
 
@@ -84,7 +84,7 @@ Scope {
             } else {
                 root.authenticating = false;
                 root.currentText = "";
-                root.status = "BITCH";
+                root.status = "Incorrect password";
                 root.failed();
             }
         }

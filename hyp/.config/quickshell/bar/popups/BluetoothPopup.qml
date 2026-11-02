@@ -185,8 +185,10 @@ BarPopup {
 
         // Scrollable device list
         Flickable {
+            id: devicesList
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.max(60, Math.min(devContent.implicitHeight + 8, 300))
+            property real targetViewportHeight: Math.max(60, Math.min(devContent.implicitHeight + 8, 300))
+            Layout.preferredHeight: targetViewportHeight
             contentHeight: devContent.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds

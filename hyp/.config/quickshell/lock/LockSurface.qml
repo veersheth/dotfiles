@@ -1,270 +1,145 @@
 import Quickshell
-import Quickshell.Services.UPower
-import Quickshell.Services.Mpris
 import QtQuick
-import QtQuick.Effects
 import qs.common
-import qs.components
 import qs.wallpaper
 
 Item {
     id: root
     required property var ctx
+    opacity: 0
 
-    // ── Background ────────────────────────────────────────────────────────
-    // Image mode: blurred wallpaper + dark overlay for readability
-    Image {
-        id: wall
-        anchors.fill: parent
-        source: WallpaperService.imagePath.length > 0 ? "file://" + WallpaperService.imagePath : ""
-        fillMode: Image.PreserveAspectCrop
-        visible: false
-        asynchronous: true
-    }
-    MultiEffect {
-        anchors.fill: parent
-        source: wall
-        blurEnabled: true
-        blurMax: 64
-        blur: 1.0
-        visible: !WallpaperService.isColor
-    }
-    // Color mode: solid chosen color; image mode: black at 0.5 opacity darkens the blur
+    // Use the exact source and crop mode of the desktop wallpaper.
     Rectangle {
         anchors.fill: parent
         color: WallpaperService.isColor ? WallpaperService.colorValue : "black"
-        opacity: WallpaperService.isColor ? 1 : 0.5
+    }
+    Image {
+        anchors.fill: parent
+        visible: !WallpaperService.isColor
+        source: !WallpaperService.isColor && WallpaperService.imagePath.length > 0
+            ? "file://" + WallpaperService.imagePath : ""
+        fillMode: Image.PreserveAspectCrop
+        smooth: true
+        asynchronous: true
     }
 
-    // ── Fade-in ───────────────────────────────────────────────────────────
-    opacity: 0
-    Component.onCompleted: {
-        opacity = 1
-        input.forceActiveFocus()
-        ctx.begin()
-    }
-    Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
-
-    // ── Battery (top-right) ───────────────────────────────────────────────
-    Row {
-        anchors { top: parent.top; right: parent.right; margins: 24 }
-        spacing: 6
-        visible: UPower.displayDevice !== null && UPower.displayDevice.isLaptopBattery
-
-        readonly property var   bat:      UPower.displayDevice
-        readonly property real  pct:      (bat?.percentage ?? 0) * 100
-        readonly property bool  charging: bat !== null && (
-            bat.state === UPowerDeviceState.Charging ||
-            bat.state === UPowerDeviceState.FullyCharged ||
-            bat.state === UPowerDeviceState.PendingCharge)
-
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: {
-                if (parent.charging) return "󰂄"
-                const icons = ["󰁺","󰁻","󰁼","󰁽","󰁾","󰁿","󰂀","󰂁","󰂂","󰁹"]
-                return icons[Math.min(9, Math.max(0, Math.floor(parent.pct / 10)))]
-            }
-            font.family: Theme.nerdFont; font.pixelSize: 15
-            color: Qt.rgba(1, 1, 1, 0.65)
-        }
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: `${Math.round(parent.pct)}%`
-            font.family: Theme.font; font.pixelSize: 13; font.weight: Font.Medium
-            color: Qt.rgba(1, 1, 1, 0.65)
+    // Keep the prompt legible over bright wallpapers without hiding the image.
+    Rectangle {
+        id: promptScrim
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        width: parent.width
+        height: Math.min(parent.height, 245)
+        opacity: 0
+        gradient: Gradient {
+            GradientStop { position: 0; color: "#00000000" }
+            GradientStop { position: 1; color: "#b8000000" }
         }
     }
 
-    // ── Media card ────────────────────────────────────────────────────────
-    Item {
-        id: mediaHost
-
-        property var _lastPlayer: null
-        readonly property var player: {
-            const players = Mpris.players.values
-            if (players.length === 0) return null
-            for (const p of players)
-                if (p.playbackState === MprisPlaybackState.Playing) {
-                    mediaHost._lastPlayer = p; return p
-                }
-            if (mediaHost._lastPlayer !== null)
-                for (const p of players)
-                    if (p === mediaHost._lastPlayer) return p
-            mediaHost._lastPlayer = players[0]
-            return players[0]
-        }
-
-        anchors {
-            right: parent.right
-            rightMargin: parent.width * 0.07
-            verticalCenter: parent.verticalCenter
-        }
-        width: 300
-        height: mediaCard.implicitHeight
-
-        opacity: player !== null ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 400; easing.type: Easing.InOutCubic } }
-        visible: opacity > 0
-
-        Rectangle {
-            anchors.fill: parent
-            radius: Theme.popupRadius
-            color: Qt.rgba(0, 0, 0, 0.35)
-            border.width: Theme.borderWidth
-            border.color: Theme.border
-        }
-
-        MediaCard {
-            id: mediaCard
-            anchors { left: parent.left; right: parent.right; top: parent.top }
-            player: mediaHost.player
-        }
-    }
-
-    // ── Center column ─────────────────────────────────────────────────────
-    SystemClock { id: clock; precision: SystemClock.Minutes }
-
-    // Snaps to real system time on wake so a frozen QTimer doesn't
-    // leave the lock screen clock stuck after sleep.
-    property date _displayDate: clock.date
-    Connections {
-        target: clock
-        function onDateChanged() { root._displayDate = clock.date }
-    }
-    Connections {
-        target: SleepWatcher
-        function onWoke() { root._displayDate = new Date() }
-    }
+    LockBar {}
 
     Column {
-        anchors.centerIn: parent
-        spacing: 0
+        id: prompt
+        anchors.left: parent.left
+        anchors.leftMargin: Math.min(48, Math.max(24, root.width * 0.04))
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Math.min(48, Math.max(24, root.height * 0.05))
+        spacing: 13
+        width: Math.max(1, root.width - anchors.leftMargin - 24)
+        opacity: 0
+        transform: Translate { id: promptOffset; y: 14 }
 
-        // Time
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 8
-
-            Text {
-                id: timeText
-                text: Qt.formatDateTime(root._displayDate, "hh:mm AP").split(" ")[0]
-                font.family: Theme.font
-                font.pixelSize: 100
-                font.weight: Font.Bold
-                color: "white"
-            }
-            Text {
-                text: Qt.formatDateTime(root._displayDate, "AP")
-                font.family: Theme.font
-                font.pixelSize: 20
-                font.weight: Font.Light
-                color: Qt.rgba(1, 1, 1, 0.5)
-                anchors.bottom: timeText.bottom
-                bottomPadding: 14
-            }
-        }
-
-        // Date
         Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: Qt.formatDateTime(root._displayDate, "dddd, MMMM d")
-            font.family: Theme.font; font.pixelSize: 16
-            color: Qt.rgba(1, 1, 1, 0.55)
+            text: Quickshell.env("USER") || "User"
+            font.family: Theme.font
+            font.pixelSize: 21
+            font.weight: Font.DemiBold
+            color: "white"
         }
 
-        Item { width: 1; height: 52 }
+        Rectangle {
+            width: Math.min(340, parent.width)
+            height: 44
+            radius: 11
+            color: "#aa101010"
+            border.width: 1
+            border.color: root.ctx.status === "Incorrect password" ? Theme.red
+                : input.activeFocus ? Theme.foreground : Theme.border
 
-        // Input + fingerprint
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 12
-
-            Rectangle {
-                id: inputBox
-                width: 260; height: 42
-                radius: height / 2
-                color: Qt.rgba(1, 1, 1, 0.1)
-                border.width: 1
-                border.color: root.ctx.status === "Incorrect password"
-                    ? Qt.rgba(1, 0.3, 0.3, 0.75)
-                    : Qt.rgba(1, 1, 1, 0.22)
-                Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                transform: Translate { id: shakeT }
-
-                TextInput {
-                    id: input
-                    anchors { fill: parent; leftMargin: 20; rightMargin: 20 }
-                    verticalAlignment: TextInput.AlignVCenter
-                    echoMode: TextInput.Password
-                    passwordCharacter: "●"
-                    font.family: Theme.font; font.pixelSize: Theme.fontSize
-                    color: "white"
-                    enabled: !root.ctx.authenticating && !root.ctx.succeeded
-                    clip: true
-                    onTextChanged: root.ctx.currentText = text
-                    onAccepted:    root.ctx.submit()
-
-                    Connections {
-                        target: root.ctx
-                        function onCurrentTextChanged() {
-                            if (root.ctx.currentText === "") input.text = ""
-                        }
-                        function onFailed() { shake.restart() }
-                    }
-                }
-
-                SequentialAnimation {
-                    id: shake
-                    NumberAnimation { target: shakeT; property: "x"; to: -10; duration: 40 }
-                    NumberAnimation { target: shakeT; property: "x"; to:  10; duration: 40 }
-                    NumberAnimation { target: shakeT; property: "x"; to:  -6; duration: 40 }
-                    NumberAnimation { target: shakeT; property: "x"; to:   4; duration: 40 }
-                    NumberAnimation { target: shakeT; property: "x"; to:   0; duration: 40 }
-                }
+            Text {
+                anchors.left: parent.left
+                anchors.leftMargin: 15
+                anchors.verticalCenter: parent.verticalCenter
+                visible: input.text.length === 0
+                text: "Password"
+                font.family: Theme.font
+                font.pixelSize: Theme.fontSize
+                color: Qt.alpha(Theme.foreground, 0.55)
             }
 
-            FingerprintIcon {
-                id: fpIcon
-                width: 32; height: 32
-                anchors.verticalCenter: parent.verticalCenter
-                scanning:  !root.ctx.authenticating && !root.ctx.succeeded
-                iconColor: root.ctx.status === "Incorrect password"
-                    ? Theme.red : Qt.rgba(1, 1, 1, 0.85)
+            TextInput {
+                id: input
+                anchors.fill: parent
+                anchors.leftMargin: 15
+                anchors.rightMargin: 15
+                verticalAlignment: TextInput.AlignVCenter
+                echoMode: TextInput.Password
+                passwordCharacter: "●"
+                font.family: Theme.font
+                font.pixelSize: Theme.fontSize
+                color: Theme.foreground
+                clip: true
+                enabled: !root.ctx.authenticating && !root.ctx.succeeded
+                onTextChanged: root.ctx.currentText = text
+                onAccepted: root.ctx.submit()
+                Component.onCompleted: forceActiveFocus()
+                Accessible.name: "Password"
 
                 Connections {
                     target: root.ctx
-                    function onSucceededChanged() {
-                        if (root.ctx.succeeded) {
-                            fpIcon.revertAnim.stop()
-                            fpIcon.unlockAnim.restart()
-                        } else {
-                            fpIcon.unlockAnim.stop()
-                            fpIcon.morph = 0
-                            fpIcon.scale = 1
-                        }
+                    function onCurrentTextChanged() {
+                        if (root.ctx.currentText === "") input.text = ""
                     }
-                    function onFailed() {
-                        fpIcon.unlockAnim.stop()
-                        fpIcon.revertAnim.restart()
-                        shake.restart()
-                    }
+                    function onFailed() { input.forceActiveFocus() }
                 }
             }
         }
+
+        Text {
+            width: parent.width
+            wrapMode: Text.WordWrap
+            text: root.ctx.authenticating ? "Checking password…"
+                : root.ctx.status !== "" ? root.ctx.status
+                : "Touch the fingerprint reader or enter your password"
+            font.family: Theme.font
+            font.pixelSize: Theme.fontSize - 1
+            color: root.ctx.status === "Incorrect password" ? "#ff8b8b"
+                : Qt.alpha(Theme.foreground, 0.72)
+        }
     }
 
-    // ── Status message ────────────────────────────────────────────────────
-    Text {
-        anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter; bottomMargin: 40 }
-        text: root.ctx.authenticating ? "Authenticating…"
-            : root.ctx.status !== ""   ? root.ctx.status
-            : ""
-        font.family: Theme.font; font.pixelSize: Theme.fontSize - 1
-        color: root.ctx.status === "Incorrect password"
-            ? Qt.rgba(1, 0.4, 0.4, 0.85)
-            : Qt.rgba(1, 1, 1, 0.4)
-        Behavior on color { ColorAnimation { duration: 150 } }
+    ParallelAnimation {
+        id: enterAnimation
+        running: true
+        NumberAnimation { target: prompt; property: "opacity"; from: 0; to: 1; duration: 360; easing.type: Easing.OutCubic }
+        NumberAnimation { target: promptOffset; property: "y"; from: 14; to: 0; duration: 420; easing.type: Easing.OutCubic }
+        NumberAnimation { target: promptScrim; property: "opacity"; from: 0; to: 1; duration: 420; easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "opacity"; from: 0; to: 1; duration: 440; easing.type: Easing.OutCubic }
+    }
+
+    ParallelAnimation {
+        id: exitAnimation
+        NumberAnimation { target: prompt; property: "opacity"; to: 0; duration: 220; easing.type: Easing.InCubic }
+        NumberAnimation { target: promptOffset; property: "y"; to: 10; duration: 260; easing.type: Easing.InCubic }
+        NumberAnimation { target: promptScrim; property: "opacity"; to: 0; duration: 260; easing.type: Easing.InCubic }
+        NumberAnimation { target: root; property: "opacity"; to: 0; duration: 360; easing.type: Easing.InCubic }
+    }
+
+    Connections {
+        target: root.ctx
+        function onSucceededChanged() {
+            if (root.ctx.succeeded) exitAnimation.start()
+        }
     }
 }

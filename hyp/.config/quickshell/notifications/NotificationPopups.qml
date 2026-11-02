@@ -13,7 +13,10 @@ Scope {
         target: NotificationService
         function onPopupNotification(notif) {
             // Suppress popups while any client is fullscreen on the focused monitor
-            if (Hyprland.focusedClient?.fullscreen) return
+            if (Compositor.mango
+                ? Mango.clients.some(c => c.is_focused && c.is_fullscreen)
+                : Compositor.hyprland ? Hyprland.focusedClient?.fullscreen
+                : ToplevelManager.activeToplevel?.fullscreen) return
             cardComponent.createObject(stack, { notif });
         }
     }

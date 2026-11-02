@@ -79,7 +79,7 @@ PanelWindow {
     anchors.top: true; anchors.bottom: true; anchors.left: true; anchors.right: true
     exclusiveZone: -1
     color: "transparent"
-    visible: false
+    visible: shown
 
     WlrLayershell.namespace:     "quickshell:media-fullscreen"
     WlrLayershell.layer:         WlrLayer.Top
@@ -87,10 +87,8 @@ PanelWindow {
 
     onShownChanged: {
         if (shown) {
-            overlay.opacity = 0; visible = true
-            enterAnim.restart(); _syncPos(); _fetchLyrics()
+            _syncPos(); _fetchLyrics()
         } else {
-            enterAnim.stop(); exitAnim.restart()
             lrcFetch.running = false
             _fetchedTitle = ""; lyricsLines = []; plainLyrics = ""
             lyricsStatus = ""; currentLineIdx = -1
@@ -98,13 +96,6 @@ PanelWindow {
     }
 
     Shortcut { sequence: "Escape"; enabled: root.shown; onActivated: root.close() }
-
-    NumberAnimation    { id: enterAnim; target: overlay; property: "opacity"; to: 1; duration: 320; easing.type: Easing.OutCubic }
-    SequentialAnimation {
-        id: exitAnim
-        NumberAnimation { target: overlay; property: "opacity"; to: 0; duration: 220; easing.type: Easing.InCubic }
-        ScriptAction    { script: root.visible = false }
-    }
 
     // ── Timers ────────────────────────────────────────────────────────────
     Timer {
@@ -182,7 +173,7 @@ PanelWindow {
     Item {
         id: overlay
         anchors.fill: parent
-        opacity: 0
+        opacity: 1
 
         // ── Very dark background (album art as faint blurred tint) ────────
         Rectangle {

@@ -240,9 +240,11 @@ BarPopup {
 
         // network list
         Flickable {
+            id: networkList
             Layout.fillWidth: true
             Layout.topMargin: 4
-            Layout.preferredHeight: Math.max(60, Math.min(netCol.implicitHeight + 16, 320))
+            property real targetViewportHeight: Math.max(60, Math.min(netCol.implicitHeight + 16, 320))
+            Layout.preferredHeight: targetViewportHeight
             contentHeight: netCol.implicitHeight
             clip: true
             boundsBehavior: Flickable.StopAtBounds

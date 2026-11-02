@@ -13,24 +13,29 @@ Item {
 
     // Snapshot re-evaluates whenever toplevels are added/removed or change workspace.
     // Drives syncModel() so the ListModel stays in sorted order with per-item signals.
-    readonly property var snapshot: Hyprland.toplevels.values
-        .map(t => t.address + ":" + (t.workspace?.id ?? 999))
+    readonly property var snapshot: Compositor.mango
+        ? Mango.clients.map(t => String(t.id) + ":" + (t.tags?.[0] ?? 999) + ":" + t.is_focused)
+        : Hyprland.toplevels.values.map(t => t.address + ":" + (t.workspace?.id ?? 999))
     onSnapshotChanged: syncModel()
 
     ListModel { id: taskModel }
     Component.onCompleted: syncModel()
 
     function syncModel() {
-        const tops = Hyprland.toplevels.values
+        const tops = (Compositor.mango ? Mango.clients : Hyprland.toplevels.values)
             .slice()
-            .sort((a, b) => (a.workspace?.id ?? 999) - (b.workspace?.id ?? 999));
+            .sort((a, b) => Compositor.mango
+                ? (a.tags?.[0] ?? 999) - (b.tags?.[0] ?? 999)
+                : (a.workspace?.id ?? 999) - (b.workspace?.id ?? 999));
+
+        const key = t => Compositor.mango ? String(t.id) : t.address;
 
         for (let i = taskModel.count - 1; i >= 0; i--)
-            if (!tops.some(t => t.address === taskModel.get(i).address))
+            if (!tops.some(t => key(t) === taskModel.get(i).address))
                 taskModel.remove(i);
 
         for (let si = 0; si < tops.length; si++) {
-            const addr = tops[si].address;
+            const addr = key(tops[si]);
             let mi = -1;
             for (let i = 0; i < taskModel.count; i++)
                 if (taskModel.get(i).address === addr) { mi = i; break; }
@@ -97,12 +102,15 @@ Item {
             required property string address
 
             readonly property var toplevel: {
-                const arr = Hyprland.toplevels.values;
-                return arr.find(t => t.address === dlg.address) ?? null;
+                const arr = Compositor.mango ? Mango.clients : Hyprland.toplevels.values;
+                return arr.find(t => (Compositor.mango ? String(t.id) : t.address) === dlg.address) ?? null;
             }
-            readonly property string appId:    dlg.toplevel?.wayland?.appId ?? dlg.toplevel?.lastIpcObject?.class ?? ""
-            readonly property bool   active:   dlg.toplevel?.activated ?? false
-            readonly property bool   minimized: dlg.toplevel?.wayland?.minimized ?? false
+            readonly property string appId: Compositor.mango ? (dlg.toplevel?.appid ?? "")
+                : (dlg.toplevel?.wayland?.appId ?? dlg.toplevel?.lastIpcObject?.class ?? "")
+            readonly property bool active: Compositor.mango ? (dlg.toplevel?.is_focused ?? false)
+                : (dlg.toplevel?.activated ?? false)
+            readonly property bool minimized: Compositor.mango ? (dlg.toplevel?.is_minimized ?? false)
+                : (dlg.toplevel?.wayland?.minimized ?? false)
             readonly property string iconSrc:  Quickshell.iconPath(dlg.appId, true)
 
             width: Theme.barHeight
@@ -146,6 +154,12 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
+                    if (Compositor.mango) {
+                        if (dlg.active) Mango.minimize(Number(dlg.address));
+                        else if (dlg.minimized) Mango.restore(Number(dlg.address));
+                        else Mango.focus(Number(dlg.address));
+                        return;
+                    }
                     if (dlg.active) {
                         dlg.toplevel?.wayland?.setMinimized(true);
                     } else {

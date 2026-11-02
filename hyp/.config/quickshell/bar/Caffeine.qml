@@ -2,12 +2,14 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import qs.common
 import qs.components
 
-// Caffeine toggle. Click → duration picker popup. State persists across
+// Caffeine toggle. Left-click toggles; right-click opens the duration picker.
+// State persists across
 // quickshell reloads via ~/.local/state/quickshell/caffeine.json.
 Item {
     id: root
@@ -18,7 +20,10 @@ Item {
     property bool _autoActive: false   // true when activated by fullscreen detection
 
     // ── Fullscreen auto-toggle ─────────────────────────────────────────
-    readonly property bool fullscreenActive: Hyprland.focusedClient?.fullscreen ?? false
+    readonly property bool fullscreenActive: Compositor.mango
+        ? Mango.clients.some(c => c.is_focused && c.is_fullscreen)
+        : Compositor.hyprland ? (Hyprland.focusedClient?.fullscreen ?? false)
+        : (ToplevelManager.activeToplevel?.fullscreen ?? false)
     onFullscreenActiveChanged: {
         if (fullscreenActive && !root.on) {
             root._autoActive = true
@@ -167,6 +172,7 @@ Item {
     // Replaces BarHitArea so we can intercept drag gestures.
     MouseArea {
         id: hitArea
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         hoverEnabled: true
         anchors.fill: parent
         anchors.topMargin:    -(Theme.barHeight - parent.height) / 2
@@ -180,13 +186,14 @@ Item {
         onExited:  if (!pressed) tip.hide()
 
         onPressed: mouse => {
+            if (mouse.button !== Qt.LeftButton) return
             _pressY = mouseY
             tip.anchorItem = root
             tip.shown = true
         }
 
         onPositionChanged: mouse => {
-            if (!pressed) return
+            if (!(pressedButtons & Qt.LeftButton)) return
             const dy = Math.max(0, mouseY - _pressY)
             if (dy >= 8) {
                 if (!root._dragging) {
@@ -199,7 +206,12 @@ Item {
             }
         }
 
-        onReleased: {
+        onReleased: mouse => {
+            if (mouse.button === Qt.RightButton) {
+                tip.hide()
+                picker.toggle()
+                return
+            }
             if (root._dragging) {
                 const ms = root._dragMs
                 root._dragging = false
@@ -207,8 +219,14 @@ Item {
                 if (ms === 0 || ms >= 5 * 60000) root.activate(ms)
             } else {
                 tip.hide()
-                picker.toggle()
+                if (root.on) root.deactivate()
+                else root.activate(0)
             }
+        }
+
+        onCanceled: {
+            root._dragging = false
+            tip.hide()
         }
     }
 

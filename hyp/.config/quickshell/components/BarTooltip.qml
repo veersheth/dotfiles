@@ -14,16 +14,6 @@ PanelWindow {
     property Item anchorItem: null
     property bool shown: false
 
-    // Scale origin: anchor centre projected onto the card (same logic as BarPopup).
-    readonly property real _originX: {
-        if (!anchorItem || !screen) return contentWidth / 2;
-        const ax = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x - screen.x;
-        return Math.max(0, Math.min(contentWidth, Math.round(ax) - WlrLayershell.margins.left));
-    }
-    readonly property real _originY: BarState.barBottom ? contentHeight : 0
-
-    property real _scale: 0
-
     function show(item) {
         anchorItem = item;
         if (shown || visible) shown = true;
@@ -42,7 +32,7 @@ PanelWindow {
     anchors.left: true
     exclusiveZone: -1
     color: "transparent"
-    visible: false
+    visible: shown
     mask: Region {}
 
     WlrLayershell.namespace: "quickshell:popup"
@@ -60,17 +50,6 @@ PanelWindow {
     implicitWidth:  contentWidth
     implicitHeight: contentHeight
 
-    onShownChanged: {
-        if (shown) {
-            root._scale = 0
-            visible = true
-            enterAnim.restart()
-        } else {
-            enterAnim.stop()
-            exitAnim.restart()
-        }
-    }
-
     Rectangle {
         id: card
         anchors.fill: parent
@@ -80,37 +59,10 @@ PanelWindow {
         border.width: Theme.borderWidth
         clip: true
 
-        transform: Scale {
-            xScale:   root._scale
-            yScale:   root._scale
-            origin.x: root._originX
-            origin.y: root._originY
-        }
-
         Item {
             id: contentItem
             anchors.fill: parent
         }
     }
 
-    // ── Enter: spring pop ─────────────────────────────────────────────────
-    NumberAnimation {
-        id: enterAnim
-        target: root; property: "_scale"
-        to: 1.0; duration: 340
-        easing.type: Easing.BezierSpline
-        easing.bezierCurve: [0.34, 1.2, 0.64, 1.0, 1.0, 1.0]
-    }
-
-    // ── Exit: fast collapse ───────────────────────────────────────────────
-    SequentialAnimation {
-        id: exitAnim
-        NumberAnimation {
-            target: root; property: "_scale"
-            to: 0; duration: 160
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.32, 0.0, 0.67, 0.0, 1.0, 1.0]
-        }
-        ScriptAction { script: root.visible = false }
-    }
 }

@@ -176,56 +176,82 @@ BarPopup {
             }
         }
 
-        GridLayout {
-            visible: root.pendingAction === ""
+        Item {
+            id: actionPage
             Layout.fillWidth: true
-            columns: 2
-            rowSpacing: 8
-            columnSpacing: 8
-            ActionTile { id: lockTile; text: "Lock"; glyph: "󰌾"; onClicked: root.choose("lock") }
-            ActionTile { text: "Sleep"; glyph: "󰤄"; onClicked: root.choose("suspend") }
-            ActionTile { text: "Restart"; glyph: "󰜉"; onClicked: root.choose("reboot") }
-            ActionTile { text: "Shut down"; glyph: "󰐥"; tint: Theme.red; onClicked: root.choose("poweroff") }
-        }
+            implicitHeight: root.pendingAction === ""
+                ? mainPage.implicitHeight : confirmPage.implicitHeight
+            height: implicitHeight
+            clip: true
 
-        MenuButton {
-            visible: root.pendingAction === ""
-            text: "Log out"
-            onClicked: root.choose("logout")
-        }
-
-        ColumnLayout {
-            visible: root.pendingAction !== ""
-            Layout.fillWidth: true
-            spacing: 12
-            Text {
-                text: (root.actionNames[root.pendingAction] || "") + "?"
-                font.family: Theme.font
-                font.pixelSize: Theme.fontSize + 2
-                font.weight: Font.DemiBold
-                color: Theme.foreground
-            }
-            Text {
-                Layout.fillWidth: true
-                text: root.explanations[root.pendingAction] || ""
-                wrapMode: Text.WordWrap
-                font.family: Theme.font
-                font.pixelSize: Theme.fontSize
-                color: Qt.alpha(Theme.foreground, 0.65)
-            }
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.topMargin: 4
+            ColumnLayout {
+                id: mainPage
+                x: 0
+                y: root.pendingAction === "" ? 0 : -8
+                width: parent.width
+                height: implicitHeight
                 spacing: 8
-                MenuButton {
-                    id: cancelButton
-                    text: "Cancel"
-                    onClicked: { root.pendingAction = ""; lockTile.forceActiveFocus(); }
+                opacity: root.pendingAction === "" ? 1 : 0
+                enabled: root.pendingAction === ""
+                Accessible.ignored: !enabled
+
+                GridLayout {
+                    Layout.fillWidth: true
+                    columns: 2
+                    rowSpacing: 8
+                    columnSpacing: 8
+                    ActionTile { id: lockTile; text: "Lock"; glyph: "󰌾"; onClicked: root.choose("lock") }
+                    ActionTile { text: "Sleep"; glyph: "󰤄"; onClicked: root.choose("suspend") }
+                    ActionTile { text: "Restart"; glyph: "󰜉"; onClicked: root.choose("reboot") }
+                    ActionTile { text: "Shut down"; glyph: "󰐥"; tint: Theme.red; onClicked: root.choose("poweroff") }
                 }
+
                 MenuButton {
-                    text: root.actionNames[root.pendingAction] || "Confirm"
-                    destructive: true
-                    onClicked: root.execute(root.pendingAction)
+                    text: "Log out"
+                    onClicked: root.choose("logout")
+                }
+            }
+
+            ColumnLayout {
+                id: confirmPage
+                x: 0
+                y: root.pendingAction === "" ? 8 : 0
+                width: parent.width
+                height: implicitHeight
+                spacing: 12
+                opacity: root.pendingAction === "" ? 0 : 1
+                enabled: root.pendingAction !== ""
+                Accessible.ignored: !enabled
+
+                Text {
+                    text: (root.actionNames[root.pendingAction] || "") + "?"
+                    font.family: Theme.font
+                    font.pixelSize: Theme.fontSize + 2
+                    font.weight: Font.DemiBold
+                    color: Theme.foreground
+                }
+                Text {
+                    Layout.fillWidth: true
+                    text: root.explanations[root.pendingAction] || ""
+                    wrapMode: Text.WordWrap
+                    font.family: Theme.font
+                    font.pixelSize: Theme.fontSize
+                    color: Qt.alpha(Theme.foreground, 0.65)
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.topMargin: 4
+                    spacing: 8
+                    MenuButton {
+                        id: cancelButton
+                        text: "Cancel"
+                        onClicked: { root.pendingAction = ""; lockTile.forceActiveFocus(); }
+                    }
+                    MenuButton {
+                        text: root.actionNames[root.pendingAction] || "Confirm"
+                        destructive: true
+                        onClicked: root.execute(root.pendingAction)
+                    }
                 }
             }
         }

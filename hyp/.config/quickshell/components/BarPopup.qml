@@ -16,6 +16,7 @@ PanelWindow {
     property bool shown: false
     property Item anchorItem: null
     property double dismissedAt: 0
+    property bool focusAcquired: false
     property bool grabFocus: true
     property bool dismissOnFocusLoss: true
     // Optional second window (e.g. a context menu) to include in the same
@@ -25,28 +26,6 @@ PanelWindow {
     property bool handleEscape: true
     // Left-align the popup's left edge with the anchor instead of centering.
     property bool alignLeft: false
-
-    // Scale origin X in card-local px — anchor centre projected onto the card.
-    // This makes the popup grow exactly from the button that opened it.
-    readonly property real _originX: {
-        if (!anchorItem || !screen) return contentWidth / 2;
-        const ax = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x - screen.x;
-        return Math.max(0, Math.min(contentWidth, Math.round(ax) - WlrLayershell.margins.left));
-    }
-    readonly property real _originY: BarState.barBottom ? contentHeight : 0
-
-    // Unified scale driven by animations so we only need one NumberAnimation.
-    property real _scale: 0
-
-    // Popups can change size when device lists, confirmation views, or
-    // expandable controls change. Animate the layer surface and clipped card
-    // together so those layout changes read as a short slide instead of a jump.
-    Behavior on contentWidth {
-        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
-    }
-    Behavior on contentHeight {
-        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
-    }
 
     function toggle() {
         if (shown) { shown = false; return; }
@@ -62,6 +41,45 @@ PanelWindow {
     exclusiveZone: -1
     color: "transparent"
     visible: false
+
+    onShownChanged: {
+        if (shown) {
+            exitAnim.stop()
+            if (!visible) card.scale = 0
+            focusAcquired = false
+            visible = true
+            enterAnim.restart()
+        } else {
+            enterAnim.stop()
+            focusCheck.stop()
+            exitAnim.restart()
+        }
+    }
+
+    Connections {
+        target: card.Window.window
+        function onActiveChanged() {
+            if (Compositor.hyprland || !root.shown) return
+            if (card.Window.window?.active) {
+                root.focusAcquired = true
+                focusCheck.stop()
+            } else if (root.focusAcquired) {
+                focusCheck.restart()
+            }
+        }
+    }
+
+    Timer {
+        id: focusCheck
+        interval: 250
+        onTriggered: {
+            if (root.shown && root.focusAcquired && root.grabFocus
+                    && root.dismissOnFocusLoss && !card.Window.window?.active) {
+                root.dismissedAt = Date.now()
+                root.shown = false
+            }
+        }
+    }
 
     WlrLayershell.namespace: "quickshell:popup"
     WlrLayershell.layer: WlrLayer.Top
@@ -83,33 +101,19 @@ PanelWindow {
     }
 
     implicitWidth:  contentWidth  + 2
-    implicitHeight: contentHeight + 2
-
-    onShownChanged: {
-        if (shown) {
-            root._scale = 0
-            visible     = true
-            enterAnim.restart()
-        } else {
-            enterAnim.stop()
-            exitAnim.restart()
-        }
-    }
+    // Keep the Wayland buffer height stable as list rows change. Resizing the
+    // native window requires compositor negotiation and can hitch independently
+    // of QML animations. Only the card paints and accepts input in this surface.
+    implicitHeight: Math.max(1, (screen?.height ?? 1080) - Theme.barHeight - 8)
+    mask: Region { x: card.x; y: card.y; width: card.width; height: card.height }
 
     Rectangle {
         id: card
-        x: 0; y: 0
-        width:  root.contentWidth
+        y: BarState.barBottom ? root.height - height : 0
+        width: root.contentWidth
         height: root.contentHeight
         radius: Theme.popupRadius
-        opacity: 1
-
-        transform: Scale {
-            xScale:   root._scale
-            yScale:   root._scale
-            origin.x: root._originX
-            origin.y: root._originY
-        }
+        transformOrigin: BarState.barBottom ? Item.Bottom : Item.Top
 
         color: Theme.surface
         border.color: Theme.border
@@ -118,7 +122,8 @@ PanelWindow {
 
         Item {
             id: contentItem
-            anchors.fill: parent
+            width: root.contentWidth
+            height: root.contentHeight
             Item {
                 id: paddedContent
                 anchors { fill: parent; margins: root.contentPadding }
@@ -126,26 +131,23 @@ PanelWindow {
         }
     }
 
-    // ── Enter: spring pop — cubic-bezier(0.34, 1.56, 0.64, 1) ───────────
-    // The y > 1 control point gives Apple's characteristic micro-overshoot.
+    // Animate from the card's current scale so interrupted opens and closes
+    // continue smoothly. The Wayland surface and list layout stay fixed.
     NumberAnimation {
         id: enterAnim
-        target: root; property: "_scale"
-        to: 1.0; duration: 340
-        easing.type: Easing.BezierSpline
-        easing.bezierCurve: [0.34, 1.2, 0.64, 1.0, 1.0, 1.0]
+        target: card; property: "scale"
+        to: 1
+        duration: 220
+        easing.type: Easing.OutCubic
     }
 
-    // ── Exit: fast collapse — cubic-bezier(0.32, 0, 0.67, 0) ────────────
-    SequentialAnimation {
+    NumberAnimation {
         id: exitAnim
-        NumberAnimation {
-            target: root; property: "_scale"
-            to: 0; duration: 160
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.32, 0.0, 0.67, 0.0, 1.0, 1.0]
-        }
-        ScriptAction { script: root.visible = false }
+        target: card; property: "scale"
+        to: 0
+        duration: 140
+        easing.type: Easing.InCubic
+        onFinished: if (!root.shown) root.visible = false
     }
 
     Shortcut {
@@ -154,13 +156,16 @@ PanelWindow {
         onActivated: root.close()
     }
 
-    HyprlandFocusGrab {
-        windows: root.extraGrabWindow !== null ? [root, root.extraGrabWindow] : [root]
-        active: root.shown && root.grabFocus
-        onCleared: {
-            if (!root.dismissOnFocusLoss) return
-            root.dismissedAt = Date.now()
-            root.shown = false
+    Loader {
+        active: Compositor.hyprland
+        sourceComponent: HyprlandFocusGrab {
+            windows: root.extraGrabWindow !== null ? [root, root.extraGrabWindow] : [root]
+            active: root.shown && root.grabFocus
+            onCleared: {
+                if (!root.dismissOnFocusLoss) return
+                root.dismissedAt = Date.now()
+                root.shown = false
+            }
         }
     }
 }
