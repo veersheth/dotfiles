@@ -67,7 +67,7 @@ return function(hl)
       inactive_opacity = 1.0,
 
       shadow = {
-        enabled = false,
+        enabled = true,
         color = "rgba(0, 0, 0, 0.25)",
         range = 20,
         render_power = 3,
