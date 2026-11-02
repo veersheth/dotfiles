@@ -42,6 +42,10 @@
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
+
+networking.firewall.allowedTCPPorts = [ 9300 ];
+networking.firewall.allowedUDPPorts = [ 5353 5355 ];
+
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
@@ -134,6 +138,7 @@
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       # GUI 
+      rquickshare packet
       chatgpt
       vicinae
       tigervnc
@@ -146,7 +151,7 @@
       tor-browser
       obsidian
       mpv
-      ghostty kitty alacritty
+      kitty foot
       vscode android-studio
       livecaptions
       obs-studio
@@ -157,8 +162,10 @@
       # onedriver
       # onedrive onedrivegui
 
+      openai-whisper
+
       # CLI
-      marp-cli
+      swift swiftpm
       yarn
       lazygit
       figlet
@@ -171,19 +178,20 @@
       btop powertop
       bun
       uv 
+      pi-coding-agent
       claude-code
 
 
       # # GNOME 
       gnome-tweaks
-      gnomeExtensions.media-controls
+      # gnomeExtensions.media-controls
       gnomeExtensions.rounded-window-corners-reborn
       gnomeExtensions.user-themes
       gnomeExtensions.disable-workspace-animation
       gnomeExtensions.bluetooth-battery-meter 
-      gnomeExtensions.gsconnect 
-      gnomeExtensions.impatience 
-      gnomeExtensions.disable-workspace-animation
+      # gnomeExtensions.gsconnect 
+      # gnomeExtensions.impatience 
+      # gnomeExtensions.disable-workspace-animation
       gnomeExtensions.just-perfection 
       gnomeExtensions.caffeine
       gnomeExtensions.appindicator
@@ -201,12 +209,9 @@
       helvetica-neue-lt-std
       nerd-fonts.jetbrains-mono
       googlesans-code
-
       pkgs.maple-mono.NormalNL-CN
-
-
+      rubik
       nerd-fonts.iosevka
-      
       noto-fonts-color-emoji
     ];
 
@@ -261,8 +266,6 @@
 
     dconf.enable = true;
 
-    # niri.enable = true;
-
     # kdeconnect = {
     #   enable = true;
     #   package = pkgs.kdePackages.kdeconnect-kde;
@@ -273,7 +276,6 @@
       enableAll = true;
       linkFonts = true;
     };
-
   };
 
   # Allow unfree packages
@@ -320,6 +322,7 @@
     # hyprland
     hyprland hypridle hyprpicker hyprsunset hyprshot cliphist satty
     hyprlock 
+
     quickshell qt5.qtgraphicaleffects
 
   ];

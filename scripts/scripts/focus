@@ -39,7 +39,7 @@ stop_focus() {
     while true; do
         input=$(zenity --entry \
             --title="End Focus Mode" \
-            --text="Type <b>end focus mode</b> to continue:") || return 1
+            --text="Type `end focus mode` to continue:") || return 1
         [ "$input" = "end focus mode" ] && break
         zenity --error --title="Try again" --text="Type exactly: end focus mode" --no-wrap
     done

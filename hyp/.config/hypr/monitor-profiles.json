@@ -61,30 +61,30 @@
         "width": 2256,
         "height": 1504,
         "refreshRate": 59.999,
-        "x": 1,
-        "y": 0,
-        "scale": 1.33,
+        "x": 9189,
+        "y": 6578,
+        "scale": 1.3333334,
         "transform": 0,
         "mirror": null,
         "disabled": false,
         "_workspaces": []
       },
       {
-        "name": "DP-11",
+        "name": "DP-2",
         "description": "RGB Systems Inc. dba Extron Electronics ExtronScalerD",
         "width": 1920,
         "height": 1080,
         "refreshRate": 60.0,
-        "x": 1693,
-        "y": 0,
-        "scale": 2.0,
+        "x": 8229,
+        "y": 6964,
+        "scale": 2,
         "transform": 0,
         "mirror": "eDP-1",
         "disabled": false,
         "_workspaces": []
       }
     ],
-    "use_edid": false
+    "use_edid": true
   },
   "BOE 0x0BCA + Kramer Electronics Ltd. International VP-461 0x00000001": {
     "monitors": [

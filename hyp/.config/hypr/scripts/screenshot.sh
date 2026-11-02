@@ -1,33 +1,53 @@
 #!/usr/bin/env bash
 
-FILE="$HOME/Pictures/Screenshots/Screenshot $(date "+%y-%m-%d %H:%M:%S").png"
+set -euo pipefail
 
-case "$1" in
+readonly SCREENSHOT_DIR="$HOME/Pictures/Screenshots"
+readonly TIMESTAMP=$(date '+%y-%m-%d %H:%M:%S')
+readonly SCREENSHOT_FILE="$SCREENSHOT_DIR/Screenshot $TIMESTAMP.png"
+
+usage() {
+    printf 'Usage: %s {region|annotate|output|ocr|lens}\n' "$0" >&2
+}
+
+make_temp_file() {
+    mktemp "/tmp/screenshot-$1-XXXXXX"
+}
+
+mkdir -p "$SCREENSHOT_DIR"
+
+case "${1:-}" in
     region)
-        hyprshot -m region -z --raw | tee "$FILE" | wl-copy --type image/png
+        hyprshot -m region -z --raw | tee "$SCREENSHOT_FILE" | wl-copy --type image/png
         ;;
     annotate)
-        hyprshot -m region -z --raw | satty --filename - --output-filename "$FILE" --copy-command wl-copy
-        ;;
-    lens)
-        TMPFILE=$(mktemp /tmp/screenshot-lens-XXXXXX.png)
-        hyprshot -m region -z --raw > "$TMPFILE"
-        URL=$(curl -s -F "reqtype=fileupload" -F "time=1h" -F "fileToUpload=@$TMPFILE" https://litterbox.catbox.moe/resources/internals/api.php)
-        rm -f "$TMPFILE"
-        xdg-open "https://lens.google.com/uploadbyurl?url=${URL}"
-        ;;
-    ocr)
-        TMPFILE=$(mktemp /tmp/screenshot-ocr-XXXXXX.png)
-        hyprshot -m region -z --raw > "$TMPFILE"
-        tesseract "$TMPFILE" stdout 2>/dev/null | wl-copy
-        rm -f "$TMPFILE"
+        hyprshot -m region -z --raw \
+            | satty --filename - --output-filename "$SCREENSHOT_FILE" --copy-command wl-copy
         ;;
     output)
-        hyprshot -m output -z --raw | tee "$FILE" | wl-copy --type image/png
+        hyprshot -m output -z --raw | tee "$SCREENSHOT_FILE" | wl-copy --type image/png
+        ;;
+    ocr)
+        temp_file=$(make_temp_file ocr)
+        trap 'rm -f "$temp_file"' EXIT
+        hyprshot -m region -z --raw > "$temp_file"
+        tesseract "$temp_file" stdout 2>/dev/null | wl-copy
+        ;;
+    lens)
+        temp_file=$(make_temp_file lens)
+        trap 'rm -f "$temp_file"' EXIT
+        hyprshot -m region -z --raw > "$temp_file"
+        upload_url=$(curl --fail --silent --show-error \
+            -F 'reqtype=fileupload' -F 'time=1h' -F "fileToUpload=@$temp_file" \
+            https://litterbox.catbox.moe/resources/internals/api.php)
+        if [[ ! "$upload_url" =~ ^https?:// ]]; then
+            printf 'Screenshot upload failed: %s\n' "$upload_url" >&2
+            exit 1
+        fi
+        xdg-open "https://lens.google.com/uploadbyurl?url=$upload_url"
         ;;
     *)
-        echo "Usage: $0 {region|annotate|output|ocr|lens}"
-        exit 1
+        usage
+        exit 2
         ;;
 esac
-

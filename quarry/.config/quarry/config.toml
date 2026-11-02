@@ -58,6 +58,10 @@ glow = "rgba(50, 50, 50, 1)"
 width = 850
 height = 600
 
+[sidebar_widths]
+files = 332
+clipboard = 234
+
 [[web_searches]]
 name = "Google"
 trigger = '^g\s+(.*)$'

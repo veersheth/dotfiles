@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if (( $# == 0 )); then
+    printf 'Usage: installappimg FILE.AppImage [FILE.AppImage ...]\n' >&2
+    exit 1
+fi
+
+app_dir="$HOME/Applications"
+desktop_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+
+guess_name() {
+    local name="${1%.*}"
+
+    # Remove common platform and version suffixes before making the name readable.
+    while [[ "$name" =~ ^(.*)[._-](x86_64|x86-64|amd64|aarch64|arm64|x64|linux|portable)$ ]]; do
+        name="${BASH_REMATCH[1]}"
+    done
+    name="$(printf '%s' "$name" | sed -E 's/[._-]v?[0-9]+([.][0-9]+)*([._-](beta|alpha|rc)[0-9]*)?$//')"
+
+    name="${name//_/ }"
+    name="${name//-/ }"
+    name="${name//./ }"
+    printf '%s' "$name"
+}
+
+escape_exec() {
+    local value="$1"
+    value="${value//\/\\}"
+    value="${value//\"/\\\"}"
+    value="${value//\$/\\\$}"
+    value="${value//\`/\\\`}"
+    printf '"%s"' "$value"
+}
+
+for input in "$@"; do
+    if [[ ! -f "$input" || "${input,,}" != *.appimage ]]; then
+        printf 'installappimg: expected an existing .AppImage file: %s\n' "$input" >&2
+        exit 1
+    fi
+
+    source_file="$(realpath -- "$input")"
+    file_name="$(basename -- "$source_file")"
+    destination="$app_dir/$file_name"
+    launcher_id="$(printf '%s' "${file_name%.*}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-|-$//g')"
+    launcher="$desktop_dir/appimage-$launcher_id.desktop"
+    proposed_name="$(guess_name "$file_name")"
+
+    if [[ -z "$proposed_name" ]]; then
+        proposed_name="${file_name%.*}"
+    fi
+
+    while true; do
+        printf 'Use "%s" as the application name for %s? [Y/n] ' "$proposed_name" "$file_name" >&2
+        if ! IFS= read -r answer; then
+            printf '\ninstallappimg: no answer received\n' >&2
+            exit 1
+        fi
+        case "$answer" in
+            ''|[Yy]) app_name="$proposed_name"; break ;;
+            [Nn])
+                printf 'Application name: ' >&2
+                if ! IFS= read -r app_name || [[ -z "${app_name//[[:space:]]/}" ]]; then
+                    printf 'installappimg: application name cannot be empty\n' >&2
+                    exit 1
+                fi
+                break
+                ;;
+            *) printf 'Please answer y or n.\n' >&2 ;;
+        esac
+    done
+
+    if [[ "$source_file" != "$destination" && ( -e "$destination" || -L "$destination" ) ]]; then
+        printf 'installappimg: destination already exists: %s\n' "$destination" >&2
+        exit 1
+    fi
+    if [[ -e "$launcher" || -L "$launcher" ]]; then
+        printf 'installappimg: launcher already exists: %s\n' "$launcher" >&2
+        exit 1
+    fi
+
+    mkdir -p -- "$app_dir" "$desktop_dir"
+    launcher_tmp="$(mktemp "$desktop_dir/.installappimg.XXXXXX")"
+
+    # Desktop entries require backslashes in names to be escaped.
+    desktop_name="${app_name//\/\\}"
+    {
+        printf '[Desktop Entry]\n'
+        printf 'Type=Application\n'
+        printf 'Name=%s\n' "$desktop_name"
+        printf 'Exec=appimage-run %s\n' "$(escape_exec "$destination")"
+        printf 'Terminal=false\n'
+        printf 'Categories=Utility;\n'
+    } > "$launcher_tmp"
+    chmod 644 -- "$launcher_tmp"
+
+    chmod +x -- "$source_file"
+    if [[ "$source_file" != "$destination" ]]; then
+        mv -- "$source_file" "$destination"
+    fi
+    mv -- "$launcher_tmp" "$launcher"
+
+    printf 'Installed %s (%s)\n' "$app_name" "$launcher"
+done

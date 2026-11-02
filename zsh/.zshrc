@@ -43,6 +43,7 @@ cdc() {
 }
 
 alias jj="~/scripts/tmux-sessionizer --init"
+alias jk="~/scripts/tmux-sessionizer --init"
 
 opengui() { xdg-open . & }
 zle -N opengui

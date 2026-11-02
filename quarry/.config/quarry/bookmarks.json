@@ -5,10 +5,6 @@
       "url": "https://castle.unsw.edu.au/login"
     },
     {
-      "name": "26t2-1531-gitlab",
-      "url": "https://gitlab.cse.unsw.edu.au/coursework/comp1531/26T2"
-    },
-    {
       "name": "whatsapp",
       "url": "https://web.whatsapp.com"
     },
@@ -47,6 +43,10 @@
     {
       "name": "wordle",
       "url": "https://www.nytimes.com/games/wordle/index.html"
+    },
+    {
+      "name": "youtube-watch-later",
+      "url": "https://www.youtube.com/playlist?list=WL"
     }
   ]
 }
