@@ -7,19 +7,42 @@ vim.pack.add({ "https://github.com/nvim-telescope/telescope.nvim" })
 
 local telescope = require "telescope"
 
-telescope.setup({
-  defaults = {
-    preview = { treesitter = false },
-    color_devicons = true,
-    sorting_strategy = "ascending",
-    path_displays = { "smart" },
-    layout_config = {
-      prompt_position = "top",
-    },
-    file_ignore_patterns = { "node_modules", "%.git/" },
-  },
-})
+-- telescope.setup({
+--   defaults = {
+--     sorting_strategy = "ascending",
+--     path_displays = { "smart" },
+--     layout_config = {
+--       prompt_position = "top",
+--     },
+--     file_ignore_patterns = { "node_modules", "%.git/" },
+--   },
+-- })
 
+
+telescope.setup({
+	defaults = {
+		preview = { treesitter = true },
+		color_devicons = true,
+		sorting_strategy = "ascending",
+		-- borderchars = {
+		-- 	"", -- top
+		-- 	"", -- right
+		-- 	"", -- bottom
+		-- 	"", -- left
+		-- 	"", -- top-left
+		-- 	"", -- top-right
+		-- 	"", -- bottom-right
+		-- 	"", -- bottom-left
+		-- },
+		path_displays = { "smart" },
+		layout_config = {
+			height = 100,
+			width = 400,
+			prompt_position = "top",
+			preview_cutoff = 40,
+		}
+	}
+})
 
 local builtin = require("telescope.builtin")
 

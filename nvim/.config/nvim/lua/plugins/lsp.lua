@@ -44,6 +44,50 @@ require("mason-lspconfig").setup({
   automatic_enable = false,
 })
 
+vim.lsp.config("harper_ls", {
+  filetypes = { "markdown" },
+  root_dir = function(bufnr, on_dir)
+    local vault = vim.fn.expand("~/sync/vault")
+    local path = vim.api.nvim_buf_get_name(bufnr)
+    if path:sub(1, #vault + 1) == vault .. "/" then on_dir(vault) end
+  end,
+  settings = {
+    ["harper-ls"] = {
+      dialect = "Australian",
+      linters = {
+        SentenceCapitalization = false,
+        CapitalizePersonalPronouns = false,
+        OrthographicConsistency = false,
+      },
+    },
+  },
+  handlers = {
+    ["textDocument/publishDiagnostics"] = function(err, result, ctx, config)
+      if result and result.diagnostics then
+        local bufnr = vim.uri_to_bufnr(result.uri)
+        if vim.api.nvim_buf_is_loaded(bufnr) then
+          result.diagnostics = vim.tbl_filter(function(diagnostic)
+            if diagnostic.code ~= "SpellCheck" then return true end
+            local range = diagnostic.range
+            if range.start.line ~= range["end"].line then return true end
+            local line = vim.api.nvim_buf_get_lines(bufnr, range.start.line, range.start.line + 1, false)[1]
+            if not line then return true end
+            local start = vim.str_byteindex(line, "utf-16", range.start.character, false)
+            local finish = vim.str_byteindex(line, "utf-16", range["end"].character, false)
+            local word = line:sub(start + 1, finish)
+            if not word:match("^%l+$") then return true end
+            return vim.api.nvim_buf_call(bufnr, function()
+              return #vim.spell.check(word:sub(1, 1):upper() .. word:sub(2)) > 0
+                and #vim.spell.check(word:upper()) > 0
+            end)
+          end, result.diagnostics)
+        end
+      end
+      return vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx, config)
+    end,
+  },
+})
+
 require("actions-preview").setup({
   backend = { "telescope" },
   extensions = { "env" },
@@ -56,7 +100,7 @@ vim.lsp.enable({
   "rust_analyzer", "clangd",
   "ruff", "pyright",
   "tinymist", 
-  "emmet_ls"
+  "emmet_ls", "harper_ls"
 })
 
 vim.api.nvim_create_autocmd("LspAttach", {
@@ -82,6 +126,5 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("n", "gi", vim.lsp.buf.implementation, "go to implementation")
     map({ "n", "v" }, "<leader>ca", require("actions-preview").code_actions, "code actions (preview)")
     map("n", "<leader>rn", vim.lsp.buf.rename, "rename symbol")
-    map("n", "K", vim.lsp.buf.hover, "hover docs")
   end,
 })

@@ -1,4 +1,4 @@
-vim.pack.add({ "https://github.com/MeanderingProgrammer/render-markdown.nvim" })
+-- vim.pack.add({ "https://github.com/MeanderingProgrammer/render-markdown.nvim" })
 vim.pack.add({ "https://github.com/dhruvasagar/vim-table-mode" })
 vim.g.table_mode_auto_align = 1
 vim.g.table_mode_corner = "|"
@@ -28,16 +28,16 @@ require("image").setup({
   hijack_file_patterns = { "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp", "*.svg" },
 })
 
-require("render-markdown").setup({
-  heading = { enabled = true, width = "block" },
-  bullet = { enabled = false },
-  latex = {
-    enabled = true,
-    converter = { "utftex", "latex2text" },
-    position = "center",
-  },
-  completions = { lsp = { enabled = true } },
-})
+-- require("render-markdown").setup({
+--   -- heading = { enabled = true, width = "block" },
+--   bullet = { enabled = false },
+--   latex = {
+--     enabled = true,
+--     converter = { "utftex", "latex2text" },
+--     position = "center",
+--   },
+--   completions = { lsp = { enabled = true } },
+-- })
 
 vim.keymap.set("n", "<leader>mr", "<cmd>RenderMarkdown toggle<cr>", { desc = "render markdown" })
 

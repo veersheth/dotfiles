@@ -15,6 +15,13 @@ end, { desc = "typst preview" })
 -- affect another, or get clobbered when autocmds re-fire.
 writing_mode_state = {}
 
+local vault = vim.fn.expand("~/sync/vault/")
+
+local function in_vault(bufnr)
+  local path = vim.api.nvim_buf_get_name(bufnr)
+  return path:sub(1, #vault) == vault and vim.bo[bufnr].filetype == "markdown"
+end
+
 local function set_writing_mode(bufnr, enabled)
   writing_mode_state[bufnr] = enabled
   if enabled then
@@ -22,7 +29,9 @@ local function set_writing_mode(bufnr, enabled)
     vim.opt_local.formatoptions:append("t")
     vim.opt_local.linebreak = true
     vim.opt_local.wrap = true
-    vim.opt_local.spell = true
+    -- Harper supplies spelling diagnostics in vault notes.
+    vim.opt_local.spell = not in_vault(bufnr)
+    vim.opt_local.spellcapcheck = ""
     vim.opt_local.signcolumn = "yes:1"
   else
     vim.opt_local.textwidth = 0
@@ -52,6 +61,43 @@ local function set_writing_mode(bufnr, enabled)
   -- 	vim.opt_local.signcolumn = "yes"
   -- end
 end
+
+vim.api.nvim_create_autocmd("BufWipeout", {
+  callback = function(ev)
+    writing_mode_state[ev.buf] = nil
+  end,
+})
+
+vim.keymap.set("n", "K", function()
+  if writing_mode_state[vim.api.nvim_get_current_buf()] then
+    if in_vault(vim.api.nvim_get_current_buf()) then
+      local pos = vim.api.nvim_win_get_cursor(0)
+      for _, diagnostic in ipairs(vim.diagnostic.get(0, { lnum = pos[1] - 1 })) do
+        if diagnostic.code == "SpellCheck" and diagnostic.col <= pos[2] and pos[2] < diagnostic.end_col then
+          vim.lsp.buf.code_action({
+            context = { only = { "quickfix" } },
+            filter = function(action, client_id)
+              local client = vim.lsp.get_client_by_id(client_id)
+              return client and client.name == "harper_ls" and action.title:match("^Replace with") ~= nil
+            end,
+          })
+          return
+        end
+      end
+    elseif vim.wo.spell then
+      local word = vim.fn.expand("<cword>")
+      if #vim.spell.check(word) > 0 then
+        vim.cmd("normal! z=")
+        return
+      end
+    end
+  end
+  if #vim.lsp.get_clients({ bufnr = 0 }) > 0 then
+    vim.lsp.buf.hover()
+  else
+    vim.cmd("normal! K")
+  end
+end, { desc = "spelling suggestions or hover docs" })
 
 vim.keymap.set("n", "<leader>tw", function()
   local bufnr = vim.api.nvim_get_current_buf()
