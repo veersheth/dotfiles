@@ -92,6 +92,8 @@ Scope {
     IpcHandler {
         target: "expose"
         function toggle(): void { root.toggle() }
+        function open(): void { BarState.exposeActive = true }
+        function close(): void { root.close() }
         function closeHovered(): void { root.closeHovered() }
     }
 
@@ -220,7 +222,14 @@ Scope {
             property bool spread: false
             property bool pageTransitionsEnabled: false
             property bool otherPagesEnabled: false
-            onReadyChanged: if (ready && BarState.exposeActive) spreadTimer.restart()
+            property int refreshIndex: 0
+            onReadyChanged: startSpread()
+
+            function startSpread() {
+                if (!BarState.exposeActive || !ready || spread) return
+                spread = true
+                pageTransitionTimer.restart()
+            }
 
             function goPage(direction) {
                 if (!BarState.exposeActive || pageCooldown.running) return
@@ -240,24 +249,13 @@ Scope {
                         overlay.pageTransitionsEnabled = false
                         overlay.otherPagesEnabled = false
                         pageTransitionTimer.stop()
-                        if (overlay.ready) spreadTimer.restart()
+                        overlay.startSpread()
                     } else {
-                        spreadTimer.stop()
                         pageTransitionTimer.stop()
                         overlay.pageTransitionsEnabled = false
                         overlay.otherPagesEnabled = false
                         overlay.spread = false
                     }
-                }
-            }
-
-            Timer {
-                id: spreadTimer
-                interval: 16
-                repeat: false
-                onTriggered: if (BarState.exposeActive) {
-                    overlay.spread = true
-                    pageTransitionTimer.restart()
                 }
             }
 
@@ -268,6 +266,27 @@ Scope {
                 onTriggered: if (BarState.exposeActive) {
                     overlay.pageTransitionsEnabled = true
                     overlay.otherPagesEnabled = true
+                }
+            }
+
+            // Refresh one preview per tick. The total capture rate stays bounded
+            // even when a workspace contains many windows.
+            Timer {
+                interval: 85
+                repeat: true
+                running: BarState.exposeActive && overlay.spread
+                onTriggered: {
+                    const count = overlay.screenCaptures.length
+                    for (let offset = 0; offset < count; offset++) {
+                        const index = (overlay.refreshIndex + offset) % count
+                        const capture = overlay.screenCaptures[index]
+                        if (capture.workspaceId !== overlay.monitor?.activeWorkspace?.id
+                                || root.closedAddresses.includes(capture.address))
+                            continue
+                        captureRepeater.itemAt(index)?.refreshFrame()
+                        overlay.refreshIndex = (index + 1) % count
+                        break
+                    }
                 }
             }
 
@@ -309,6 +328,13 @@ Scope {
                 ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
             Shortcut { sequence: "Escape"; enabled: root.overlayShown; onActivated: root.close() }
+
+            Rectangle {
+                anchors.fill: parent
+                color: "#22000000"
+                opacity: root.overlayShown && !overlay.ready ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 90 } }
+            }
 
             Item {
                 anchors.fill: parent
@@ -373,6 +399,7 @@ Scope {
                             workspace => workspace.id === modelData.workspaceId)
                         readonly property bool currentPage: modelData.workspaceId === overlay.monitor?.activeWorkspace?.id
                         readonly property bool nearbyPage: Math.abs(pageIndex - overlay.activePageIndex) <= 1
+                        function refreshFrame() { captureView.captureFrame() }
                         visible: nearbyPage && !root.closedAddresses.includes(modelData.address)
                         x: pageIndex * overlay.width + (overlay.spread ? (root.targets[modelData.address]?.x ?? modelData.x) : modelData.x)
                         y: overlay.spread ? (root.targets[modelData.address]?.y ?? modelData.y) : modelData.y
@@ -420,7 +447,8 @@ Scope {
                                 captureSource: preview.currentPage
                                     || overlay.otherPagesEnabled && preview.nearbyPage
                                     ? preview.modelData.handle : null
-                                live: preview.currentPage
+                                live: false
+                                onCaptureSourceChanged: if (captureSource) captureFrame()
                                 onHasContentChanged: overlay.updateReady()
                             }
                         }
@@ -446,65 +474,94 @@ Scope {
 
                 Item {
                     id: workspaceStrip
-                    width: Math.min(parent.width - 48, Math.max(180, overlay.workspaceEntries.length * 190))
-                    height: 112
+                    width: Math.min(parent.width - 32,
+                        20 + overlay.workspaceEntries.length * 142
+                        + Math.max(0, overlay.workspaceEntries.length - 1) * 12)
+                    height: 120
                     readonly property real thumbWidth: overlay.workspaceEntries.length > 0
-                        ? Math.min(170, (width - 24 - (overlay.workspaceEntries.length - 1) * 10) / overlay.workspaceEntries.length) : 0
+                        ? Math.min(142, (width - 20
+                            - (overlay.workspaceEntries.length - 1) * 12)
+                            / overlay.workspaceEntries.length) : 0
                     anchors.horizontalCenter: parent.horizontalCenter
                     y: overlay.spread ? 16 : -height - 16
                     Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: 18
-                        color: "#bb161616"
+                        radius: 19
+                        color: "#dc111418"
+                        border.width: 1
+                        border.color: "#33ffffff"
                     }
 
                     Row {
                         id: thumbRow
                         anchors.centerIn: parent
-                        spacing: 10
+                        spacing: 12
                         Repeater {
                             model: overlay.workspaceEntries
-                            Rectangle {
+                            Item {
                                 id: thumb
                                 required property var modelData
                                 width: workspaceStrip.thumbWidth
-                                height: 88
-                                radius: 11
-                                clip: true
-                                color: WallpaperService.isColor ? WallpaperService.colorValue : "black"
-                                Image {
-                                    anchors.fill: parent
-                                    visible: !WallpaperService.isColor
-                                    source: wallpaperImage.source
-                                    fillMode: Image.PreserveAspectCrop
-                                }
-                                Repeater {
-                                    model: overlay.screenCaptures.filter(c => c.workspaceId === thumb.modelData.id && !root.closedAddresses.includes(c.address))
-                                    Rectangle {
-                                        required property var modelData
-                                        x: modelData.x * thumb.width / overlay.width
-                                        y: modelData.y * thumb.height / overlay.height
-                                        width: Math.max(2, modelData.width * thumb.width / overlay.width)
-                                        height: Math.max(2, modelData.height * thumb.height / overlay.height)
-                                        color: "#b82a2a2a"
-                                        border.width: 1
-                                        border.color: "#aabbbbbb"
-                                        radius: 2
+                                height: 100
+
+                                ClippingRectangle {
+                                    id: thumbFrame
+                                    width: parent.width
+                                    height: 76
+                                    radius: 10
+                                    color: WallpaperService.isColor
+                                        ? WallpaperService.colorValue : "#111418"
+                                    border.width: 1
+                                    border.color: thumbMouse.containsMouse
+                                        ? "#aaffffff" : "#55ffffff"
+                                    contentUnderBorder: true
+
+                                    Image {
+                                        anchors.fill: parent
+                                        visible: !WallpaperService.isColor
+                                        source: wallpaperImage.source
+                                        fillMode: Image.PreserveAspectCrop
+                                        opacity: 0.78
+                                    }
+                                    Rectangle { anchors.fill: parent; color: "#33000000" }
+                                    Repeater {
+                                        model: overlay.screenCaptures.filter(c => c.workspaceId === thumb.modelData.id
+                                            && !root.closedAddresses.includes(c.address))
+                                        Rectangle {
+                                            required property var modelData
+                                            x: modelData.x * thumbFrame.width / overlay.width
+                                            y: modelData.y * thumbFrame.height / overlay.height
+                                            width: Math.max(3, modelData.width * thumbFrame.width / overlay.width)
+                                            height: Math.max(3, modelData.height * thumbFrame.height / overlay.height)
+                                            color: "#e21b2026"
+                                            border.width: 1
+                                            border.color: "#99c3ccd8"
+                                            radius: 2
+                                        }
                                     }
                                 }
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: 3
+                                    width: parent.width
+                                    horizontalAlignment: Text.AlignHCenter
                                     text: thumb.modelData.name
-                                    color: "white"
-                                    font.pixelSize: 12
-                                    style: Text.Outline
-                                    styleColor: "black"
+                                    elide: Text.ElideRight
+                                    color: overlay.monitor?.activeWorkspace?.id === thumb.modelData.id
+                                        ? "#ffffff" : "#c5cbd2"
+                                    font.family: Theme.font
+                                    font.pixelSize: 13
+                                    font.weight: overlay.monitor?.activeWorkspace?.id === thumb.modelData.id
+                                        ? Font.DemiBold : Font.Normal
                                 }
-                                MouseArea { anchors.fill: parent; onClicked: thumb.modelData.activate() }
+                                MouseArea {
+                                    id: thumbMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: thumb.modelData.activate()
+                                }
                             }
                         }
                     }
@@ -513,11 +570,11 @@ Scope {
                         x: thumbRow.x + overlay.activePageIndex * (workspaceStrip.thumbWidth + thumbRow.spacing) - 3
                         y: thumbRow.y - 3
                         width: workspaceStrip.thumbWidth + 6
-                        height: 94
-                        radius: 14
+                        height: 82
+                        radius: 13
                         color: "transparent"
                         border.width: 2
-                        border.color: "#ffffff"
+                        border.color: Theme.blue
                         Behavior on x {
                             enabled: overlay.pageTransitionsEnabled
                             NumberAnimation { duration: 340; easing.type: Easing.OutCubic }

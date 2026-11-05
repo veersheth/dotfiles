@@ -251,12 +251,16 @@ return function(hl)
     end)
   end)
 
-  local function toggle_quickshell_expose()
-    hl.dispatch(hl.dsp.exec_cmd("qs ipc call expose toggle"))
-  end
-
-  hl.gesture({ fingers = 3, direction = "up",   action = toggle_quickshell_expose })
-  hl.gesture({ fingers = 3, direction = "down", action = toggle_quickshell_expose })
+  hl.gesture({
+    fingers = 3,
+    direction = "up",
+    action = function() hl.dispatch(hl.dsp.exec_cmd("qs ipc call expose open")) end,
+  })
+  hl.gesture({
+    fingers = 3,
+    direction = "down",
+    action = function() hl.dispatch(hl.dsp.exec_cmd("qs ipc call expose close")) end,
+  })
 
   expose.log_error = function(err) dbg("error: " .. err) end
   return expose
