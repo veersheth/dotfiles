@@ -251,28 +251,12 @@ return function(hl)
     end)
   end)
 
-  hl.gesture({
-    fingers   = 3,
-    direction = "up",
-    action    = function()
-      local ok, err = pcall(function()
-        if not expose.active then enter_expose() end
-      end)
-      if not ok then dbg("error: " .. err) end
-    end,
-  })
+  local function toggle_quickshell_expose()
+    hl.dispatch(hl.dsp.exec_cmd("qs ipc call expose toggle"))
+  end
 
-  -- 3-finger swipe down: close it
-  hl.gesture({
-    fingers   = 3,
-    direction = "down",
-    action    = function()
-      local ok, err = pcall(function()
-        if expose.active then exit_expose() end
-      end)
-      if not ok then dbg("error: " .. err) end
-    end,
-  })
+  hl.gesture({ fingers = 3, direction = "up",   action = toggle_quickshell_expose })
+  hl.gesture({ fingers = 3, direction = "down", action = toggle_quickshell_expose })
 
   expose.log_error = function(err) dbg("error: " .. err) end
   return expose

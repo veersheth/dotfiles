@@ -110,8 +110,9 @@ return function(hl)
   hl.bind("ALT + Print",  hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh lens"))     -- google lens
 
   -- Framework media key
-  hl.bind("SUPER + XF86AudioMedia", hl.dsp.exec_cmd("kitty -e nixx --hold"))
-  hl.bind("XF86AudioMedia", hl.dsp.exec_cmd("qs ipc call flash triggerWith '#233b82' 600"))
+  -- hl.bind("SUPER + XF86AudioMedia", hl.dsp.exec_cmd("kitty -e nixx --hold"))
+  hl.bind("XF86AudioMedia", hl.dsp.exec_cmd("qs ipc call expose toggle"))
+  hl.bind("SUPER + XF86AudioMedia", hl.dsp.exec_cmd("qs ipc call flash triggerWith '#233b82' 600"))
 
   --------------------------
   ---- QUARRY            ----

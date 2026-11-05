@@ -8,10 +8,12 @@ import qs.lock
 import qs.launcher
 import qs.polkit
 import qs.flash
+import qs.expose
 
 ShellRoot {
     Desktop {}
     Bar {}
+    Expose {}
     NotificationPopups {}
     Osd {}
     Lock {}

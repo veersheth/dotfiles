@@ -15,15 +15,17 @@ Variants {
         id: root
         required property var modelData
         screen: modelData
+        visible: !BarState.exposeActive
 
         anchors.top:    !BarState.barBottom
         anchors.bottom: BarState.barBottom
         anchors.left:   true
         anchors.right:  true
         implicitHeight: Theme.barHeight
-        exclusiveZone: Theme.barHeight
+        exclusiveZone: BarState.exposeActive ? 0 : Theme.barHeight
         color: "transparent"
 
+        WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.namespace: "quickshell:bar"
 
         mask: Region { item: bar }

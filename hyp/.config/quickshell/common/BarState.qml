@@ -7,6 +7,7 @@ Singleton {
     id: root
     property bool barBottom: false
     property bool transparent: false
+    property bool exposeActive: false
     signal wallpaperPickerRequested()
 
     FileView {
