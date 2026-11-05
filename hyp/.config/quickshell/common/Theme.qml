@@ -23,7 +23,7 @@ QtObject {
 
     // Type
     readonly property string font:     "Maple Mono Normal NL CN"
-    readonly property string nerdFont: "JetBrainsMono Nerd Font"
+    readonly property string nerdFont: "Maple Mono Normal NL CN"
     readonly property int    fontSize: 13
     readonly property int    iconSize: 16
 
