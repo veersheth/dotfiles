@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+Usage: kindle-sync [OPTIONS] [KINDLE_MOUNT]
+
+Copy books from ~/sync/books/reading/ into 00-books/ on a USB-mounted
+Kindle for reading in KOReader. EPUB, MOBI, AZW, AZW3, and PDF files
+are copied as-is.
+New and changed books are copied; Kindle-only files are never deleted.
+
+Options:
+  -h, --help          Show this help message
+  -n, --dry-run       Show planned copies without writing to the Kindle
+  -s, --source DIR    Read books from DIR (default: ~/sync/books/reading)
+  -m, --mount DIR     Use DIR as the Kindle mount point
+  -d, --destination DIR  Use DIR inside the Kindle (default: 00-books)
+
+KINDLE_MOUNT is an alternative to --mount. Without --source, the script
+asks whether to use the usual books folder. Without a Kindle mount path,
+it asks whether to detect the mounted Kindle automatically. Without
+--destination, it asks whether to use 00-books on the Kindle. All three
+questions default to Yes.
+EOF
+}
+
+dry_run=false
+mount_arg=''
+source_dir="$HOME/sync/books/reading"
+source_is_default=true
+destination_rel='00-books'
+destination_is_default=true
+while (( $# )); do
+    case "$1" in
+        -n|--dry-run) dry_run=true; shift ;;
+        -h|--help) usage; exit 0 ;;
+        -s|--source|-m|--mount|-d|--destination)
+            option="$1"
+            if (( $# < 2 )) || [[ -z "$2" ]]; then
+                printf 'Missing directory for %s\n' "$option" >&2
+                exit 2
+            fi
+            if [[ "$option" == -s || "$option" == --source ]]; then
+                source_dir="$2"
+                source_is_default=false
+            elif [[ "$option" == -d || "$option" == --destination ]]; then
+                destination_rel="$2"
+                destination_is_default=false
+            else
+                if [[ -n "$mount_arg" ]]; then
+                    printf 'Kindle mount specified more than once.\n' >&2
+                    exit 2
+                fi
+                mount_arg="$2"
+            fi
+            shift 2
+            ;;
+        -*) printf 'Unknown option: %s\n' "$1" >&2; usage >&2; exit 2 ;;
+        *)
+            if [[ -n "$mount_arg" ]]; then
+                printf 'Kindle mount specified more than once.\n' >&2
+                exit 2
+            fi
+            mount_arg="$1"
+            shift
+            ;;
+    esac
+done
+
+if "$source_is_default"; then
+    while true; do
+        printf 'Use %s as the books folder? [Y/n] ' "$source_dir" >&2
+        if ! IFS= read -r answer; then
+            printf '\nNo answer received. Pass --source DIR to skip the prompt.\n' >&2
+            exit 2
+        fi
+        case "${answer,,}" in
+            ''|y|yes) break ;;
+            n|no)
+                printf 'Books folder path: ' >&2
+                if ! IFS= read -r source_dir || [[ -z "$source_dir" ]]; then
+                    printf 'A books folder path is required.\n' >&2
+                    exit 2
+                fi
+                break
+                ;;
+            *) printf 'Please answer Y or n.\n' >&2 ;;
+        esac
+    done
+fi
+
+if [[ ! -d "$source_dir" ]]; then
+    printf 'Source folder does not exist: %s\n' "$source_dir" >&2
+    exit 1
+fi
+
+if [[ -z "$mount_arg" ]]; then
+    while true; do
+        printf 'Auto-detect the connected Kindle? [Y/n] ' >&2
+        if ! IFS= read -r answer; then
+            printf '\nNo answer received. Pass --mount DIR to skip the prompt.\n' >&2
+            exit 2
+        fi
+        case "${answer,,}" in
+            ''|y|yes)
+                mapfile -t kindle_mounts < <(findmnt -rn -o TARGET --source LABEL=Kindle)
+                if (( ${#kindle_mounts[@]} != 1 )); then
+                    printf 'Expected one mounted Kindle, found %d. Pass --mount DIR if needed.\n' "${#kindle_mounts[@]}" >&2
+                    exit 1
+                fi
+                mount_arg="${kindle_mounts[0]}"
+                break
+                ;;
+            n|no)
+                printf 'Kindle mount path: ' >&2
+                if ! IFS= read -r mount_arg || [[ -z "$mount_arg" ]]; then
+                    printf 'A Kindle mount path is required.\n' >&2
+                    exit 2
+                fi
+                break
+                ;;
+            *) printf 'Please answer Y or n.\n' >&2 ;;
+        esac
+    done
+fi
+if [[ -z "$mount_arg" || ! -d "$mount_arg" ]]; then
+    printf 'Kindle mount not found. Connect it, then pass its mount path.\n' >&2
+    exit 1
+fi
+
+mount_dir="$(realpath -- "$mount_arg")"
+if [[ "$(findmnt -rn -o TARGET --target "$mount_dir")" != "$mount_dir" ]]; then
+    printf 'Not a mounted device root: %s\n' "$mount_dir" >&2
+    exit 1
+fi
+filesystem="$(findmnt -rn -o FSTYPE --target "$mount_dir")"
+if [[ "$filesystem" == fuse.gvfsd-fuse ]]; then
+    printf 'This is an MTP mount; this script needs the Kindle USB-storage mount.\n' >&2
+    exit 1
+fi
+device="$(findmnt -rn -o SOURCE --target "$mount_dir")"
+label="$(lsblk -dnro LABEL -- "$device" 2>/dev/null || true)"
+if [[ "${label,,}" != *kindle* && ! -d "$mount_dir/documents" && ! -d "$mount_dir/Documents" ]]; then
+    printf 'Mount does not look like a Kindle: %s\n' "$mount_dir" >&2
+    exit 1
+fi
+
+if "$destination_is_default"; then
+    while true; do
+        printf 'Use %s inside the Kindle for books? [Y/n] ' "$destination_rel" >&2
+        if ! IFS= read -r answer; then
+            printf '\nNo answer received. Pass --destination DIR to skip the prompt.\n' >&2
+            exit 2
+        fi
+        case "${answer,,}" in
+            ''|y|yes) break ;;
+            n|no)
+                printf 'Books folder inside Kindle (relative path): ' >&2
+                if ! IFS= read -r destination_rel || [[ -z "$destination_rel" ]]; then
+                    printf 'A Kindle books folder is required.\n' >&2
+                    exit 2
+                fi
+                break
+                ;;
+            *) printf 'Please answer Y or n.\n' >&2 ;;
+        esac
+    done
+fi
+if [[ "$destination_rel" == /* ]]; then
+    printf 'Destination must be a path inside the Kindle, without a leading slash.\n' >&2
+    exit 2
+fi
+destination="$(realpath -m -- "$mount_dir/$destination_rel")"
+if [[ "$destination" != "$mount_dir/"* ]]; then
+    printf 'Destination must stay inside the Kindle: %s\n' "$destination_rel" >&2
+    exit 2
+fi
+
+command -v rsync >/dev/null || { printf 'rsync is required.\n' >&2; exit 1; }
+if "$dry_run"; then
+    printf 'Previewing: %s/ -> %s/\n' "$source_dir" "$destination"
+else
+    printf 'Syncing: %s/ -> %s/\n' "$source_dir" "$destination"
+fi
+rsync_args=(-rivc --mkpath --no-perms --no-owner --no-group --omit-dir-times)
+rsync_args+=(--include='*/' --include='*.epub' --include='*.mobi')
+rsync_args+=(--include='*.azw' --include='*.azw3' --include='*.pdf' --exclude='*')
+if "$dry_run"; then rsync_args+=(--dry-run); fi
+rsync "${rsync_args[@]}" -- "$source_dir/" "$destination/"
+if ! "$dry_run"; then sync -f "$destination"; fi
