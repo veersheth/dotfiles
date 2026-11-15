@@ -27,8 +27,9 @@ Singleton {
         keepOnReload: true
 
         onNotification: notif => {
-            root.unreadCount += 1;
             notif.tracked = true;
+            if (notif.lastGeneration) return;
+            root.unreadCount += 1;
             if (!root.dnd) root.popupNotification(notif);
         }
     }

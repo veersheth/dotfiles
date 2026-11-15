@@ -89,10 +89,8 @@ Rectangle {
                     font.pixelSize: Theme.fontSize - 1
                     font.weight: parent.isFocused ? Font.DemiBold : Font.Normal
                     color: parent.isFocused
-                        ? Theme.blue
-                        : wsMouse.containsMouse
-                            ? Qt.alpha(root.foreground, 0.6)
-                            : Qt.alpha(root.foreground, 0.3)
+                        ? (root.foreground.r < 0.5 ? "#315fa8" : Theme.blue)
+                        : root.foreground
                 }
 
                 MouseArea {

@@ -13,11 +13,13 @@ Rectangle {
 
     readonly property bool critical: notif.urgency === NotificationUrgency.Critical
     property bool exiting: false
+    property bool dismissing: false
+    property bool dismissedAlready: false
 
     width:  parent ? parent.width : 340
     height: layout.implicitHeight + 36
     radius: Theme.popupRadius
-    color:  Theme.surface
+    color: Theme.surface
     border.width: Theme.borderWidth
     border.color: critical ? Qt.alpha(Theme.red, 0.6) : Theme.border
 
@@ -29,7 +31,10 @@ Rectangle {
 
     Connections {
         target: card.notif
-        function onClosed() { card.exit(); }
+        function onClosed() {
+            card.dismissedAlready = true;
+            card.fadeDismiss();
+        }
     }
 
     // Timeout hides the popup but keeps the notification tracked so it
@@ -47,6 +52,14 @@ Rectangle {
         exitAnim.start();
     }
 
+    function fadeDismiss() {
+        if (exiting) return;
+        exiting = true;
+        dismissing = true;
+        enterAnim.stop();
+        fadeOut.start();
+    }
+
     ParallelAnimation {
         id: enterAnim
         NumberAnimation { target: card; property: "x";       to: 0;  duration: 280; easing.type: Easing.OutCubic }
@@ -61,9 +74,18 @@ Rectangle {
         ScriptAction { script: card.destroy() }
     }
 
+    SequentialAnimation {
+        id: fadeOut
+        NumberAnimation { target: card; property: "opacity"; to: 0; duration: 180; easing.type: Easing.InQuad }
+        ScriptAction { script: {
+            if (!card.dismissedAlready) card.notif.dismiss();
+            card.destroy();
+        } }
+    }
+
     MouseArea {
         anchors.fill: parent
-        onClicked: card.notif.dismiss()
+        onClicked: card.fadeDismiss()
     }
 
     RowLayout {

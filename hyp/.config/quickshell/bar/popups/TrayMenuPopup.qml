@@ -25,6 +25,12 @@ BarPopup {
         interval: 60
         onTriggered: root.shown = true
     }
+    Connections {
+        target: BarState
+        function onPopupActivated(popup) {
+            if (popup !== root) showDelay.stop()
+        }
+    }
 
     function openFor(item, menu) {
         if (shown) {

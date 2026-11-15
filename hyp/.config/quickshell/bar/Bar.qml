@@ -15,17 +15,18 @@ Variants {
         id: root
         required property var modelData
         screen: modelData
-        visible: !BarState.exposeActive
+        visible: !BarState.exposeActive || BarState.exposeGestureTracking
 
         anchors.top:    !BarState.barBottom
         anchors.bottom: BarState.barBottom
         anchors.left:   true
         anchors.right:  true
         implicitHeight: Theme.barHeight
-        exclusiveZone: BarState.exposeActive ? 0 : Theme.barHeight
+        exclusiveZone: BarState.exposeActive && !BarState.exposeGestureTracking
+            ? 0 : Theme.barHeight
         color: "transparent"
 
-        WlrLayershell.layer: WlrLayer.Overlay
+        WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.namespace: "quickshell:bar"
 
         mask: Region { item: bar }
@@ -42,6 +43,15 @@ Variants {
               top: parent.top; left: parent.left; right: parent.right
             }
             height: Theme.barHeight
+            transform: Translate {
+                y: BarState.exposeGestureTracking
+                    ? (BarState.barBottom ? 1 : -1) * bar.height
+                        * BarState.exposeGestureProgress : 0
+                Behavior on y {
+                    enabled: !BarState.exposeGestureTracking
+                    NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                }
+            }
             color: BarState.transparent ? "transparent" : Theme.background
 
             // Empty bar space → context menu (right-click).

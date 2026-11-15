@@ -123,6 +123,40 @@ Scope {
         function brightness(): void { readBacklight.running = true }
     }
 
+    // An external airplane-mode toggle changes the rfkill state without going
+    // through Quickshell. Read all wireless radios and only notify on changes.
+    property int airplaneState: -1
+    Process {
+        id: readAirplane
+        command: ["sh", "-c",
+            'total=0; blocked=0; ' +
+            'for radio in /sys/class/rfkill/rfkill*; do ' +
+            '[ -r "$radio/type" ] || continue; ' +
+            'read -r type < "$radio/type"; ' +
+            'case "$type" in wlan|bluetooth|wwan) ;; *) continue ;; esac; ' +
+            'total=$((total + 1)); ' +
+            'read -r soft < "$radio/soft"; read -r hard < "$radio/hard"; ' +
+            'if [ "$soft" = 1 ] || [ "$hard" = 1 ]; then blocked=$((blocked + 1)); fi; ' +
+            'done; ' +
+            'if [ "$total" -gt 0 ]; then ' +
+            'if [ "$blocked" -eq "$total" ]; then printf 1; else printf 0; fi; ' +
+            'fi']
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const state = Number(text.trim())
+                if (text.trim() === "" || (state !== 0 && state !== 1)) return
+                if (root.airplaneState !== -1 && state !== root.airplaneState)
+                    root.showMessage("󰀝", state ? "Airplane mode on" : "Airplane mode off")
+                root.airplaneState = state
+            }
+        }
+    }
+
+    Timer {
+        interval: 1000; running: true; repeat: true; triggeredOnStart: true
+        onTriggered: if (!readAirplane.running) readAirplane.running = true
+    }
+
     Process {
         id: readKbd
         command: ["cat", `/sys/class/leds/${root.kbdDev}/brightness`]

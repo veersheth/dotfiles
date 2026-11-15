@@ -8,7 +8,26 @@ Singleton {
     property bool barBottom: false
     property bool transparent: false
     property bool exposeActive: false
+    property bool exposeGestureTracking: false
+    property real exposeGestureProgress: 0
+    property var activePopup: null
     signal wallpaperPickerRequested()
+    signal popupActivated(var popup)
+
+    function activatePopup(popup) {
+        if (activePopup && activePopup !== popup) {
+            if (activePopup.closeForReplacement)
+                activePopup.closeForReplacement()
+            else
+                activePopup.close()
+        }
+        activePopup = popup
+        popupActivated(popup)
+    }
+
+    function releasePopup(popup) {
+        if (activePopup === popup) activePopup = null
+    }
 
     FileView {
         id: store

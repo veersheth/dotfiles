@@ -16,11 +16,13 @@ Scope {
     property var closedAddresses: []
     property bool geometryReady: false
     property bool overlayShown: false
+    property bool gestureCancelling: false
     property string frontAddress: ""
     property string hoveredAddress: ""
     property real hoverCursorX: 0
     property real hoverCursorY: 0
     property int rounding: 0
+    property int shadowRange: 0
     property int borderSize: 0
     property color activeBorder: "transparent"
     property color inactiveBorder: "transparent"
@@ -82,6 +84,29 @@ Scope {
 
     function close() { BarState.exposeActive = false }
 
+    function gestureBegin() {
+        if (BarState.exposeActive) return
+        gestureCancelling = false
+        BarState.exposeGestureProgress = 0
+        BarState.exposeGestureTracking = true
+        BarState.exposeActive = true
+    }
+
+    function gestureUpdate(progress) {
+        if (!BarState.exposeGestureTracking) return
+        BarState.exposeGestureProgress = Math.max(0, Math.min(1, progress))
+    }
+
+    function gestureFinish(commit) {
+        if (!BarState.exposeGestureTracking) return
+        if (!commit) {
+            gestureCancelling = true
+            BarState.exposeActive = false
+        }
+        BarState.exposeGestureTracking = false
+        BarState.exposeGestureProgress = commit ? 1 : 0
+    }
+
     function removeCapture(address) {
         if (closedAddresses.includes(address)) return
         closedAddresses = closedAddresses.concat([address])
@@ -98,6 +123,20 @@ Scope {
     }
 
     Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name !== "custom" || !event.data.startsWith("quickshell-expose:"))
+                return
+            const payload = event.data.slice("quickshell-expose:".length)
+            if (payload === "begin") root.gestureBegin()
+            else if (payload === "commit") root.gestureFinish(true)
+            else if (payload === "cancel") root.gestureFinish(false)
+            else if (payload.startsWith("progress:"))
+                root.gestureUpdate(Number(payload.slice("progress:".length)))
+        }
+    }
+
+    Connections {
         target: BarState
         function onExposeActiveChanged() {
             if (BarState.exposeActive) {
@@ -111,6 +150,7 @@ Scope {
                 root.closedAddresses = []
                 root.frontAddress = ""
                 root.hoveredAddress = ""
+                root.gestureCancelling = false
                 Hyprland.refreshMonitors()
                 Hyprland.refreshWorkspaces()
                 clientsProcess.running = true
@@ -132,12 +172,13 @@ Scope {
             root.targets = ({})
             root.closedAddresses = []
             root.hoveredAddress = ""
+            root.gestureCancelling = false
         }
     }
 
     Process {
         id: decorationProcess
-        command: ["hyprctl", "-j", "--batch", "getoption decoration:rounding;getoption general:border_size;getoption general:col.active_border;getoption general:col.inactive_border"]
+        command: ["hyprctl", "-j", "--batch", "getoption decoration:rounding;getoption general:border_size;getoption general:col.active_border;getoption general:col.inactive_border;getoption decoration:shadow:range"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
@@ -146,6 +187,7 @@ Scope {
                     root.borderSize = values[1].int
                     root.activeBorder = "#" + values[2].gradient.split(" ")[0]
                     root.inactiveBorder = "#" + values[3].gradient.split(" ")[0]
+                    root.shadowRange = values[4].int
                 } catch (error) {
                     console.warn("Expose: could not read Hyprland decoration:", error)
                 }
@@ -220,15 +262,57 @@ Scope {
                 capture => capture.monitorId === monitor?.id)
             property bool ready: false
             property bool spread: false
+            property real revealProgress: 0
+            property bool gestureVisualStarted: false
+            property real gestureStartProgress: 0
             property bool pageTransitionsEnabled: false
             property bool otherPagesEnabled: false
             property int refreshIndex: 0
-            onReadyChanged: startSpread()
+            onReadyChanged: {
+                if (!ready) {
+                    revealAnim.stop()
+                    revealProgress = 0
+                    gestureVisualStarted = false
+                } else if (BarState.exposeGestureTracking) {
+                    beginGestureVisual()
+                } else {
+                    startSpread()
+                }
+            }
+
+            Connections {
+                target: BarState
+                function onExposeGestureProgressChanged() {
+                    if (BarState.exposeGestureTracking && overlay.ready && overlay.gestureVisualStarted)
+                        overlay.revealProgress = Math.max(0,
+                            (BarState.exposeGestureProgress - overlay.gestureStartProgress)
+                            / Math.max(0.01, 1 - overlay.gestureStartProgress))
+                }
+                function onExposeGestureTrackingChanged() {
+                    if (!BarState.exposeGestureTracking) overlay.startSpread()
+                }
+            }
+
+            function beginGestureVisual() {
+                revealAnim.stop()
+                gestureStartProgress = BarState.exposeGestureProgress
+                gestureVisualStarted = true
+                revealProgress = 0
+            }
 
             function startSpread() {
-                if (!BarState.exposeActive || !ready || spread) return
+                if (!BarState.exposeActive || BarState.exposeGestureTracking || !ready || spread) return
                 spread = true
+                revealAnim.to = 1
+                revealAnim.duration = Math.max(90, Math.round(300 * (1 - revealProgress)))
+                revealAnim.restart()
                 pageTransitionTimer.restart()
+            }
+
+            NumberAnimation {
+                id: revealAnim
+                target: overlay; property: "revealProgress"
+                easing.type: Easing.OutCubic
             }
 
             function goPage(direction) {
@@ -249,12 +333,16 @@ Scope {
                         overlay.pageTransitionsEnabled = false
                         overlay.otherPagesEnabled = false
                         pageTransitionTimer.stop()
-                        overlay.startSpread()
+                        if (BarState.exposeGestureTracking) overlay.beginGestureVisual()
+                        else overlay.startSpread()
                     } else {
                         pageTransitionTimer.stop()
                         overlay.pageTransitionsEnabled = false
                         overlay.otherPagesEnabled = false
                         overlay.spread = false
+                        revealAnim.to = 0
+                        revealAnim.duration = Math.max(90, Math.round(300 * overlay.revealProgress))
+                        revealAnim.restart()
                     }
                 }
             }
@@ -269,12 +357,12 @@ Scope {
                 }
             }
 
-            // Refresh one preview per tick. The total capture rate stays bounded
-            // even when a workspace contains many windows.
+            // Keep previews live at a modest rate. The first frames are already
+            // captured before the spread begins, so don't compete with its animation.
             Timer {
-                interval: 85
+                interval: 200
                 repeat: true
-                running: BarState.exposeActive && overlay.spread
+                running: BarState.exposeActive && overlay.spread && !revealAnim.running
                 onTriggered: {
                     const count = overlay.screenCaptures.length
                     for (let offset = 0; offset < count; offset++) {
@@ -291,9 +379,14 @@ Scope {
             }
 
             function updateReady() {
-                if (!root.geometryReady || (!WallpaperService.isColor
+                if (!root.geometryReady) {
+                    ready = false
+                    return
+                }
+                if (ready && root.overlayShown) return
+                if (!WallpaperService.isColor
                         && WallpaperService.imagePath !== ""
-                        && wallpaperImage.status !== Image.Ready)) {
+                        && wallpaperImage.status !== Image.Ready) {
                     ready = false
                     return
                 }
@@ -332,7 +425,8 @@ Scope {
             Rectangle {
                 anchors.fill: parent
                 color: "#22000000"
-                opacity: root.overlayShown && !overlay.ready ? 1 : 0
+                opacity: root.overlayShown && !overlay.ready
+                    && !BarState.exposeGestureTracking ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: 90 } }
             }
 
@@ -340,7 +434,7 @@ Scope {
                 anchors.fill: parent
                 // Keep the scene rendering so ScreencopyView can receive its
                 // first frame, without showing a wallpaper-only transition.
-                opacity: overlay.ready ? 1 : 0.001
+                opacity: overlay.ready && !root.gestureCancelling ? 1 : 0.001
 
                 Rectangle {
                     anchors.fill: parent
@@ -399,27 +493,38 @@ Scope {
                             workspace => workspace.id === modelData.workspaceId)
                         readonly property bool currentPage: modelData.workspaceId === overlay.monitor?.activeWorkspace?.id
                         readonly property bool nearbyPage: Math.abs(pageIndex - overlay.activePageIndex) <= 1
+                        readonly property var spreadTarget: root.targets[modelData.address] ?? modelData
+                        readonly property real sourceScale: overlay.monitor?.scale || 1
+                        readonly property real capturePaddingX: Math.max(0, Math.min(root.shadowRange,
+                            (captureView.sourceSize.width / sourceScale - modelData.width) / 2))
+                        readonly property real capturePaddingY: Math.max(0, Math.min(root.shadowRange,
+                            (captureView.sourceSize.height / sourceScale - modelData.height) / 2))
                         function refreshFrame() { captureView.captureFrame() }
                         visible: nearbyPage && !root.closedAddresses.includes(modelData.address)
-                        x: pageIndex * overlay.width + (overlay.spread ? (root.targets[modelData.address]?.x ?? modelData.x) : modelData.x)
-                        y: overlay.spread ? (root.targets[modelData.address]?.y ?? modelData.y) : modelData.y
-                        width: overlay.spread ? (root.targets[modelData.address]?.width ?? modelData.width) : modelData.width
-                        height: overlay.spread ? (root.targets[modelData.address]?.height ?? modelData.height) : modelData.height
+                        x: pageIndex * overlay.width + modelData.x
+                            + (spreadTarget.x - modelData.x) * overlay.revealProgress
+                        y: modelData.y + (spreadTarget.y - modelData.y) * overlay.revealProgress
+                        width: modelData.width + (spreadTarget.width - modelData.width) * overlay.revealProgress
+                        height: modelData.height + (spreadTarget.height - modelData.height) * overlay.revealProgress
 
                         Behavior on x {
                             enabled: preview.initialized && preview.currentPage
+                                && !BarState.exposeGestureTracking && !revealAnim.running
                             NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
                         }
                         Behavior on y {
                             enabled: preview.initialized && preview.currentPage
+                                && !BarState.exposeGestureTracking && !revealAnim.running
                             NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
                         }
                         Behavior on width {
                             enabled: preview.initialized && preview.currentPage
+                                && !BarState.exposeGestureTracking && !revealAnim.running
                             NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
                         }
                         Behavior on height {
                             enabled: preview.initialized && preview.currentPage
+                                && !BarState.exposeGestureTracking && !revealAnim.running
                             NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
                         }
 
@@ -433,7 +538,7 @@ Scope {
                             radius: root.rounding * Math.min(preview.width / preview.modelData.width,
                                                     preview.height / preview.modelData.height)
                             color: "transparent"
-                            contentUnderBorder: true
+                            contentUnderBorder: false
                             border.width: root.borderSize
                             border.color: (root.hoveredAddress !== ""
                                 ? root.hoveredAddress === preview.modelData.address
@@ -443,12 +548,14 @@ Scope {
 
                             ScreencopyView {
                                 id: captureView
-                                anchors.fill: parent
+                                x: -preview.capturePaddingX * preview.width / preview.modelData.width
+                                y: -preview.capturePaddingY * preview.height / preview.modelData.height
+                                width: parent.width - 2 * x
+                                height: parent.height - 2 * y
                                 captureSource: preview.currentPage
                                     || overlay.otherPagesEnabled && preview.nearbyPage
                                     ? preview.modelData.handle : null
-                                live: false
-                                onCaptureSourceChanged: if (captureSource) captureFrame()
+                                live: preview.currentPage && !captureView.hasContent
                                 onHasContentChanged: overlay.updateReady()
                             }
                         }
@@ -483,8 +590,11 @@ Scope {
                             - (overlay.workspaceEntries.length - 1) * 12)
                             / overlay.workspaceEntries.length) : 0
                     anchors.horizontalCenter: parent.horizontalCenter
-                    y: overlay.spread ? 16 : -height - 16
-                    Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                    y: -height - 16 + (height + 32) * overlay.revealProgress
+                    Behavior on y {
+                        enabled: !BarState.exposeGestureTracking && !revealAnim.running
+                        NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                    }
 
                     Rectangle {
                         anchors.fill: parent

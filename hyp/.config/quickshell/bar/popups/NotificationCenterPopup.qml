@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import Quickshell.Services.Notifications
 import Quickshell.Widgets
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Layouts
 import qs.common
 import qs.components
@@ -18,6 +19,9 @@ PanelWindow {
     property bool shown: false
     property double dismissedAt: 0
     property bool focusAcquired: false
+    property bool dismissing: false
+    readonly property int shadowPadding: 16
+    Component.onDestruction: BarState.releasePopup(root)
 
     readonly property var notifs: [...NotificationService.notifications.values].reverse()
 
@@ -27,6 +31,22 @@ PanelWindow {
         shown = true;
     }
     function close() { shown = false; }
+    function closeForReplacement() {
+        shown = false
+        exitAnim.stop()
+        visible = false
+    }
+
+    function dismissCard(card) {
+        if (dismissing) return
+        dismissing = true
+        const distance = card.height + list.spacing
+        for (let i = card.index + 1; i < list.count; ++i) {
+            const below = list.itemAtIndex(i)
+            if (below) below.slideOffset = -distance
+        }
+        card.fadeDismiss()
+    }
 
     screen: anchorItem?.Window.window?.screen ?? null
     anchors.top:    true
@@ -38,12 +58,14 @@ PanelWindow {
 
     onShownChanged: {
         if (shown) {
+            BarState.activatePopup(root)
             exitAnim.stop()
-            if (!visible) panel.x = panel.width
+            if (!visible) panel.x = panel.width + root.shadowPadding * 2
             focusAcquired = false
             visible = true
             enterAnim.restart()
         } else {
+            BarState.releasePopup(root)
             enterAnim.stop()
             focusCheck.stop()
             exitAnim.restart()
@@ -79,21 +101,34 @@ PanelWindow {
     WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     WlrLayershell.margins.top:    BarState.barBottom ? 8 : Theme.barHeight + 8
     WlrLayershell.margins.bottom: BarState.barBottom ? Theme.barHeight + 8 : 8
-    WlrLayershell.margins.right:  8
+    WlrLayershell.margins.right:  0
 
-    implicitWidth: 380
+    implicitWidth: 380 + shadowPadding * 2
+    mask: Region { x: panel.x; y: panel.y; width: panel.width; height: panel.height }
 
     NumberAnimation {
         id: enterAnim
         target: panel; property: "x"
-        to: 0; duration: 240; easing.type: Easing.OutCubic
+        to: root.shadowPadding; duration: 240; easing.type: Easing.OutCubic
     }
 
     NumberAnimation {
         id: exitAnim
         target: panel; property: "x"
-        to: panel.width; duration: 180; easing.type: Easing.InCubic
+        to: panel.width + root.shadowPadding * 2
+        duration: 180; easing.type: Easing.InCubic
         onFinished: if (!root.shown) root.visible = false
+    }
+
+    RectangularShadow {
+        x: panel.x
+        y: panel.y
+        width: panel.width
+        height: panel.height
+        radius: Theme.popupRadius
+        blur: 14
+        offset.x: -3
+        color: "#80000000"
     }
 
     Loader {
@@ -112,8 +147,8 @@ PanelWindow {
         id: panel
         anchors.top:    parent.top
         anchors.bottom: parent.bottom
-        width: parent.width
-        x: parent.width
+        width: 380
+        x: root.shadowPadding
         radius: Theme.popupRadius
         color: Theme.surface
         border.color: Theme.border
@@ -219,11 +254,16 @@ PanelWindow {
                 leftMargin: 14; rightMargin: 14
                 topMargin: 10; bottomMargin: 14
                 boundsBehavior: Flickable.StopAtBounds
-
                 delegate: Rectangle {
                     id: notifCard
                     required property var modelData
                     required property int index
+                    property real slideOffset: 0
+                    function fadeDismiss() { fadeOut.start() }
+                    Behavior on slideOffset {
+                        NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                    }
+                    transform: Translate { y: notifCard.slideOffset }
 
                     readonly property bool critical: modelData.urgency === NotificationUrgency.Critical
 
@@ -234,11 +274,23 @@ PanelWindow {
                     border.width: Theme.borderWidth
                     border.color: critical ? Qt.alpha(Theme.red, 0.6) : Theme.border
 
+                    NumberAnimation {
+                        id: fadeOut
+                        target: notifCard
+                        property: "opacity"
+                        to: 0
+                        duration: 180
+                        onFinished: {
+                            root.dismissing = false
+                            notifCard.modelData.dismiss()
+                        }
+                    }
+
                     MouseArea {
                         id: itemMouse
                         anchors.fill: parent
                         hoverEnabled: false
-                        onClicked: notifCard.modelData.dismiss()
+                        onClicked: root.dismissCard(notifCard)
                     }
 
                     RowLayout {

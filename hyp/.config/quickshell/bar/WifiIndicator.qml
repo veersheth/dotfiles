@@ -133,8 +133,22 @@ Item {
         }
     }
 
+    // NetworkManager reports connection changes immediately. Keep the slower
+    // poll for signal strength, which does not reliably produce monitor events.
+    Process {
+        running: true
+        command: ["nmcli", "monitor"]
+        stdout: SplitParser { onRead: networkRefresh.restart() }
+    }
+
     Timer {
-        interval: 5000
+        id: networkRefresh
+        interval: 250
+        onTriggered: wifiProc.running = true
+    }
+
+    Timer {
+        interval: 30000
         running: true
         repeat: true
         triggeredOnStart: true

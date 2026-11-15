@@ -45,11 +45,11 @@ Item {
     // ── Drag-to-set state ─────────────────────────────────────────────
     property bool _dragging: false
     property real _dragMs:   0
+    property real _cursorScreenX: 0
     property real _cursorScreenY: 0
 
-    function _dragToMs(dy) {
-        if (dy >= 120) return 0;  // 0 = indefinite
-        return Math.round(dy / 5) * 5 * 60000;  // 1px = 1 min, snap to 5 min
+    function _dragToMs(distance) {
+        return Math.floor(distance / 10) * 60000;
     }
     function _formatMs(ms) {
         if (ms <= 0) return "Indefinitely";
@@ -180,6 +180,7 @@ Item {
         anchors.leftMargin:   -6
         anchors.rightMargin:  -6
 
+        property real _pressX: 0
         property real _pressY: 0
 
         onEntered: if (!root._dragging) tip.show(root)
@@ -187,6 +188,7 @@ Item {
 
         onPressed: mouse => {
             if (mouse.button !== Qt.LeftButton) return
+            _pressX = mouseX
             _pressY = mouseY
             tip.anchorItem = root
             tip.shown = true
@@ -194,15 +196,17 @@ Item {
 
         onPositionChanged: mouse => {
             if (!(pressedButtons & Qt.LeftButton)) return
-            const dy = Math.max(0, mouseY - _pressY)
-            if (dy >= 8) {
+            const distance = Math.hypot(mouseX - _pressX, mouseY - _pressY)
+            if (distance >= 8) {
                 if (!root._dragging) {
                     root._dragging = true
                     picker.close()
                     tip.hide()
                 }
-                root._dragMs = root._dragToMs(dy)
-                root._cursorScreenY = hitArea.mapToGlobal(mouse.x, mouse.y).y
+                root._dragMs = root._dragToMs(distance)
+                const cursor = hitArea.mapToGlobal(mouse.x, mouse.y)
+                root._cursorScreenX = cursor.x
+                root._cursorScreenY = cursor.y
             }
         }
 
@@ -215,8 +219,7 @@ Item {
             if (root._dragging) {
                 const ms = root._dragMs
                 root._dragging = false
-                // under 5 min → too short, treat as cancel
-                if (ms === 0 || ms >= 5 * 60000) root.activate(ms)
+                if (ms > 0) root.activate(ms)
             } else {
                 tip.hide()
                 if (root.on) root.deactivate()
@@ -267,13 +270,13 @@ Item {
 
         WlrLayershell.margins.top: {
             const sy = screen?.y ?? 0
-            return Math.max(Theme.barHeight + 4,
-                            Math.round(root._cursorScreenY - sy - implicitHeight / 2))
+            return Math.max(0, Math.min((screen?.height ?? 0) - implicitHeight,
+                            Math.round(root._cursorScreenY - sy - implicitHeight / 2)))
         }
         WlrLayershell.margins.left: {
-            const mid = root.mapToGlobal(root.width / 2, 0).x
             const sx  = screen?.x ?? 0
-            return Math.max(0, Math.round(mid - sx - implicitWidth / 2))
+            return Math.max(0, Math.min((screen?.width ?? 0) - implicitWidth,
+                            Math.round(root._cursorScreenX - sx - implicitWidth / 2)))
         }
 
         Rectangle {
@@ -286,7 +289,7 @@ Item {
             Text {
                 id: dlText
                 anchors.centerIn: parent
-                text: root._formatMs(root._dragMs)
+                text: root._dragMs > 0 ? root._formatMs(root._dragMs) : "Keep pulling…"
                 font.family: Theme.font
                 font.pixelSize: Theme.fontSize
                 font.weight: Font.DemiBold

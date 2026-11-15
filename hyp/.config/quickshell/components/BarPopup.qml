@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import QtQuick
+import QtQuick.Effects
 import qs.common
 
 // Popup that drops from the bar. Set anchorItem to the bar module and call
@@ -26,6 +27,9 @@ PanelWindow {
     property bool handleEscape: true
     // Left-align the popup's left edge with the anchor instead of centering.
     property bool alignLeft: false
+    property int rightEdgeInset: 2
+    readonly property int shadowPadding: 16
+    Component.onDestruction: BarState.releasePopup(root)
 
     function toggle() {
         if (shown) { shown = false; return; }
@@ -40,19 +44,15 @@ PanelWindow {
     anchors.left:   true
     exclusiveZone: -1
     color: "transparent"
-    visible: false
+    visible: shown
 
     onShownChanged: {
         if (shown) {
-            exitAnim.stop()
-            if (!visible) card.scale = 0
+            BarState.activatePopup(root)
             focusAcquired = false
-            visible = true
-            enterAnim.restart()
         } else {
-            enterAnim.stop()
+            BarState.releasePopup(root)
             focusCheck.stop()
-            exitAnim.restart()
         }
     }
 
@@ -91,29 +91,42 @@ PanelWindow {
         if (!anchorItem) return 0;
         const sx = screen?.x ?? 0;
         const sw = screen?.width ?? 9999;
+        const maxLeft = Math.max(0, sw - contentWidth - shadowPadding * 2);
         if (root.alignLeft) {
             const left = anchorItem.mapToGlobal(0, 0).x;
-            return Math.max(0, Math.min(Math.round(left - sx), sw - contentWidth - 2));
+            return Math.max(0, Math.min(Math.round(left - sx) - shadowPadding, maxLeft));
         }
         const mid   = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x;
         const ideal = Math.round(mid - sx - contentWidth / 2);
-        return Math.max(0, Math.min(ideal, sw - contentWidth - 2));
+        return Math.max(0, Math.min(ideal - shadowPadding,
+            maxLeft - Math.max(0, rightEdgeInset - shadowPadding)));
     }
 
-    implicitWidth:  contentWidth  + 2
+    implicitWidth:  contentWidth + shadowPadding * 2
     // Keep the Wayland buffer height stable as list rows change. Resizing the
     // native window requires compositor negotiation and can hitch independently
     // of QML animations. Only the card paints and accepts input in this surface.
     implicitHeight: Math.max(1, (screen?.height ?? 1080) - Theme.barHeight - 8)
     mask: Region { x: card.x; y: card.y; width: card.width; height: card.height }
 
+    RectangularShadow {
+        x: card.x
+        y: card.y
+        width: card.width
+        height: card.height
+        radius: Theme.popupRadius
+        blur: 14
+        offset.y: BarState.barBottom ? -3 : 3
+        color: "#80000000"
+    }
+
     Rectangle {
         id: card
+        x: root.shadowPadding
         y: BarState.barBottom ? root.height - height : 0
         width: root.contentWidth
         height: root.contentHeight
         radius: Theme.popupRadius
-        transformOrigin: BarState.barBottom ? Item.Bottom : Item.Top
 
         color: Theme.surface
         border.color: Theme.border
@@ -129,25 +142,6 @@ PanelWindow {
                 anchors { fill: parent; margins: root.contentPadding }
             }
         }
-    }
-
-    // Animate from the card's current scale so interrupted opens and closes
-    // continue smoothly. The Wayland surface and list layout stay fixed.
-    NumberAnimation {
-        id: enterAnim
-        target: card; property: "scale"
-        to: 1
-        duration: 220
-        easing.type: Easing.OutCubic
-    }
-
-    NumberAnimation {
-        id: exitAnim
-        target: card; property: "scale"
-        to: 0
-        duration: 140
-        easing.type: Easing.InCubic
-        onFinished: if (!root.shown) root.visible = false
     }
 
     Shortcut {

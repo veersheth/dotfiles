@@ -24,6 +24,16 @@ PanelWindow {
         shown = false;
     }
 
+    onShownChanged: {
+        if (shown) {
+            card.opacity = 0;
+            card.scale = 0.92;
+            enterAnim.restart();
+        } else {
+            enterAnim.stop();
+        }
+    }
+
     Timer { id: showDelay; interval: 300; onTriggered: root.shown = true }
 
     screen: anchorItem?.Window.window?.screen ?? null
@@ -58,6 +68,7 @@ PanelWindow {
         border.color: Theme.border
         border.width: Theme.borderWidth
         clip: true
+        transformOrigin: BarState.barBottom ? Item.Bottom : Item.Top
 
         Item {
             id: contentItem
@@ -65,4 +76,15 @@ PanelWindow {
         }
     }
 
+    ParallelAnimation {
+        id: enterAnim
+        NumberAnimation {
+            target: card; property: "opacity"
+            to: 1; duration: 160; easing.type: Easing.OutCubic
+        }
+        NumberAnimation {
+            target: card; property: "scale"
+            to: 1; duration: 180; easing.type: Easing.OutCubic
+        }
+    }
 }

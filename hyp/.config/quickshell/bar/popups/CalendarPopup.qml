@@ -12,6 +12,7 @@ import qs.components
 // info/controls, all centered on one horizontal line.
 BarPopup {
     id: root
+    rightEdgeInset: 16
 
     property var today: new Date()
     property int month: today.getMonth()
