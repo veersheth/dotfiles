@@ -159,14 +159,17 @@
         "description": "BOE 0x0BCA Unknown",
         "width": 2256,
         "height": 1504,
-        "refreshRate": 59.999,
-        "x": 734,
-        "y": -31,
-        "scale": 1.4,
+        "refreshRate": 59.999001,
+        "x": 465,
+        "y": -95,
+        "scale": 1.300781,
         "transform": 0,
         "mirror": null,
         "disabled": false,
-        "_workspaces": []
+        "_workspaces": [],
+        "_make": "BOE",
+        "_model": "0x0BCA",
+        "_serial": null
       }
     ],
     "use_edid": true
@@ -200,6 +203,29 @@
         "mirror": null,
         "disabled": false,
         "_workspaces": []
+      }
+    ],
+    "use_edid": true
+  },
+  "Unknown Unknown (eDP-1)": {
+    "monitors": [
+      {
+        "name": "eDP-1",
+        "description": "Unknown Unknown (eDP-1)",
+        "width": 2256,
+        "height": 1504,
+        "refreshRate": 60.0,
+        "x": 286,
+        "y": -105,
+        "scale": 1.2999999523162842,
+        "transform": 0,
+        "mirror": null,
+        "disabled": false,
+        "_workspaces": [],
+        "_make": null,
+        "_model": null,
+        "_serial": null,
+        "_mode_known": false
       }
     ],
     "use_edid": true

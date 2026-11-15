@@ -12,91 +12,157 @@ return function(hl)
 
   local function xy(t) return t.x or t[1], t.y or t[2] end
 
-  -- local function grid(n, mw, mh)
-  --   local cols = math.ceil(math.sqrt(n * mw / mh))
-  --   return cols, math.ceil(n / cols)
-  -- end
-
-  local MAX_SCALE = 1.0   -- 1.0 = never enlarge past original size
-
-  local function layout_for(wins, mw, mh, top, cols)
-    local n    = #wins
-    local rows = math.ceil(n / cols)
-    local pad  = math.max(10, math.min(40, 160 / n))
-    local cw   = (mw - pad * (cols + 1)) / cols
-    local ch   = (mh - top - pad * (rows + 1)) / rows
-    local score = 0
-    for _, it in ipairs(wins) do
-      score = score + math.min(cw / it.sw, ch / it.sh, MAX_SCALE)
-    end
-    return { cols = cols, rows = rows, pad = pad, cw = cw, ch = ch, score = score }
-  end
-
-  local function best_layout(wins, mw, mh, top)
-    local best
-    for cols = 1, #wins do
-      local l = layout_for(wins, mw, mh, top, cols)
-      if l.cw > 0 and l.ch > 0 and (not best or l.score > best.score + 1e-6) then
-        best = l
-      end
-    end
-    return best or layout_for(wins, mw, mh, top, math.ceil(math.sqrt(#wins)))
-  end
+  local MAX_SCALE = 0.95
 
   local function wkey(w)
     return tostring(w.address or w)
   end
 
-  -- lay out a list of window items in the expose grid and record their
-  -- original geometry in expose.saved
-  local function place_windows(wins)
-    local mon = hl.get_monitors()[1]
+  local function clamp(value, low, high)
+    return math.max(low, math.min(value, high))
+  end
+
+  local function overlap(a, b, gap)
+    return (a.width + b.width) / 2 + gap - math.abs(a.x - b.x),
+           (a.height + b.height) / 2 + gap - math.abs(a.y - b.y)
+  end
+
+  -- Map each original center by its angle and distance from the monitor center,
+  -- then resolve overlaps. Equal centers get stable angles around a small ring.
+  -- This only moves real windows; it keeps no screencopy previews running.
+  local function spread_positions(wins, mon)
     local sc  = mon.scale or 1
     local mw, mh = mon.width / sc, mon.height / sc
     local mx, my = mon.x or 0, mon.y or 0
+    local margin = math.min(48, math.min(mw, mh) * 0.04)
+    local area_w, area_h = mw - 2 * margin, mh - 2 * margin
+    local left, top = mx + margin, my + margin
+    local gap = math.min(20, math.min(area_w, area_h) * 0.025)
 
-    local top = 60
-    local L = best_layout(wins, mw, mh, top)
-    local cols, rows, pad, cw, ch = L.cols, L.rows, L.pad, L.cw, L.ch
-
-    -- sort top to bottom, split into rows, sort each row left to right
     table.sort(wins, function(a, b)
-      local acy, bcy = math.floor(a.cy + 0.5), math.floor(b.cy + 0.5)
-      if acy ~= bcy then return acy < bcy end
-      local acx, bcx = math.floor(a.cx + 0.5), math.floor(b.cx + 0.5)
-      if acx ~= bcx then return acx < bcx end
+      if a.cy ~= b.cy then return a.cy < b.cy end
+      if a.cx ~= b.cx then return a.cx < b.cx end
       return wkey(a.win) < wkey(b.win)
     end)
 
-    local ordered = {}
-    for r = 0, rows - 1 do
-      local row = {}
-      for c = 1, cols do
-        local item = wins[r * cols + c]
-        if item then table.insert(row, item) end
-      end
-      table.sort(row, function(a, b) return a.cx < b.cx end)
-      for c, item in ipairs(row) do
-        item.col, item.row, item.rowcount = c - 1, r, #row
-        table.insert(ordered, item)
-      end
+    local weighted_area = 0
+    for _, it in ipairs(wins) do
+      it.boost = 1.5 - 0.5 * math.min(1, it.sh / mh)
+      weighted_area = weighted_area + it.sw * it.sh * it.boost * it.boost
+    end
+    local scale = math.min(MAX_SCALE,
+      math.sqrt(area_w * area_h / (weighted_area * 1.45)))
+    for _, it in ipairs(wins) do
+      scale = math.min(scale, area_w / (it.sw * it.boost),
+        area_h / (it.sh * it.boost))
     end
 
+    local jitter = math.min(10, math.min(area_w, area_h) * 0.01)
+    for _ = 1, 12 do
+      for i, it in ipairs(wins) do
+        local window_scale = math.min(MAX_SCALE, scale * it.boost)
+        it.width, it.height = it.sw * window_scale, it.sh * window_scale
+        local angle = 2 * math.pi * (i - 1) / #wins
+        local px = (it.cx - mx - mw / 2) / (mw / 2)
+        local py = (it.cy - my - mh / 2) / (mh / 2)
+        local original_radius = math.sqrt(px * px + py * py)
+        local ux, uy, radius
+        if original_radius < 0.005 then
+          ux, uy = math.cos(angle), math.sin(angle)
+          radius = 0.22
+        else
+          ux, uy = px / original_radius, py / original_radius
+          radius = 0.20 + 0.35 * math.min(1, original_radius)
+        end
+        it.x = left + area_w / 2 + ux * radius * area_w / 2
+          + math.cos(angle) * jitter
+        it.y = top + area_h / 2 + uy * radius * area_h / 2
+          + math.sin(angle) * jitter
+        it.x = clamp(it.x, left + it.width / 2, left + area_w - it.width / 2)
+        it.y = clamp(it.y, top + it.height / 2, top + area_h - it.height / 2)
+      end
+
+      for _ = 1, 90 do
+        local collided = false
+        for i = 1, #wins - 1 do
+          local a = wins[i]
+          for j = i + 1, #wins do
+            local b = wins[j]
+            local ox, oy = overlap(a, b, gap)
+            if ox > 0.5 and oy > 0.5 then
+              collided = true
+              local dx, dy = a.x - b.x, a.y - b.y
+              if math.abs(dx) + math.abs(dy) < 0.001 then
+                local angle = (i * 2.4 + j * 1.3)
+                dx, dy = math.cos(angle), math.sin(angle)
+              end
+              local length = math.sqrt(dx * dx + dy * dy)
+              local ux, uy = dx / length, dy / length
+              local distance = math.min(
+                ox / math.max(math.abs(ux), 0.001),
+                oy / math.max(math.abs(uy), 0.001))
+              local step = (distance + 0.5) / 2
+              a.x, b.x = a.x + ux * step, b.x - ux * step
+              a.y, b.y = a.y + uy * step, b.y - uy * step
+            end
+          end
+        end
+        for _, it in ipairs(wins) do
+          it.x = clamp(it.x, left + it.width / 2, left + area_w - it.width / 2)
+          it.y = clamp(it.y, top + it.height / 2, top + area_h - it.height / 2)
+        end
+        if not collided then break end
+      end
+
+      local clear = true
+      for i = 1, #wins - 1 do
+        for j = i + 1, #wins do
+          local ox, oy = overlap(wins[i], wins[j], gap)
+          if ox > 1 and oy > 1 then clear = false; break end
+        end
+        if not clear then break end
+      end
+      if clear then break end
+      scale = scale * 0.88
+    end
+
+    -- Center the whole constellation without changing its gaps. For one
+    -- window this naturally places that window in the monitor center.
+    local min_x, min_y = math.huge, math.huge
+    local max_x, max_y = -math.huge, -math.huge
+    local min_dx, min_dy = -math.huge, -math.huge
+    local max_dx, max_dy = math.huge, math.huge
+    for _, it in ipairs(wins) do
+      min_x = math.min(min_x, it.x - it.width / 2)
+      max_x = math.max(max_x, it.x + it.width / 2)
+      min_y = math.min(min_y, it.y - it.height / 2)
+      max_y = math.max(max_y, it.y + it.height / 2)
+      min_dx = math.max(min_dx, left + it.width / 2 - it.x)
+      max_dx = math.min(max_dx, left + area_w - it.width / 2 - it.x)
+      min_dy = math.max(min_dy, top + it.height / 2 - it.y)
+      max_dy = math.min(max_dy, top + area_h - it.height / 2 - it.y)
+    end
+    local dx = clamp(left + area_w / 2 - (min_x + max_x) / 2, min_dx, max_dx)
+    local dy = clamp(top + area_h / 2 - (min_y + max_y) / 2, min_dy, max_dy)
+    for _, it in ipairs(wins) do
+      it.x, it.y = it.x + dx, it.y + dy
+    end
+  end
+
+  -- Resize and move the real windows; keep their original geometry for exit.
+  local function place_windows(wins)
+    spread_positions(wins, hl.get_monitors()[1])
+
     expose.saved = {}
-    for _, it in ipairs(ordered) do
-      local w = it.win
-      table.insert(expose.saved, {
-        win = w, x = it.ax, y = it.ay, w = it.sw, h = it.sh, tiled = it.tiled,
-      })
-
-      local s = math.min(cw / it.sw, ch / it.sh, MAX_SCALE)
-      local nw, nh = it.sw * s, it.sh * s
-      local row_offset = (cols - it.rowcount) * (cw + pad) / 2
-      local x = mx + pad + row_offset + it.col * (cw + pad) + (cw - nw) / 2
-      local y = my + top + pad + it.row * (ch + pad) + (ch - nh) / 2
-
-      hl.dispatch(hl.dsp.window.resize({ x = nw, y = nh, window = w }))
-      hl.dispatch(hl.dsp.window.move({ x = x, y = y, window = w }))
+    for _, it in ipairs(wins) do
+      expose.saved[#expose.saved + 1] = {
+        win = it.win, x = it.ax, y = it.ay,
+        w = it.sw, h = it.sh, tiled = it.tiled,
+      }
+      hl.dispatch(hl.dsp.window.resize({ x = it.width, y = it.height, window = it.win }))
+      hl.dispatch(hl.dsp.window.move({
+        x = it.x - it.width / 2, y = it.y - it.height / 2, window = it.win,
+      }))
     end
   end
 
@@ -111,14 +177,16 @@ return function(hl)
     -- capturing geometry BEFORE any floating happens
     local wins = {}
     for _, w in ipairs(hl.get_windows()) do
-      if w.workspace and w.workspace.id == ws.id then
+      if w.workspace and w.workspace.id == ws.id and w.at and w.size then
         local ax, ay = xy(w.at)
         local sw, sh = xy(w.size)
-        table.insert(wins, {
-          win = w, ax = ax, ay = ay, sw = sw, sh = sh,
-          cx = ax + sw / 2, cy = ay + sh / 2,
-          tiled = not w.floating,
-        })
+        if ax and ay and sw and sh and sw > 1 and sh > 1 then
+          table.insert(wins, {
+            win = w, ax = ax, ay = ay, sw = sw, sh = sh,
+            cx = ax + sw / 2, cy = ay + sh / 2,
+            tiled = not w.floating,
+          })
+        end
       end
     end
     if #wins == 0 then return end
@@ -191,16 +259,6 @@ return function(hl)
     place_windows(wins)
   end
 
-  local function toggle_expose()
-    local ok, err = pcall(function()
-      if expose.active then exit_expose() else enter_expose() end
-    end)
-    if not ok then dbg("error: " .. err) end
-  end
-
-  hl.bind("SUPER + D", toggle_expose)
-  hl.bind("SUPER + SUPER_L", toggle_expose, { release = true })
-
   -- SUPER+J/K: when the focused window is floating, cycle focus through windows
   -- and raise each one to the front (no expose). Tiled windows keep the normal
   -- master cyclenext/cycleprev behaviour.
@@ -225,14 +283,11 @@ return function(hl)
     if not ok then dbg("error: " .. err) end
   end
 
-  -- global binds (work from normal mode)
-  hl.bind("SUPER + J", function() switcher_step(1)  end)
-  hl.bind("SUPER + K", function() switcher_step(-1) end)
-
   hl.define_submap("expose", function()
     hl.bind("escape", exit_expose)
     hl.bind("return", exit_expose)
     hl.bind("Tab", hl.dsp.window.cycle_next())
+    hl.bind("Print", hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot.sh active-output"))
     hl.bind("SUPER + D", exit_expose)
     hl.bind("SUPER + SUPER_L", exit_expose, { release = true })
     hl.bind("SUPER + Q", function()
@@ -251,17 +306,19 @@ return function(hl)
     end)
   end)
 
-  hl.gesture({
-    fingers = 3,
-    direction = "up",
-    action = function() hl.dispatch(hl.dsp.exec_cmd("qs ipc call expose open")) end,
-  })
-  hl.gesture({
-    fingers = 3,
-    direction = "down",
-    action = function() hl.dispatch(hl.dsp.exec_cmd("qs ipc call expose close")) end,
-  })
-
+  expose.open = function()
+    if expose.active then return end
+    local ok, err = pcall(enter_expose)
+    if not ok then dbg("error: " .. err) end
+  end
+  expose.close = function()
+    if not expose.active then return end
+    local ok, err = pcall(exit_expose)
+    if not ok then dbg("error: " .. err) end
+  end
+  expose.toggle = function()
+    if expose.active then expose.close() else expose.open() end
+  end
   expose.log_error = function(err) dbg("error: " .. err) end
   return expose
 end

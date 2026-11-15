@@ -7,7 +7,7 @@ readonly TIMESTAMP=$(date '+%y-%m-%d %H:%M:%S')
 readonly SCREENSHOT_FILE="$SCREENSHOT_DIR/Screenshot $TIMESTAMP.png"
 
 usage() {
-    printf 'Usage: %s {region|annotate|output|ocr|lens}\n' "$0" >&2
+    printf 'Usage: %s {region|annotate|output|active-output|ocr|lens}\n' "$0" >&2
 }
 
 make_temp_file() {
@@ -26,6 +26,9 @@ case "${1:-}" in
         ;;
     output)
         hyprshot -m output -z --raw | tee "$SCREENSHOT_FILE" | wl-copy --type image/png
+        ;;
+    active-output)
+        hyprshot -m output -m active -z --raw | tee "$SCREENSHOT_FILE" | wl-copy --type image/png
         ;;
     ocr)
         temp_file=$(make_temp_file ocr)
