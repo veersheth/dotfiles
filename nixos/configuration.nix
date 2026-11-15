@@ -42,7 +42,6 @@
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
 
-
 networking.firewall.allowedTCPPorts = [ 9300 ];
 networking.firewall.allowedUDPPorts = [ 5353 5355 ];
 
@@ -138,33 +137,29 @@ networking.firewall.allowedUDPPorts = [ 5353 5355 ];
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [
       # GUI 
-      rquickshare packet
-      chatgpt
-      vicinae
+      localsend
       tigervnc
       gnome-power-manager
       gimp-with-plugins
       steam lutris wine winetricks mangohud # gaming
-      blender shotcut davinci-resolve # video
-      spotify spotatui
-      sioyek mupdf zathura
+      # shotcut # video
+      spotify
+      sioyek mupdf
       tor-browser
       obsidian
       mpv
-      kitty foot
-      vscode android-studio
+      foot
+      vscode android-studio vscodium
       livecaptions
       obs-studio
-      davinci-resolve
-      onlyoffice-desktopeditors
-      keepassxc
-      
       # onedriver
       # onedrive onedrivegui
-
-      openai-whisper
+      # openai-whisper
+      proton-vpn proton-vpn-cli   
+      pairdrop
 
       # CLI
+      rclone fuse3
       swift swiftpm
       yarn
       lazygit
@@ -185,9 +180,8 @@ networking.firewall.allowedUDPPorts = [ 5353 5355 ];
       # # GNOME 
       gnome-tweaks
       # gnomeExtensions.media-controls
-      gnomeExtensions.rounded-window-corners-reborn
+      # gnomeExtensions.rounded-window-corners-reborn
       gnomeExtensions.user-themes
-      gnomeExtensions.disable-workspace-animation
       gnomeExtensions.bluetooth-battery-meter 
       # gnomeExtensions.gsconnect 
       # gnomeExtensions.impatience 
@@ -271,6 +265,10 @@ networking.firewall.allowedUDPPorts = [ 5353 5355 ];
     #   package = pkgs.kdePackages.kdeconnect-kde;
     # };
 
+    mango = {
+      enable = true;
+    };
+
     craftapps = {
       enable = true;
       enableAll = true;
@@ -284,6 +282,7 @@ networking.firewall.allowedUDPPorts = [ 5353 5355 ];
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    keepassxc
     inotify-tools
     cmake gnumake
     zenity
@@ -345,23 +344,29 @@ networking.firewall.allowedUDPPorts = [ 5353 5355 ];
   services = {
     # timesyncd.enable = true;
     fwupd.enable = true;
+
     keyd.enable = true;
+
     fprintd.enable = true;
+
     flatpak.enable = true;
+
     logind.settings.Login = {
       HandlePowerKey = "lock";
       HandleLidSwitch = "suspend";
       HandleLidSwitchExternalPower = "suspend";
     };
+
     upower = {
       enable = true;
       criticalPowerAction = "PowerOff";
     };
+
     resilio = {
       enable = true;
       enableWebUI = true;
-      httpLogin = "holysheth";
-      httpPass = "resiliopass123";
+      httpLogin = "veer";
+      httpPass = "000";
     };
   };
 
@@ -391,12 +396,6 @@ networking.firewall.allowedUDPPorts = [ 5353 5355 ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
-
-  # JUST FOR AIRDROP THRU OMDROP
-  networking.firewall.interfaces."awdl0" = {
-    allowedTCPPorts = [ 8771 ];
-    allowedUDPPorts = [ 5353 ];
-  };
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
