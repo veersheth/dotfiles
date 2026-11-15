@@ -15,7 +15,7 @@ vim.pack.add({ "https://github.com/nvim-treesitter/nvim-treesitter-textobjects" 
 require("nvim-treesitter").setup()
 
 local langs = {
-  "svelte", "markdown", "lua", "rust", "typst", "typescript",
+  "svelte", "markdown", "markdown_inline", "lua", "rust", "typst", "typescript",
   "javascript", "c", "cpp", "glsl", "zig", "python",
   "tsx",
 }
