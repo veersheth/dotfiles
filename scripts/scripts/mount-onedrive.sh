@@ -9,7 +9,10 @@ rc_socket="$runtime_dir/mount-onedrive-${UID}.sock"
 cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/rclone"
 service_file="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/mount-onedrive-script.service"
 script_path=$(readlink -f "$0")
+tray_icon="${script_path%/*}/onedrive-tray.svg"
+tray_helper="${script_path%/*}/onedrive-tray.sh"
 mount_pid=
+tray_pid=
 stopping=0
 
 notify() {
@@ -38,6 +41,25 @@ stop_mount() {
     fi
 }
 
+start_tray() {
+    command -v yad >/dev/null 2>&1 || return 0
+    command -v xdg-open >/dev/null 2>&1 || return 0
+    command -v jq >/dev/null 2>&1 || return 0
+    [[ -r "$tray_icon" ]] || return 0
+    [[ -r "$tray_helper" ]] || return 0
+
+    bash "$tray_helper" "$rc_socket" "$mount_dir" "$script_path" "$tray_icon" 9>&- &
+    tray_pid=$!
+}
+
+cleanup() {
+    if [[ -n "$tray_pid" ]]; then
+        kill "$tray_pid" 2>/dev/null || true
+        wait "$tray_pid" 2>/dev/null || true
+    fi
+    rm -f "$pid_file"
+}
+
 run_mount() {
     local connected=0 status
 
@@ -48,7 +70,7 @@ run_mount() {
         return 0
     fi
     printf '%s %s\n' "$$" "$(process_start_time "$$")" > "$pid_file"
-    trap 'rm -f "$pid_file"' EXIT
+    trap cleanup EXIT
     trap stop_mount INT TERM
 
     if mountpoint -q "$mount_dir"; then
@@ -87,6 +109,7 @@ run_mount() {
         if mountpoint -q "$mount_dir"; then
             connected=1
             notify "OneDrive mounted" "$mount_dir"
+            start_tray
             break
         fi
         sleep 0.5
@@ -286,6 +309,9 @@ EOF
     fi
     systemctl --user daemon-reload || return 1
     systemctl --user enable mount-onedrive-script.service || return 1
+    if ! command -v yad >/dev/null 2>&1; then
+        echo "Install yad for the optional system tray icon, then restart the mount."
+    fi
     start_mount
 }
 
