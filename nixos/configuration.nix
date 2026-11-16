@@ -159,6 +159,8 @@ networking.firewall.allowedUDPPorts = [ 5353 5355 ];
       pairdrop
 
       # CLI
+      yad
+      rofi
       rclone fuse3
       swift swiftpm
       yarn
