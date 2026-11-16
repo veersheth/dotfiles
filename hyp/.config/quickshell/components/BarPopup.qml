@@ -29,6 +29,9 @@ PanelWindow {
     property bool alignLeft: false
     property int rightEdgeInset: 2
     readonly property int shadowPadding: 16
+    property bool alive: false
+    property real dist: -contentHeight
+    readonly property int dRest: 4
     Component.onDestruction: BarState.releasePopup(root)
 
     function toggle() {
@@ -37,6 +40,11 @@ PanelWindow {
         shown = true;
     }
     function close() { shown = false; }
+    function closeForReplacement() {
+        shown = false
+        exitAnim.stop()
+        alive = false
+    }
 
     screen: anchorItem?.Window.window?.screen ?? null
     anchors.top:    !BarState.barBottom
@@ -44,15 +52,27 @@ PanelWindow {
     anchors.left:   true
     exclusiveZone: -1
     color: "transparent"
-    visible: shown
+    visible: alive
 
-    onShownChanged: {
-        if (shown) {
-            BarState.activatePopup(root)
-            focusAcquired = false
-        } else {
-            BarState.releasePopup(root)
-            focusCheck.stop()
+    Connections {
+        target: root
+        function onShownChanged() {
+            if (root.shown) {
+                BarState.activatePopup(root)
+                exitAnim.stop()
+                if (!root.alive) root.dist = -root.contentHeight
+                root.focusAcquired = false
+                root.alive = true
+                enterAnim.restart()
+                Qt.callLater(() => {
+                    if (root.shown) card.forceActiveFocus()
+                })
+            } else {
+                BarState.releasePopup(root)
+                enterAnim.stop()
+                focusCheck.stop()
+                exitAnim.restart()
+            }
         }
     }
 
@@ -85,8 +105,8 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: shown ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
-    WlrLayershell.margins.top:    BarState.barBottom ? 0 : Theme.barHeight + 4
-    WlrLayershell.margins.bottom: BarState.barBottom ? Theme.barHeight + 4 : 0
+    WlrLayershell.margins.top:    BarState.barBottom ? 0 : Theme.barHeight
+    WlrLayershell.margins.bottom: BarState.barBottom ? Theme.barHeight : 0
     WlrLayershell.margins.left: {
         if (!anchorItem) return 0;
         const sx = screen?.x ?? 0;
@@ -107,7 +127,12 @@ PanelWindow {
     // native window requires compositor negotiation and can hitch independently
     // of QML animations. Only the card paints and accepts input in this surface.
     implicitHeight: Math.max(1, (screen?.height ?? 1080) - Theme.barHeight - 8)
-    mask: Region { x: card.x; y: card.y; width: card.width; height: card.height }
+    mask: Region {
+        x: card.x
+        y: BarState.barBottom ? root.height - card.height - dRest : dRest
+        width: card.width
+        height: card.height
+    }
 
     RectangularShadow {
         x: card.x
@@ -122,8 +147,9 @@ PanelWindow {
 
     Rectangle {
         id: card
+        focus: true
         x: root.shadowPadding
-        y: BarState.barBottom ? root.height - height : 0
+        y: BarState.barBottom ? root.height - root.dist - height : root.dist
         width: root.contentWidth
         height: root.contentHeight
         radius: Theme.popupRadius
@@ -142,6 +168,25 @@ PanelWindow {
                 anchors { fill: parent; margins: root.contentPadding }
             }
         }
+    }
+
+    NumberAnimation {
+        id: enterAnim
+        target: root; property: "dist"; to: root.dRest
+        duration: 460
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: [0.16, 1.0, 0.3, 1.0, 1.0, 1.0]
+    }
+
+    SequentialAnimation {
+        id: exitAnim
+        NumberAnimation {
+            target: root; property: "dist"; to: -root.contentHeight
+            duration: 300
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: [0.7, 0.0, 0.84, 0.0, 1.0, 1.0]
+        }
+        ScriptAction { script: root.alive = false }
     }
 
     Shortcut {

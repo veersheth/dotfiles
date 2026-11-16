@@ -64,6 +64,9 @@ PanelWindow {
             focusAcquired = false
             visible = true
             enterAnim.restart()
+            Qt.callLater(() => {
+                if (root.shown) panel.forceActiveFocus()
+            })
         } else {
             BarState.releasePopup(root)
             enterAnim.stop()
@@ -104,7 +107,13 @@ PanelWindow {
     WlrLayershell.margins.right:  0
 
     implicitWidth: 380 + shadowPadding * 2
-    mask: Region { x: panel.x; y: panel.y; width: panel.width; height: panel.height }
+    mask: Region { x: root.shadowPadding; y: panel.y; width: panel.width; height: panel.height }
+
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.shown
+        onActivated: root.close()
+    }
 
     NumberAnimation {
         id: enterAnim
@@ -145,6 +154,7 @@ PanelWindow {
 
     Rectangle {
         id: panel
+        focus: true
         anchors.top:    parent.top
         anchors.bottom: parent.bottom
         width: 380

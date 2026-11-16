@@ -54,7 +54,9 @@ PanelWindow {
         if (!anchorItem) return 0;
         const mid = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x;
         const sx  = screen?.x ?? 0;
-        return Math.max(0, Math.round(mid - sx - implicitWidth / 2));
+        const sw  = screen?.width ?? 9999;
+        return Math.max(0, Math.min(Math.round(mid - sx - implicitWidth / 2),
+            sw - implicitWidth - 8));
     }
 
     implicitWidth:  contentWidth

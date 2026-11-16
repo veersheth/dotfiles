@@ -32,11 +32,11 @@ RowLayout {
         sourceComponent: CaffeineDisplay { foreground: root.foreground }
     }
 
-    NotificationBell { foreground: root.foreground; Layout.fillHeight: true }
     WifiIndicator { foreground: root.foreground; Layout.fillHeight: true }
     BluetoothIndicator { foreground: root.foreground; Layout.fillHeight: true }
     Clock { foreground: root.foreground; Layout.fillHeight: true }
     Volume { foreground: root.foreground; Layout.fillHeight: true }
     Battery { foreground: root.foreground; Layout.fillHeight: true }
+    NotificationBell { foreground: root.foreground; Layout.fillHeight: true }
     Power { foreground: root.foreground; Layout.fillHeight: true }
 }
