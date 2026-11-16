@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Mango uses wlr-gamma-control; hyprsunset only works with Hyprland.
+state_dir=${XDG_RUNTIME_DIR:-/tmp}
+state_file="$state_dir/mango-nightlight-state"
+pid_file="$state_dir/mango-nightlight-pid"
+
+stop_current() {
+    local pid
+    if [[ -f $pid_file ]]; then
+        pid=$(cat "$pid_file")
+        if [[ $pid =~ ^[0-9]+$ && -r /proc/$pid/comm ]] &&
+                [[ $(cat "/proc/$pid/comm") == wlsunset ]]; then
+            kill "$pid" 2>/dev/null || true
+        fi
+        rm -f "$pid_file"
+    fi
+}
+
+state=OFF
+[[ -f $state_file ]] && state=$(cat "$state_file")
+case "$state" in
+    OFF) next=6000 ;;
+    6000) next=4000 ;;
+    4000) next=2000 ;;
+    *) next=OFF ;;
+esac
+
+if [[ $next != OFF ]] && ! command -v wlsunset >/dev/null 2>&1; then
+    notify-send -t 3000 'Night light unavailable' 'Install wlsunset for Mango.' 2>/dev/null || true
+    printf 'wlsunset is required for Mango night light.\n' >&2
+    exit 1
+fi
+
+stop_current
+if [[ $next == OFF ]]; then
+    printf 'OFF\n' > "$state_file"
+else
+    # wlsunset requires the high temperature to exceed the low one. A 1 K
+    # difference makes the chosen temperature effectively constant all day.
+    wlsunset -l 0 -L 0 -T "$((next + 1))" -t "$next" >/dev/null 2>&1 &
+    pid=$!
+    sleep 0.2
+    if ! kill -0 "$pid" 2>/dev/null; then
+        printf 'wlsunset exited before applying the night-light setting.\n' >&2
+        exit 1
+    fi
+    printf '%s\n' "$pid" > "$pid_file"
+    printf '%s\n' "$next" > "$state_file"
+fi
+notify-send -t 700 'Night light' "$next" 2>/dev/null || true

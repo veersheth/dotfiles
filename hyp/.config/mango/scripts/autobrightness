@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+"""Ambient-light brightness daemon for laptops with an IIO illuminance sensor."""
+
+import glob
+import os
+import subprocess
+import sys
+import time
+
+# ---------------- tuning ----------------
+SENSOR_DELAY = 0.4      # seconds between sensor readings
+SENSOR_COUNT = 5        # readings to average
+BRIGHTNESS_ADJUST = 1.0 # + = brighter overall, - = dimmer. try -2.5 .. +2.5
+SENSOR_MAX = 3984       # sensor reading treated as "100% brightness"
+MIN_PCT = 1.0           # never dim below this
+MAX_PCT = 100.0
+FPS = 30                # fade smoothness
+HALF_LIFE = 0.25        # seconds to cover half the remaining distance
+THRESHOLD_PCT = 1.5     # ignore target changes smaller than this
+RESPECT_MANUAL = True   # remember your manual adjustments as an offset
+
+DEBUG = bool(os.environ.get("DEBUG"))
+# ----------------------------------------
+
+
+def log(*a):
+    if DEBUG:
+        print(*a, flush=True)
+
+
+def read_int(path):
+    with open(path) as f:
+        return int(f.read().strip())
+
+
+def find_sensor():
+    if os.environ.get("SENSOR"):
+        return os.environ["SENSOR"]
+    hits = sorted(glob.glob("/sys/bus/iio/devices/iio:device*/in_illuminance_raw"))
+    if not hits:
+        sys.exit("no ambient light sensor found under /sys/bus/iio/devices")
+    return hits[0]
+
+
+def find_backlight():
+    if os.environ.get("BACKLIGHT"):
+        return os.environ["BACKLIGHT"]
+    cands = sorted(glob.glob("/sys/class/backlight/*"))
+    for c in cands:  # prefer the internal panel over ddcci/other devices
+        if os.path.basename(c).startswith(("amdgpu", "intel", "nvidia", "nv_")):
+            return c
+    if not cands:
+        sys.exit("no backlight device found under /sys/class/backlight")
+    return cands[0]
+
+
+class Backlight:
+    """Writes to sysfs directly if permitted, otherwise shells out to brightnessctl."""
+
+    def __init__(self, path):
+        self.path = path
+        self.name = os.path.basename(path)
+        self.max = read_int(os.path.join(path, "max_brightness"))
+        self.file = os.path.join(path, "brightness")
+        self.direct = os.access(self.file, os.W_OK)
+        if not self.direct:
+            log(f"no write access to {self.name}, falling back to brightnessctl")
+
+    def get_pct(self):
+        return read_int(os.path.join(self.path, "brightness")) / self.max * 100
+
+    def set_pct(self, pct):
+        pct = min(MAX_PCT, max(MIN_PCT, pct))
+        raw = max(1, min(self.max, round(pct / 100 * self.max)))
+        if self.direct:
+            with open(self.file, "w") as f:
+                f.write(str(raw))
+        else:
+            subprocess.run(
+                ["brightnessctl", "-q", "-d", self.name, "s", str(raw)], check=False
+            )
+        return raw
+
+
+def light_to_pct(light):
+    frac = min(1.0, max(0.0, light / SENSOR_MAX))
+    frac **= 1 / (2 ** BRIGHTNESS_ADJUST)
+    return MIN_PCT + frac * (MAX_PCT - MIN_PCT)
+
+
+def main():
+    sensor = find_sensor()
+    bl = Backlight(find_backlight())
+    log(f"sensor={sensor} backlight={bl.name} max_brightness={bl.max}")
+
+    alpha = 1 - 0.5 ** (1 / max(1e-6, HALF_LIFE * FPS))
+    frame = 1 / FPS
+    min_step = 100 / bl.max  # one hardware level, in percent
+
+    samples = []
+    current = bl.get_pct()
+    target = current
+    offset = 0.0
+    last_written = bl.set_pct(current)
+    next_sample = 0.0
+
+    while True:
+        now = time.monotonic()
+
+        if now >= next_sample:
+            next_sample = now + SENSOR_DELAY
+            try:
+                samples.append(read_int(sensor))
+            except OSError as e:
+                log("sensor read failed:", e)
+            del samples[:-SENSOR_COUNT]
+
+            if samples:
+                avg = sum(samples) / len(samples)
+                base = light_to_pct(avg)
+
+                if RESPECT_MANUAL and abs(current - target) < THRESHOLD_PCT:
+                    try:
+                        actual_raw = read_int(bl.file)
+                    except OSError:
+                        actual_raw = last_written
+                    # drifted from what we wrote => you changed it by hand
+                    if abs(actual_raw - last_written) > 1.5:
+                        current = actual_raw / bl.max * 100
+                        offset = current - base
+                        last_written = actual_raw
+                        log(f"manual change detected, offset now {offset:+.1f}%")
+
+                new_target = min(MAX_PCT, max(MIN_PCT, base + offset))
+                if abs(new_target - target) >= THRESHOLD_PCT:
+                    log(f"lux={avg:.0f} target {target:.1f}% -> {new_target:.1f}%")
+                    target = new_target
+
+        fading = abs(target - current) >= min_step / 2
+        if fading:
+            step = (target - current) * alpha
+            if abs(step) < min_step:
+                step = min_step if step > 0 else -min_step
+            if abs(step) > abs(target - current):
+                step = target - current
+            current += step
+            try:
+                last_written = bl.set_pct(current)
+            except OSError as e:
+                log("write failed:", e)
+            time.sleep(frame)
+        else:
+            # settled: idle until the next sensor reading instead of spinning
+            time.sleep(max(0.0, min(next_sample - time.monotonic(), SENSOR_DELAY)))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
