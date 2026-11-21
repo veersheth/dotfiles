@@ -32,6 +32,8 @@
     "amdgpu.sg_display=0"
   ];
 
+  boot.resumeDevice = (builtins.head config.swapDevices).device;
+
   hardware.graphics = {
     enable32Bit = true; # for lutris
     extraPackages = with pkgs; [
@@ -96,6 +98,7 @@ networking.firewall.allowedUDPPorts = [ 5353 5355 ];
   # };
   # services.displayManager.defaultSession = "xfce";
 
+  # # KDE
   # services.displayManager.sddm = {
   #   enable = true;
   #   wayland.enable = true;
@@ -321,9 +324,11 @@ networking.firewall.allowedUDPPorts = [ 5353 5355 ];
 
 
     # hyprland
-    hyprland hypridle hyprpicker hyprsunset hyprshot cliphist satty
-    hyprlock 
+    hyprland hyprpicker hyprsunset 
 
+    hypridle 
+    wlsunset
+    cliphist satty
     quickshell qt5.qtgraphicaleffects
 
   ];
