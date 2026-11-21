@@ -1,5 +1,15 @@
 {
   "pins": {
+    "time": [
+      {
+        "name": "Mumbai, IN",
+        "payload": "Mumbai, IN"
+      },
+      {
+        "name": "Sydney, AU",
+        "payload": "Sydney, AU"
+      }
+    ],
     "emojis": [
       {
         "name": "😭",
@@ -10,12 +20,6 @@
         "payload": "💀"
       }
     ],
-    "clipboard": [],
-    "time": [
-      {
-        "name": "Mumbai, IN",
-        "payload": "Mumbai, IN"
-      }
-    ]
+    "clipboard": []
   }
 }

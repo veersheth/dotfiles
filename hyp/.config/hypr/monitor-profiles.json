@@ -67,7 +67,12 @@
         "transform": 0,
         "mirror": null,
         "disabled": false,
-        "_workspaces": []
+        "_workspaces": [],
+        "_make": null,
+        "_model": null,
+        "_serial": null,
+        "_mode_known": true,
+        "_transform_touched": false
       },
       {
         "name": "DP-11",
@@ -75,13 +80,18 @@
         "width": 1920,
         "height": 1080,
         "refreshRate": 60.0,
-        "x": 8611,
-        "y": 6424,
+        "x": 9921,
+        "y": 0,
         "scale": 2,
         "transform": 0,
         "mirror": "eDP-1",
         "disabled": false,
-        "_workspaces": []
+        "_workspaces": [],
+        "_make": null,
+        "_model": null,
+        "_serial": null,
+        "_mode_known": true,
+        "_transform_touched": false
       }
     ],
     "use_edid": true
@@ -215,8 +225,8 @@
         "width": 2256,
         "height": 1504,
         "refreshRate": 60.0,
-        "x": 286,
-        "y": -105,
+        "x": 218,
+        "y": -51,
         "scale": 1.2999999523162842,
         "transform": 0,
         "mirror": null,

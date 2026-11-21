@@ -29,7 +29,7 @@ unfocused_opacity=1
 # Animation Configuration
 animations=1
 layer_animations=1
-animation_type_open=fade
+animation_type_open=slide
 animation_type_close=fade
 layer_animation_type_open=fade
 layer_animation_type_close=fade
@@ -39,7 +39,7 @@ fade_in_begin_opacity=0.8
 fade_out_begin_opacity=0.8
 animation_duration_move=180
 animation_duration_open=180
-animation_duration_tag=180
+animation_duration_tag=0
 animation_duration_close=140
 animation_duration_focus=100
 animation_curve_open=0.22,1,0.36,1
