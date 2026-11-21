@@ -18,7 +18,6 @@ PanelWindow {
     property Item anchorItem: null
     property bool shown: false
     property double dismissedAt: 0
-    property bool focusAcquired: false
     property bool dismissing: false
     readonly property int shadowPadding: 16
     Component.onDestruction: BarState.releasePopup(root)
@@ -61,7 +60,6 @@ PanelWindow {
             BarState.activatePopup(root)
             exitAnim.stop()
             if (!visible) panel.x = panel.width + root.shadowPadding * 2
-            focusAcquired = false
             visible = true
             enterAnim.restart()
             Qt.callLater(() => {
@@ -70,32 +68,20 @@ PanelWindow {
         } else {
             BarState.releasePopup(root)
             enterAnim.stop()
-            focusCheck.stop()
             exitAnim.restart()
         }
     }
 
-    Connections {
-        target: panel.Window.window
-        function onActiveChanged() {
-            if (Compositor.hyprland || !root.shown) return
-            if (panel.Window.window?.active) {
-                root.focusAcquired = true
-                focusCheck.stop()
-            } else if (root.focusAcquired) {
-                focusCheck.restart()
-            }
-        }
-    }
-
-    Timer {
-        id: focusCheck
-        interval: 250
-        onTriggered: {
-            if (root.shown && root.focusAcquired && !panel.Window.window?.active) {
-                root.dismissedAt = Date.now()
-                root.shown = false
-            }
+    BarClickAway {
+        screen: root.screen
+        visible: root.shown && !Compositor.hyprland
+        popupX: width - root.width + root.shadowPadding
+        popupY: BarState.barBottom ? 8 : Theme.barHeight + 8
+        popupWidth: panel.width
+        popupHeight: root.height
+        onDismissed: {
+            root.dismissedAt = Date.now()
+            root.close()
         }
     }
 
@@ -146,6 +132,7 @@ PanelWindow {
             windows: [root]
             active: root.shown
             onCleared: {
+                if (!root.shown) return
                 root.dismissedAt = Date.now()
                 root.shown = false
             }

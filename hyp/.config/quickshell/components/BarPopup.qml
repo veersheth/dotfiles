@@ -17,9 +17,8 @@ PanelWindow {
     property bool shown: false
     property Item anchorItem: null
     property double dismissedAt: 0
-    property bool focusAcquired: false
     property bool grabFocus: true
-    property bool dismissOnFocusLoss: true
+    property bool dismissOnOutsideClick: true
     // Optional second window (e.g. a context menu) to include in the same
     // focus grab so hover events reach it while the grab is active.
     property var extraGrabWindow: null
@@ -61,7 +60,6 @@ PanelWindow {
                 BarState.activatePopup(root)
                 exitAnim.stop()
                 if (!root.alive) root.dist = -root.contentHeight
-                root.focusAcquired = false
                 root.alive = true
                 enterAnim.restart()
                 Qt.callLater(() => {
@@ -70,34 +68,24 @@ PanelWindow {
             } else {
                 BarState.releasePopup(root)
                 enterAnim.stop()
-                focusCheck.stop()
                 exitAnim.restart()
             }
         }
     }
 
-    Connections {
-        target: card.Window.window
-        function onActiveChanged() {
-            if (Compositor.hyprland || !root.shown) return
-            if (card.Window.window?.active) {
-                root.focusAcquired = true
-                focusCheck.stop()
-            } else if (root.focusAcquired) {
-                focusCheck.restart()
-            }
-        }
-    }
-
-    Timer {
-        id: focusCheck
-        interval: 250
-        onTriggered: {
-            if (root.shown && root.focusAcquired && root.grabFocus
-                    && root.dismissOnFocusLoss && !card.Window.window?.active) {
-                root.dismissedAt = Date.now()
-                root.shown = false
-            }
+    BarClickAway {
+        screen: root.screen
+        visible: root.shown && root.grabFocus && root.dismissOnOutsideClick
+            && !Compositor.hyprland
+        popupX: root.WlrLayershell.margins.left + root.shadowPadding
+        popupY: BarState.barBottom
+            ? height - Theme.barHeight - root.dRest - root.contentHeight
+            : Theme.barHeight + root.dRest
+        popupWidth: root.contentWidth
+        popupHeight: root.contentHeight
+        onDismissed: {
+            root.dismissedAt = Date.now()
+            root.close()
         }
     }
 
@@ -201,7 +189,7 @@ PanelWindow {
             windows: root.extraGrabWindow !== null ? [root, root.extraGrabWindow] : [root]
             active: root.shown && root.grabFocus
             onCleared: {
-                if (!root.dismissOnFocusLoss) return
+                if (!root.shown || !root.dismissOnOutsideClick) return
                 root.dismissedAt = Date.now()
                 root.shown = false
             }
