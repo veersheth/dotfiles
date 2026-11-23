@@ -5,6 +5,7 @@ set -euo pipefail
 state_dir=${XDG_RUNTIME_DIR:-/tmp}
 state_file="$state_dir/mango-nightlight-state"
 pid_file="$state_dir/mango-nightlight-pid"
+on_temp=4000
 
 stop_current() {
     local pid
@@ -20,15 +21,13 @@ stop_current() {
 
 state=OFF
 [[ -f $state_file ]] && state=$(cat "$state_file")
-case "$state" in
-    OFF) next=6000 ;;
-    6000) next=4000 ;;
-    4000) next=2000 ;;
-    *) next=OFF ;;
-esac
+if [[ $state == OFF ]]; then
+    next=$on_temp
+else
+    next=OFF
+fi
 
 if [[ $next != OFF ]] && ! command -v wlsunset >/dev/null 2>&1; then
-    notify-send -t 3000 'Night light unavailable' 'Install wlsunset for Mango.' 2>/dev/null || true
     printf 'wlsunset is required for Mango night light.\n' >&2
     exit 1
 fi
@@ -49,4 +48,3 @@ else
     printf '%s\n' "$pid" > "$pid_file"
     printf '%s\n' "$next" > "$state_file"
 fi
-notify-send -t 700 'Night light' "$next" 2>/dev/null || true
