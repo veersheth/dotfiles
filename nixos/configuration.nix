@@ -329,6 +329,7 @@ networking.firewall.allowedUDPPorts = [ 5353 5355 ];
     hypridle 
     wlsunset
     cliphist satty
+    grim slurp wayfreeze 
     quickshell qt5.qtgraphicaleffects
 
   ];
