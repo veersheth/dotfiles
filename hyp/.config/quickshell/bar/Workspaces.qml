@@ -97,6 +97,8 @@ Rectangle {
                     id: wsMouse
                     anchors.fill: parent
                     hoverEnabled: true
+                    onEntered: BarHover.enter()
+                    onExited: BarHover.leave()
                     onClicked: {
                         if (Compositor.mango)
                             Mango.view(root.monitorName, parent.modelData.index)
@@ -114,6 +116,8 @@ Rectangle {
         id: pillMouse
         anchors.fill: parent
         hoverEnabled: true
+        onEntered: BarHover.enter()
+        onExited: BarHover.leave()
         propagateComposedEvents: true
         onClicked:   mouse => mouse.accepted = false
         onPressed:   mouse => mouse.accepted = false

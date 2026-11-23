@@ -183,8 +183,14 @@ Item {
         property real _pressX: 0
         property real _pressY: 0
 
-        onEntered: if (!root._dragging) tip.show(root)
-        onExited:  if (!pressed) tip.hide()
+        onEntered: {
+            BarHover.enter()
+            if (!root._dragging) tip.show(root)
+        }
+        onExited: {
+            BarHover.leave()
+            if (!pressed) tip.hide()
+        }
 
         onPressed: mouse => {
             if (mouse.button !== Qt.LeftButton) return
@@ -252,35 +258,30 @@ Item {
     // ── Drag cursor label ──────────────────────────────────────────────
     // Floats next to the cursor while dragging so the user can see the
     // duration without looking back up at the bar.
+    // Fullscreen click-through surface, like the tray drag ghost: moving the
+    // child rectangle is cheap, unlike renegotiating layer-shell margins on
+    // every pointer move.
     PanelWindow {
         id: dragLabel
         visible: root._dragging
-        screen: root.Window.window?.screen ?? null
+        screen: root.QsWindow.window?.screen ?? null
         anchors.top:  true
         anchors.left: true
         exclusiveZone: -1
+        implicitWidth:  screen?.width ?? 1
+        implicitHeight: screen?.height ?? 1
         color: "transparent"
         mask: Region {}
 
-        WlrLayershell.namespace: "quickshell:popup"
+        WlrLayershell.namespace: "quickshell:caffeine-drag"
         WlrLayershell.layer:     WlrLayer.Overlay
-
-        implicitWidth:  dlText.implicitWidth + 24
-        implicitHeight: dlText.implicitHeight + 12
-
-        WlrLayershell.margins.top: {
-            const sy = screen?.y ?? 0
-            return Math.max(0, Math.min((screen?.height ?? 0) - implicitHeight,
-                            Math.round(root._cursorScreenY - sy - implicitHeight / 2)))
-        }
-        WlrLayershell.margins.left: {
-            const sx  = screen?.x ?? 0
-            return Math.max(0, Math.min((screen?.width ?? 0) - implicitWidth,
-                            Math.round(root._cursorScreenX - sx - implicitWidth / 2)))
-        }
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
         Rectangle {
-            anchors.fill: parent
+            x: Math.round(root._cursorScreenX - (dragLabel.screen?.x ?? 0) - width / 2)
+            y: Math.round(root._cursorScreenY - (dragLabel.screen?.y ?? 0) - height / 2)
+            width:  dlText.implicitWidth + 24
+            height: dlText.implicitHeight + 12
             radius: height / 2
             color: Theme.surface
             border.color: Theme.border

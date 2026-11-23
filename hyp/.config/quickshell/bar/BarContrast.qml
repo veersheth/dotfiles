@@ -10,7 +10,8 @@ Canvas {
     property real screenHeight: 1080
     property real luminance: 0
     readonly property color solidColor: WallpaperService.isColor ? WallpaperService.colorValue : "black"
-    readonly property color foreground: !BarState.transparent ? Theme.foreground
+    readonly property color foreground: (!BarState.transparent || BarState.barAutoHide)
+        ? Theme.foreground
         : luminance > 0.179 ? "#000000" : "#ffffff"
     readonly property string imageUrl: WallpaperService.imagePath.length > 0
         ? "file://" + WallpaperService.imagePath : ""

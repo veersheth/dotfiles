@@ -47,7 +47,7 @@ PanelWindow {
         card.fadeDismiss()
     }
 
-    screen: anchorItem?.Window.window?.screen ?? null
+    screen: anchorItem?.QsWindow.window?.screen ?? null
     anchors.top:    true
     anchors.bottom: true
     anchors.right:  true

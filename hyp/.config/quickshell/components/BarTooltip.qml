@@ -13,6 +13,10 @@ PanelWindow {
     property real contentHeight: 32
     property Item anchorItem: null
     property bool shown: false
+    // The dock reuses this tooltip above the bottom edge; existing bar modules
+    // keep the defaults below.
+    property bool anchorToBottom: BarState.barBottom
+    property int edgeMargin: Theme.barHeight + 4
 
     function show(item) {
         anchorItem = item;
@@ -36,9 +40,9 @@ PanelWindow {
 
     Timer { id: showDelay; interval: 300; onTriggered: root.shown = true }
 
-    screen: anchorItem?.Window.window?.screen ?? null
-    anchors.top:    !BarState.barBottom
-    anchors.bottom: BarState.barBottom
+    screen: anchorItem?.QsWindow.window?.screen ?? null
+    anchors.top:    !root.anchorToBottom
+    anchors.bottom: root.anchorToBottom
     anchors.left: true
     exclusiveZone: -1
     color: "transparent"
@@ -48,8 +52,8 @@ PanelWindow {
     WlrLayershell.namespace: "quickshell:popup"
     WlrLayershell.layer: WlrLayer.Top
 
-    WlrLayershell.margins.top:    BarState.barBottom ? 0 : Theme.barHeight + 4
-    WlrLayershell.margins.bottom: BarState.barBottom ? Theme.barHeight + 4 : 0
+    WlrLayershell.margins.top:    root.anchorToBottom ? 0 : root.edgeMargin
+    WlrLayershell.margins.bottom: root.anchorToBottom ? root.edgeMargin : 0
     WlrLayershell.margins.left: {
         if (!anchorItem) return 0;
         const mid = anchorItem.mapToGlobal(anchorItem.width / 2, 0).x;
@@ -70,7 +74,7 @@ PanelWindow {
         border.color: Theme.border
         border.width: Theme.borderWidth
         clip: true
-        transformOrigin: BarState.barBottom ? Item.Bottom : Item.Top
+        transformOrigin: root.anchorToBottom ? Item.Bottom : Item.Top
 
         Item {
             id: contentItem

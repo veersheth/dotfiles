@@ -31,7 +31,7 @@ BarPopup {
     }
 
     // ── Device row component ────────────────────────────────────────────
-    component DevRow: Rectangle {
+    component DevRow: PopupListRow {
         id: dev
         required property var modelData
 
@@ -39,78 +39,51 @@ BarPopup {
         readonly property bool isPaired:    modelData.paired
         readonly property bool isBusy: root.connectingAddress === modelData.address
 
-        Layout.fillWidth: true
-        implicitHeight: 40
-        radius: Theme.itemRadius
-        // connected devices use the same highlight as the active Wi-Fi network
-        color: dev.isConnected ? Qt.alpha(Theme.blue, 0.18)
-             : devMo.containsMouse ? Theme.hover : "transparent"
-        Behavior on color { ColorAnimation { duration: Theme.animDuration } }
-
-        RowLayout {
-            anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
-            spacing: 10
-
-            Text {
-                text: {
-                    const t = dev.modelData.icon ?? "";
-                    if (t.includes("headset") || t.includes("headphones")) return "󰋋";
-                    if (t.includes("keyboard"))  return "󰌌";
-                    if (t.includes("mouse"))     return "󰍽";
-                    if (t.includes("phone"))     return "󰏲";
-                    if (t.includes("audio-card") || t.includes("speaker"))  return "󰓃";
-                    if (t.includes("gaming"))   return "󰊗";
-                    return "󰂱";
-                }
-                font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize
-                color: dev.isConnected ? Theme.blue : Qt.alpha(Theme.foreground, 0.55)
-                Behavior on color { ColorAnimation { duration: Theme.animDuration } }
-            }
-
-            Text {
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-                text: dev.modelData.name ?? dev.modelData.address
-                font.family: Theme.font; font.pixelSize: Theme.fontSize - 1
-                font.weight: dev.isConnected ? Font.DemiBold : Font.Medium
-                color: Theme.foreground
-            }
-
-            // battery percentage when reported
-            Text {
-                visible: dev.modelData.batteryAvailable ?? false
-                text: `${Math.round((dev.modelData.battery ?? 0) * 100)}%`
-                font.family: Theme.font; font.pixelSize: Theme.fontSize - 3
-                color: Qt.alpha(Theme.foreground, 0.45)
-            }
-
-            // spinner while connecting, check when connected
-            Text {
-                id: statusGlyph
-                visible: dev.isBusy || dev.isConnected
-                text: dev.isBusy ? "󰑐" : "󰄬"
-                font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize - 2
-                color: dev.isConnected ? Theme.blue : Qt.alpha(Theme.foreground, 0.5)
-                RotationAnimation on rotation {
-                    running: dev.isBusy; loops: Animation.Infinite
-                    from: 0; to: 360; duration: 900
-                }
-                onVisibleChanged: if (!dev.isBusy) rotation = 0
+        iconText: {
+            const t = dev.modelData.icon ?? "";
+            if (t.includes("headset") || t.includes("headphones")) return "󰋋";
+            if (t.includes("keyboard"))  return "󰌌";
+            if (t.includes("mouse"))     return "󰍽";
+            if (t.includes("phone"))     return "󰏲";
+            if (t.includes("audio-card") || t.includes("speaker"))  return "󰓃";
+            if (t.includes("gaming"))   return "󰊗";
+            return "󰂱";
+        }
+        iconColor: dev.isConnected ? Theme.blue : Qt.alpha(Theme.foreground, 0.55)
+        label: dev.modelData.name ?? dev.modelData.address
+        labelWeight: dev.isConnected ? Font.DemiBold : Font.Medium
+        selected: dev.isConnected
+        interactionEnabled: !dev.isBusy
+        onClicked: {
+            if (dev.isConnected) {
+                dev.modelData.connected = false;
+            } else {
+                root.connectingAddress = dev.modelData.address;
+                dev.modelData.connected = true;
+                connectTimeout.restart();
             }
         }
 
-        MouseArea {
-            id: devMo; anchors.fill: parent; hoverEnabled: true
-            enabled: !dev.isBusy
-            onClicked: {
-                if (dev.isConnected) {
-                    dev.modelData.connected = false;
-                } else {
-                    root.connectingAddress = dev.modelData.address;
-                    dev.modelData.connected = true;
-                    connectTimeout.restart();
-                }
+        // battery percentage when reported
+        Text {
+            visible: dev.modelData.batteryAvailable ?? false
+            text: `${Math.round((dev.modelData.battery ?? 0) * 100)}%`
+            font.family: Theme.font; font.pixelSize: Theme.fontSize - 3
+            color: Qt.alpha(Theme.foreground, 0.45)
+        }
+
+        // spinner while connecting, check when connected
+        Text {
+            id: statusGlyph
+            visible: dev.isBusy || dev.isConnected
+            text: dev.isBusy ? "󰑐" : "󰄬"
+            font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize - 2
+            color: dev.isConnected ? Theme.blue : Qt.alpha(Theme.foreground, 0.5)
+            RotationAnimation on rotation {
+                running: dev.isBusy; loops: Animation.Infinite
+                from: 0; to: 360; duration: 900
             }
+            onVisibleChanged: if (!dev.isBusy) rotation = 0
         }
     }
 
@@ -196,7 +169,6 @@ BarPopup {
             CommonList {
                 id: devContent
                 width: parent.width
-                spacing: 4
 
                 // ── Off state ───────────────────────────────────────────
                 Text {
@@ -226,7 +198,7 @@ BarPopup {
                 ColumnLayout {
                     visible: root.enabled
                     Layout.fillWidth: true
-                    spacing: 6
+                    spacing: 0
 
                     RowLayout {
                         Layout.fillWidth: true

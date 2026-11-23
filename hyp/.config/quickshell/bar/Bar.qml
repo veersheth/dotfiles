@@ -22,14 +22,90 @@ Variants {
         anchors.left:   true
         anchors.right:  true
         implicitHeight: Theme.barHeight
-        exclusiveZone: BarState.exposeActive && !BarState.exposeGestureTracking
-            ? 0 : Theme.barHeight
+        readonly property int revealEdge: 3
+        readonly property bool floating: BarState.barAutoHide
+        readonly property bool tuckedAway: floating && !BarState.barPeek
+        exclusiveZone: root.floating ? -1
+            : (BarState.exposeActive && !BarState.exposeGestureTracking ? 0 : Theme.barHeight)
         color: "transparent"
 
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.namespace: "quickshell:bar"
 
-        mask: Region { item: bar }
+        // Auto-hide uses -1 so the floating bar never enters the compositor's
+        // exclusive-zone layout; only the thin edge strip is interactive while
+        // tucked away.
+        mask: Region {
+            x: 0
+            y: root.tuckedAway ? (BarState.barBottom ? root.height - root.revealEdge : 0) : 0
+            width: root.width
+            height: root.tuckedAway ? root.revealEdge : Theme.barHeight
+        }
+
+        MouseArea {
+            id: revealStrip
+            property bool edgeHovered: false
+            visible: root.floating
+            enabled: root.floating
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
+            z: 20
+            height: root.revealEdge
+            anchors {
+                left: parent.left
+                right: parent.right
+                top: BarState.barBottom ? undefined : parent.top
+                bottom: BarState.barBottom ? parent.bottom : undefined
+            }
+            onEntered: {
+                edgeHovered = true
+                BarHover.enter()
+                BarState.triggerEdgePeek()
+            }
+            onPositionChanged: if (containsMouse) BarState.triggerEdgePeek()
+            onExited: {
+                edgeHovered = false
+                BarHover.leave()
+                BarState.rearmEdge()
+            }
+        }
+
+        Timer {
+            id: peekRetractTimer
+            interval: 350
+            onTriggered: {
+                if (revealStrip.edgeHovered) {
+                    peekRetractTimer.restart()
+                    return
+                }
+                if (!BarHover.active && !BarState.activePopup && !BarState.rearrangeModules)
+                    BarState.hideBarPeek()
+            }
+        }
+
+        Connections {
+            target: BarHover
+            function onActiveChanged() {
+                if (BarHover.active) peekRetractTimer.stop()
+                else peekRetractTimer.restart()
+            }
+        }
+
+        Connections {
+            target: BarState
+            function onActivePopupChanged() {
+                if (BarState.activePopup) peekRetractTimer.stop()
+                else peekRetractTimer.restart()
+            }
+            function onBarPeekChanged() {
+                if (BarState.barPeek && !BarHover.active && !BarState.activePopup)
+                    peekRetractTimer.restart()
+            }
+            function onRearrangeModulesChanged() {
+                if (BarState.rearrangeModules) peekRetractTimer.stop()
+                else peekRetractTimer.restart()
+            }
+        }
 
         BarContrast {
             id: contrast
@@ -44,27 +120,37 @@ Variants {
             }
             height: Theme.barHeight
             transform: Translate {
-                y: BarState.exposeGestureTracking
-                    ? (BarState.barBottom ? 1 : -1) * bar.height
-                        * BarState.exposeGestureProgress : 0
+                y: (BarState.exposeGestureTracking
+                        ? (BarState.barBottom ? 1 : -1) * bar.height
+                            * BarState.exposeGestureProgress
+                        : 0)
+                    + (root.tuckedAway
+                        ? (BarState.barBottom ? bar.height : -bar.height)
+                        : 0)
                 Behavior on y {
                     enabled: !BarState.exposeGestureTracking
                     NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
                 }
             }
-            color: BarState.transparent ? "transparent" : Theme.background
+            color: BarState.transparent && !BarState.barAutoHide ? "transparent" : Theme.background
 
             // Empty bar space → context menu (right-click).
             // First child, so every module's own MouseArea stays on top.
             MouseArea {
                 anchors.fill: parent
-                acceptedButtons: Qt.RightButton
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                hoverEnabled: true
+                onEntered: BarHover.enter()
+                onExited: BarHover.leave()
                 onClicked: mouse => {
                     if (mouse.button === Qt.RightButton) {
                         const half = barMenu.contentWidth / 2 + 8
                         barMenuAnchor.x = Math.max(half, Math.min(mouse.x, bar.width - half))
                         barMenu.toggle()
                     }
+                }
+                onDoubleClicked: mouse => {
+                    if (mouse.button === Qt.LeftButton) BarState.toggleBarAutoHide()
                 }
             }
 
@@ -75,59 +161,9 @@ Variants {
                 width: 1; height: parent.height
             }
 
-            BarPopup {
+            ShellContextMenu {
                 id: barMenu
                 anchorItem: barMenuAnchor
-                contentWidth: 246
-                contentHeight: barMenuCol.implicitHeight + 32
-
-                Column {
-                    id: barMenuCol
-                    anchors { verticalCenter: parent.verticalCenter; left: parent.left; right: parent.right }
-                    spacing: 4
-
-                    Rectangle {
-                        width: parent.width; height: 34; radius: 9
-                        color: barWallMo.containsMouse ? Theme.hover : "transparent"
-                        Row {
-                            anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                            spacing: 9
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: "󰸉"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Theme.foreground }
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: "Change background…"; font.family: Theme.font; font.pixelSize: Theme.fontSize; font.weight: Font.Medium; color: Theme.foreground }
-                        }
-                        MouseArea { id: barWallMo; anchors.fill: parent; hoverEnabled: true; onClicked: { barMenu.close(); BarState.wallpaperPickerRequested() } }
-                    }
-
-                    Rectangle {
-                        width: parent.width; height: 34; radius: 9
-                        color: transparencyMo.containsMouse ? Theme.hover : "transparent"
-                        Text {
-                            anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                            text: BarState.transparent ? "✓  Transparent bar" : "Transparent bar"
-                            font.family: Theme.font
-                            font.pixelSize: Theme.fontSize
-                            color: Theme.foreground
-                        }
-                        MouseArea {
-                            id: transparencyMo
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: { BarState.setTransparent(!BarState.transparent); barMenu.close() }
-                        }
-                    }
-
-                    Rectangle {
-                        width: parent.width; height: 34; radius: 9
-                        color: barPosMo.containsMouse ? Theme.hover : "transparent"
-                        Row {
-                            anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                            spacing: 9
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: BarState.barBottom ? "󰹙" : "󰹘"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Theme.foreground }
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: BarState.barBottom ? "Move bar to top" : "Move bar to bottom"; font.family: Theme.font; font.pixelSize: Theme.fontSize; font.weight: Font.Medium; color: Theme.foreground }
-                        }
-                        MouseArea { id: barPosMo; anchors.fill: parent; hoverEnabled: true; onClicked: { barMenu.close(); BarState.setBottom(!BarState.barBottom) } }
-                    }
-                }
             }
 
             Rectangle {
@@ -136,7 +172,7 @@ Variants {
                 anchors.left:   parent.left
                 anchors.right:  parent.right
                 height: Theme.borderWidth
-                color: BarState.transparent ? "transparent" : Theme.barBorder
+                color: BarState.transparent && !BarState.barAutoHide ? "transparent" : Theme.barBorder
               }
 
               Item {
@@ -179,8 +215,10 @@ Variants {
                   id: rightModules
                   anchors { right: parent.right; rightMargin: 14; top: parent.top; bottom: parent.bottom }
                   foreground: contrast.foreground
+                  rearrangeMode: BarState.rearrangeModules
               }
             }
+
         }
     }
 }

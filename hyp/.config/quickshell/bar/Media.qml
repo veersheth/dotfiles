@@ -126,6 +126,6 @@ Item {
     MediaFullscreen {
         id: fullscreen
         player: root.player
-        screen: root.Window.window?.screen ?? null
+        screen: root.QsWindow.window?.screen ?? null
     }
 }

@@ -13,6 +13,7 @@ import qs.expose
 ShellRoot {
     Desktop {}
     Bar {}
+    Dock {}
     Expose {}
     NotificationPopups {}
     Osd {}

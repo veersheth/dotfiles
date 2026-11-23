@@ -280,56 +280,43 @@ BarPopup {
                         Layout.fillWidth: true
                         spacing: 4
 
-                        Rectangle {
-                            width: parent.width; height: 38; radius: Theme.itemRadius
-                            color: netItem.modelData.inUse ? Qt.alpha(Theme.blue, 0.18)
-                                 : netMouse.containsMouse ? Theme.hover : "transparent"
-
-                            RowLayout {
-                                anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
-                                spacing: 10
-                                Text {
-                                    text: root.icons[Math.max(0, Math.min(4, Math.round(netItem.modelData.signal / 25)))]
-                                    font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize
-                                    color: netItem.modelData.inUse ? Theme.blue : Theme.foreground
-                                }
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: netItem.modelData.ssid; elide: Text.ElideRight
-                                    font.family: Theme.font; font.pixelSize: Theme.fontSize
-                                    font.weight: netItem.modelData.inUse ? Font.DemiBold : Font.Medium
-                                    color: Theme.foreground
-                                }
-                                Text {
-                                    visible: root.busySsid === netItem.modelData.ssid
-                                    text: "connecting…"
-                                    font.family: Theme.font; font.pixelSize: Theme.fontSize - 3
-                                    color: Qt.alpha(Theme.foreground, 0.55)
-                                }
-                                Text {
-                                    visible: netItem.modelData.secured
-                                    text: "󰌾"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize - 2
-                                    color: Qt.alpha(Theme.foreground, 0.5)
-                                }
-                                Text {
-                                    visible: netItem.modelData.inUse
-                                    text: "󰄬"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize - 2
-                                    color: Theme.blue
+                        PopupListRow {
+                            id: netRow
+                            width: parent.width
+                            iconText: root.icons[Math.max(0, Math.min(4, Math.round(netItem.modelData.signal / 25)))]
+                            iconColor: netItem.modelData.inUse ? Theme.blue : Theme.foreground
+                            label: netItem.modelData.ssid
+                            labelFontSize: Theme.fontSize
+                            labelWeight: netItem.modelData.inUse ? Font.DemiBold : Font.Medium
+                            selected: netItem.modelData.inUse
+                            rowHeight: 38
+                            horizontalPadding: 12
+                            onClicked: {
+                                const net = netItem.modelData;
+                                if (net.inUse || root.busySsid !== "") return;
+                                if (net.secured && !net.known) {
+                                    root.expandedSsid = root.expandedSsid === net.ssid ? "" : net.ssid;
+                                    root.error = "";
+                                } else {
+                                    root.connectTo(net, "");
                                 }
                             }
 
-                            MouseArea {
-                                id: netMouse; anchors.fill: parent; hoverEnabled: true
-                                onClicked: {
-                                    const net = netItem.modelData;
-                                    if (net.inUse || root.busySsid !== "") return;
-                                    if (net.secured && !net.known) {
-                                        root.expandedSsid = root.expandedSsid === net.ssid ? "" : net.ssid;
-                                        root.error = "";
-                                    } else {
-                                        root.connectTo(net, "");
-                                    }
-                                }
+                            Text {
+                                visible: root.busySsid === netItem.modelData.ssid
+                                text: "connecting…"
+                                font.family: Theme.font; font.pixelSize: Theme.fontSize - 3
+                                color: Qt.alpha(Theme.foreground, 0.55)
+                            }
+                            Text {
+                                visible: netItem.modelData.secured
+                                text: "󰌾"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize - 2
+                                color: Qt.alpha(Theme.foreground, 0.5)
+                            }
+                            Text {
+                                visible: netItem.modelData.inUse
+                                text: "󰄬"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize - 2
+                                color: Theme.blue
                             }
                         }
 

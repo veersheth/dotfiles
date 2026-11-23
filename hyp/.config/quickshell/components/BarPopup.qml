@@ -45,7 +45,7 @@ PanelWindow {
         alive = false
     }
 
-    screen: anchorItem?.Window.window?.screen ?? null
+    screen: anchorItem?.QsWindow.window?.screen ?? null
     anchors.top:    !BarState.barBottom
     anchors.bottom: BarState.barBottom
     anchors.left:   true
@@ -117,7 +117,7 @@ PanelWindow {
     implicitHeight: Math.max(1, (screen?.height ?? 1080) - Theme.barHeight - 8)
     mask: Region {
         x: card.x
-        y: BarState.barBottom ? root.height - card.height - dRest : dRest
+        y: card.y
         width: card.width
         height: card.height
     }

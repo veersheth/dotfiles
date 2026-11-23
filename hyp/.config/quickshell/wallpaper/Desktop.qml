@@ -54,6 +54,7 @@ Scope {
     Connections {
         target: BarState
         function onWallpaperPickerRequested() { pickerProc.running = true }
+        function onColorPickerRequested() { colorPickerProc.running = true }
     }
 
     // ── Color picker ──────────────────────────────────────────────────────
@@ -134,54 +135,10 @@ Scope {
                 }
             }
 
-            // Desktop context menu — same leak card as every bar popup
-            BarPopup {
+            // Shared shell context menu — identical to the bar's right-click menu.
+            ShellContextMenu {
                 id: desktopMenu
                 anchorItem: menuAnchor
-                contentWidth: 246
-                contentHeight: menuCol.implicitHeight + 32
-
-                Column {
-                    id: menuCol
-                    anchors { verticalCenter: parent.verticalCenter; left: parent.left; right: parent.right }
-                    spacing: 4
-
-                    Rectangle {
-                        width: parent.width; height: 34; radius: 9
-                        color: wallMo.containsMouse ? Theme.hover : "transparent"
-                        Row {
-                            anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                            spacing: 9
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: "󰸉"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Theme.foreground }
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: "Change background…"; font.family: Theme.font; font.pixelSize: Theme.fontSize; font.weight: Font.Medium; color: Theme.foreground }
-                        }
-                        MouseArea { id: wallMo; anchors.fill: parent; hoverEnabled: true; onClicked: { desktopMenu.close(); pickerProc.running = true } }
-                    }
-
-                    Rectangle {
-                        width: parent.width; height: 34; radius: 9
-                        color: colorMo.containsMouse ? Theme.hover : "transparent"
-                        Row {
-                            anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                            spacing: 9
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: "󰏘"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Theme.foreground }
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: "Set solid color…"; font.family: Theme.font; font.pixelSize: Theme.fontSize; font.weight: Font.Medium; color: Theme.foreground }
-                        }
-                        MouseArea { id: colorMo; anchors.fill: parent; hoverEnabled: true; onClicked: { desktopMenu.close(); colorPickerProc.running = true } }
-                    }
-
-                    Rectangle {
-                        width: parent.width; height: 34; radius: 9
-                        color: barPosMo.containsMouse ? Theme.hover : "transparent"
-                        Row {
-                            anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                            spacing: 9
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: BarState.barBottom ? "󰹙" : "󰹘"; font.family: Theme.nerdFont; font.pixelSize: Theme.iconSize; color: Theme.foreground }
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: BarState.barBottom ? "Move bar to top" : "Move bar to bottom"; font.family: Theme.font; font.pixelSize: Theme.fontSize; font.weight: Font.Medium; color: Theme.foreground }
-                        }
-                        MouseArea { id: barPosMo; anchors.fill: parent; hoverEnabled: true; onClicked: { desktopMenu.close(); BarState.setBottom(!BarState.barBottom) } }
-                    }
-                }
             }
         }
     }
